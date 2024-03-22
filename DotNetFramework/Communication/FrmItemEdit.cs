@@ -70,7 +70,7 @@ namespace DotNetFramework.Communication
             pnlPort.MinimumSize = new Size(300, pnlPort.Height);
 
             gbPort = new GroupBox();
-            gbPort.Dock = DockStyle.Top;
+            gbPort.Dock = DockStyle.Fill;
             gbPort.Size = new Size(gbPort.Width, 200);
             gbPort.Text = Data_Runtime.String("F0200");
 
@@ -78,7 +78,7 @@ namespace DotNetFramework.Communication
 
             //연결된 포트
             cboPortList = new ucControlBox(CtrlType.ComboBox);
-            cboPortList.Dock = DockStyle.Top;
+            cboPortList.Dock = DockStyle.Bottom;
             cboPortList.LblText = Data_Runtime.String("F0100");
             cboPortList.LblWidth = portLabelWidth;
             (cboPortList.ctrl as ComboBox).Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
@@ -91,7 +91,7 @@ namespace DotNetFramework.Communication
             cboProtocolType = new ucControlBox(CtrlType.ComboBox);
             cboProtocolType.LblText = Data_Runtime.String("F0101");
             cboProtocolType.LblWidth = portLabelWidth;
-            cboProtocolType.Dock = DockStyle.Top;
+            cboProtocolType.Dock = DockStyle.Bottom;
             (cboProtocolType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(ProtocolType)).OfType<object>().ToArray());    //포트타입 enum을 통해 추가
             (cboProtocolType.ctrl as ComboBox).SelectedIndex = 0;  //Default Value
 
@@ -99,7 +99,7 @@ namespace DotNetFramework.Communication
             cboBaudRate = new ucControlBox(CtrlType.ComboBox);
             cboBaudRate.LblText = Data_Runtime.String("F0102");
             cboBaudRate.LblWidth = portLabelWidth;
-            cboBaudRate.Dock = DockStyle.Top;
+            cboBaudRate.Dock = DockStyle.Bottom;
             (cboBaudRate.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(BaudRate)).OfType<object>().ToArray());    //enum을 통해 추가
             (cboBaudRate.ctrl as ComboBox).SelectedIndex = 0;  //Default Value
 
@@ -107,7 +107,7 @@ namespace DotNetFramework.Communication
             numDataBits = new ucControlBox(CtrlType.NumbericUpDown);
             numDataBits.LblText = Data_Runtime.String("F0103");
             numDataBits.LblWidth = portLabelWidth;
-            numDataBits.Dock = DockStyle.Top;
+            numDataBits.Dock = DockStyle.Bottom;
             (numDataBits.ctrl as NumericUpDown).Maximum = 8;
             (numDataBits.ctrl as NumericUpDown).Minimum = 5;
             (numDataBits.ctrl as NumericUpDown).Value = 8;  //Default Value
@@ -116,7 +116,7 @@ namespace DotNetFramework.Communication
             cboStopBit = new ucControlBox(CtrlType.ComboBox);
             cboStopBit.LblText = Data_Runtime.String("F0104");
             cboStopBit.LblWidth = portLabelWidth;
-            cboStopBit.Dock = DockStyle.Top;
+            cboStopBit.Dock = DockStyle.Bottom;
             (cboStopBit.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(StopBits)).OfType<object>().ToArray());    //enum을 통해 추가
             (cboStopBit.ctrl as ComboBox).SelectedIndex = 0;  //Default Value
 
@@ -124,7 +124,7 @@ namespace DotNetFramework.Communication
             cboParity = new ucControlBox(CtrlType.ComboBox);
             cboParity.LblText = Data_Runtime.String("F0105");
             cboParity.LblWidth = portLabelWidth;
-            cboParity.Dock = DockStyle.Top;
+            cboParity.Dock = DockStyle.Bottom;
             (cboParity.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(Parity)).OfType<object>().ToArray());    //enum을 통해 추가
             (cboParity.ctrl as ComboBox).SelectedIndex = 0;  //Default Value
 
@@ -149,17 +149,18 @@ namespace DotNetFramework.Communication
             BtnPortDel.Text = Data_Runtime.String("F1002");
 
 
-            pnlPort.Controls.Add(cboParity);
-            pnlPort.Controls.Add(cboStopBit);
-            pnlPort.Controls.Add(numDataBits);
-            pnlPort.Controls.Add(cboBaudRate);
-            pnlPort.Controls.Add(cboProtocolType);
-            pnlPort.Controls.Add(cboPortList);
-            pnlPort.Controls.Add(gbPort);
-
             pnlPortBtn.Controls.Add(BtnPortNew);
             pnlPortBtn.Controls.Add(BtnPortSave);
             pnlPortBtn.Controls.Add(BtnPortDel);
+
+            pnlPort.Controls.Add(gbPort);
+            pnlPort.Controls.Add(CreateSplitLine(DockStyle.Bottom));
+            pnlPort.Controls.Add(cboPortList);
+            pnlPort.Controls.Add(cboProtocolType);
+            pnlPort.Controls.Add(cboBaudRate);
+            pnlPort.Controls.Add(numDataBits);
+            pnlPort.Controls.Add(cboStopBit);
+            pnlPort.Controls.Add(cboParity);
             pnlPort.Controls.Add(pnlPortBtn);
 
             this.Controls.Add(pnlPort);
@@ -177,7 +178,7 @@ namespace DotNetFramework.Communication
             pnlUnit.MinimumSize = new Size(300, pnlUnit.Height);
 
             gbUnit = new GroupBox();
-            gbUnit.Dock = DockStyle.Top;
+            gbUnit.Dock = DockStyle.Fill;
             gbUnit.Size = new Size(gbUnit.Width, 200);
             gbUnit.Text = Data_Runtime.String("F0400");
 
@@ -185,7 +186,7 @@ namespace DotNetFramework.Communication
 
             //Unit Slave Address
             numUnitAddress = new ucControlBox(CtrlType.NumbericUpDown);
-            numUnitAddress.Dock = DockStyle.Top;
+            numUnitAddress.Dock = DockStyle.Bottom;
             numUnitAddress.LblText = Data_Runtime.String("F0300");
             numUnitAddress.LblWidth = unitLabelWIdth;
             (numUnitAddress.ctrl as NumericUpDown).Maximum = 128;
@@ -194,7 +195,7 @@ namespace DotNetFramework.Communication
 
             //Unit 구분
             cboUnitType = new ucControlBox(CtrlType.ComboBox);
-            cboUnitType.Dock = DockStyle.Top;
+            cboUnitType.Dock = DockStyle.Bottom;
             cboUnitType.LblText = Data_Runtime.String("F0301");
             cboUnitType.LblWidth = unitLabelWIdth;
             (cboUnitType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitType)).OfType<object>().ToArray());
@@ -202,7 +203,7 @@ namespace DotNetFramework.Communication
 
             //Unit Model명
             cboUnitModel = new ucControlBox(CtrlType.ComboBox);
-            cboUnitModel.Dock = DockStyle.Top;
+            cboUnitModel.Dock = DockStyle.Bottom;
             cboUnitModel.LblText = Data_Runtime.String("F0302");
             cboUnitModel.LblWidth = unitLabelWIdth;
             (cboUnitModel.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitModel)).OfType<object>().ToArray());
@@ -213,7 +214,7 @@ namespace DotNetFramework.Communication
 
             //Unit Model명(사용자지정)
             txtUnitName = new ucControlBox(CtrlType.TextBox);
-            txtUnitName.Dock = DockStyle.Top;
+            txtUnitName.Dock = DockStyle.Bottom;
             txtUnitName.LblText = Data_Runtime.String("F0303");
             txtUnitName.LblWidth = unitLabelWIdth;
             (txtUnitName.ctrl as TextBox).Text = Convert.ToString((cboUnitModel.ctrl as ComboBox).Items[0]);
@@ -238,15 +239,16 @@ namespace DotNetFramework.Communication
             BtnUnitDel.Size = new Size(100, BtnUnitDel.Height);
             BtnUnitDel.Text = Data_Runtime.String("F1002");
 
-            pnlUnit.Controls.Add(txtUnitName);
-            pnlUnit.Controls.Add(cboUnitModel);
-            pnlUnit.Controls.Add(cboUnitType);
-            pnlUnit.Controls.Add(numUnitAddress);
-            pnlUnit.Controls.Add(gbUnit);
-
             pnlUnitBtn.Controls.Add(BtnUnitNew);
             pnlUnitBtn.Controls.Add(BtnUnitSave);
             pnlUnitBtn.Controls.Add(BtnUnitDel);
+
+            pnlUnit.Controls.Add(gbUnit);
+            pnlUnit.Controls.Add(CreateSplitLine(DockStyle.Bottom));
+            pnlUnit.Controls.Add(numUnitAddress);
+            pnlUnit.Controls.Add(cboUnitType);
+            pnlUnit.Controls.Add(cboUnitModel);
+            pnlUnit.Controls.Add(txtUnitName);
             pnlUnit.Controls.Add(pnlUnitBtn);
 
             this.Controls.Add(pnlUnit);
@@ -371,7 +373,7 @@ namespace DotNetFramework.Communication
         /// </summary>
         /// <param name="dock">Dock 방향</param>
         /// <returns></returns>
-        private Label CreateSplitLine(DockStyle dock)
+        private Label CreateSplitLine(DockStyle dock, int thickness = 4)
         {
             Label lbl = new Label();
             lbl.Dock = dock;
@@ -380,7 +382,14 @@ namespace DotNetFramework.Communication
             lbl.Text = "";
             lbl.BorderStyle = BorderStyle.Fixed3D;
             lbl.AutoSize = false;
-            lbl.Size = new Size(4, lbl.Height);
+            if (dock == DockStyle.Left || dock == DockStyle.Right)
+            {
+                lbl.Size = new Size(thickness, lbl.Height);
+            }
+            else if(dock == DockStyle.Top || dock == DockStyle.Bottom)
+            {
+                lbl.Size = new Size(lbl.Width, thickness);
+            }
 
             return lbl;
         }
