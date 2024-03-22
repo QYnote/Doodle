@@ -17,7 +17,8 @@ using System.Xml.Linq;
 using Dnf.Communication;
 using Dnf.Utils;
 using DotNetFramework.Communication;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+
+//Button Resource 사이트
 
 namespace DotNetFramework
 {
@@ -30,14 +31,12 @@ namespace DotNetFramework
         /// <summary>
         /// GroupBox에서 선택된 Port
         /// </summary>
-        Port SelectedPort;
-
-        MdiClient MdiClient;
 
         #region Control 모음
         MenuStrip TextMenu = new MenuStrip();   //상단 글자메뉴
         ToolStrip IconMenu = new ToolStrip();   //상단 아이콘 메뉴
-        TabControl TabCtrl;                     //Tab Page(주 화면)
+        TabControl TabCtrl = new TabControl();  //Tab Page(주 화면)
+        Button BtnTabClose;                     //Tab Page 닫기 버튼
         Label lblStatus;    //상태
 
         Panel pnlList;      //생성된 정보들모음
@@ -55,6 +54,8 @@ namespace DotNetFramework
 
         private void InitControl()
         {
+            this.StartPosition = FormStartPosition.CenterScreen;
+
             //버튼작동 상태
             lblStatus = new Label();
             lblStatus.Size = new Size(lblStatus.Width, 60);
@@ -62,22 +63,13 @@ namespace DotNetFramework
             lblStatus.Font = new Font(lblStatus.Font.FontFamily, (float)14.0, FontStyle.Bold);
             lblStatus.Text = "None Action";
             lblStatus.TextAlign = ContentAlignment.MiddleCenter;
-
-
-            TabCtrl = new TabControl();
-            TabCtrl.Dock = DockStyle.Fill;
+            lblStatus.TabIndex = 3;
+            this.Controls.Add(lblStatus);
 
             //Control Add
-            //this.Controls.Add(TabCtrl);
-            this.IsMdiContainer = true;
-            this.Controls.Add(MdiClient);
-            //IsMdiContainer = true;
-            CreateControl_Info();
-            this.Controls.Add(lblStatus);
             CreateControl_Base();
-
-            this.Size = new Size(1400, 600);
-            this.StartPosition = FormStartPosition.CenterScreen;
+            CreateControl_Info();
+            SortControl();
         }
 
         private void CreateControl_Base()
@@ -97,6 +89,7 @@ namespace DotNetFramework
             ToolStripMenuItem test = new ToolStripMenuItem() { Text = "Test" };
             tmComm.DropDownItems.AddRange(new ToolStripItem[] { tmCommCre, tmCommOpen, tmCommClose });
 
+            TextMenu.TabIndex = 0;
             TextMenu.Items.AddRange(new ToolStripItem[] { tmFile, tmComm, test });
 
             //Icon 메뉴
@@ -126,10 +119,24 @@ namespace DotNetFramework
                 new ToolStripSeparator(),
             });
 
+            //Tab Control
+            TabCtrl.Dock = DockStyle.Fill;
+
+            //Tab 닫기 Button
+            BtnTabClose = new Button();
+            BtnTabClose.Size = new Size(20, 20);
+            BtnTabClose.Image = Dnf.Utils.Properties.Resources.Close_16x16;
+            BtnTabClose.Location = new Point(this.Size.Width - BtnTabClose.Width - 17,      //17 : 보정값
+            TextMenu.Height + IconMenu.Height + lblStatus.Height + BtnTabClose.Height - 6); //6  : 보정값
+            BtnTabClose.Anchor = AnchorStyles.Right | AnchorStyles.Top;
+            BtnTabClose.Visible = false;
+
             //
 
             this.Controls.Add(IconMenu);
             this.Controls.Add(TextMenu);
+            this.Controls.Add(TabCtrl);
+            this.Controls.Add(BtnTabClose);
 
             tmCommCre    .Click += (sender, e) => { CreateControl_TabPage(Data_Runtime.String("F0204")); };
             tmFileXmlSave.Click += (sender, e) => { InfoSave();  };
@@ -139,38 +146,12 @@ namespace DotNetFramework
             imCommCre    .Click += (sender, e) => { CreateControl_TabPage(Data_Runtime.String("F0204")); };
             imCommOpen   .Click += (sender, e) => { PortOpen();  };
             imCommClose  .Click += (sender, e) => { PortClose(); };
+            BtnTabClose  .Click += (sender, e) => { TabPageButton(); };
+            TabCtrl.ControlAdded += (sender, e) => { if (TabCtrl.TabPages.Count == 1) BtnTabClose.Visible = true; };
+
+            lblStatus.BorderStyle = BorderStyle.FixedSingle;
 
             test  .Click += (sender, e) => {};
-        }
-
-        /// <summary>
-        /// TabPage 생성
-        /// </summary>
-        /// <param name="pageName">TabPage 명칭</param>
-        private void CreateControl_TabPage(string pageName)
-        {
-            TabPage page;
-            //TabPgae명 검색
-            int tabIdx = TabCtrl.TabPages.IndexOfKey(pageName);
-
-            if (tabIdx == -1)
-            {
-                //TapPage 신규 생성
-                page = new FrmItemEdit(this);
-                page.Padding = new Padding(3);
-                page.UseVisualStyleBackColor = true;
-                page.Name = pageName;
-                page.Text = pageName;
-
-                TabCtrl.TabPages.Add(page);
-                page.Focus();
-            }
-            else
-            {
-                //해당 Tab 이동
-                page = TabCtrl.TabPages[tabIdx];
-                page.Focus();
-            }
         }
 
         /// <summary>
@@ -188,7 +169,16 @@ namespace DotNetFramework
             Tree.Dock = DockStyle.Fill;
             Tree.Size = new Size(Tree.Width, 100);
             Tree.MinimumSize = new Size(200, 100);
+            Tree.ImageList = new ImageList();
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.BlueCircleSetting_16x16);  //Program Computer
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.RedPower_16x16);           //빨강(미연결)
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.YellowWarning_16x16);      //노랑(연결 불량, 오류)
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.GreenSync_16x16);          //초록(정상연결)
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.TreeChild_16x16);          //Unit 미만 항목
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.empty_16x16);              //Default 아이콘
             Tree.Nodes.Add("Program Computer");
+            Tree.Nodes[0].ImageIndex = 0;
+            Tree.SelectedImageIndex = 5;    //선택한 Node Image 기본값
 
             //선택한 Port, Unit 정보 Grid
             gv = new DataGridView();
@@ -232,6 +222,46 @@ namespace DotNetFramework
             Tree.AfterSelect += (sender, e) => { InitItemInfo(Tree.SelectedNode); };
         }
 
+        private void SortControl()
+        {
+            TextMenu.BringToFront();
+            IconMenu.BringToFront();
+            lblStatus.BringToFront();
+            pnlList.BringToFront();
+            TabCtrl.BringToFront();
+            BtnTabClose.BringToFront();
+        }
+
+        /// <summary>
+        /// TabPage 생성
+        /// </summary>
+        /// <param name="pageName">TabPage 명칭</param>
+        private void CreateControl_TabPage(string pageName)
+        {
+            TabPage page;
+            //TabPgae명 검색
+            int tabIdx = TabCtrl.TabPages.IndexOfKey(pageName);
+
+            if (tabIdx == -1)
+            {
+                //TapPage 신규 생성
+                page = new FrmItemEdit(this);
+                page.Padding = new Padding(3);
+                page.UseVisualStyleBackColor = true;
+                page.Name = pageName;
+                page.Text = pageName;
+
+                TabCtrl.TabPages.Add(page);
+                page.Focus();
+            }
+            else
+            {
+                //해당 Tab 이동
+                page = TabCtrl.TabPages[tabIdx];
+                page.Focus();
+            }
+        }
+
         /// <summary>
         /// Main Form Tree 재지정
         /// </summary>
@@ -244,6 +274,7 @@ namespace DotNetFramework
                 TreeNode portNode = new TreeNode();
                 portNode.Name = port.PortName;
                 portNode.Text = port.PortName;
+                portNode.ImageIndex = 1;
                 portNode.Tag = port;
 
                 foreach (Unit unit in port.Units.Values)
@@ -251,6 +282,7 @@ namespace DotNetFramework
                     TreeNode unitNode = new TreeNode();
                     unitNode.Name = unit.UnitModelUserName + unit.SlaveAddr;
                     unitNode.Text = unit.UnitModelUserName;
+                    unitNode.ImageIndex = 1;
                     unitNode.Tag = unit;
 
                     portNode.Nodes.Add(unitNode);
@@ -267,6 +299,7 @@ namespace DotNetFramework
         /// </summary>
         private void InitItemInfo(TreeNode node)
         {
+            //선택 Item 정보 표시
             Type tagType = node.Tag?.GetType();
 
             if(tagType == typeof(Port))
@@ -346,6 +379,19 @@ namespace DotNetFramework
             gv.DataSource = dt;
         }
 
+        private void TabPageButton()
+        {
+            if(TabCtrl.TabPages.Count == 1)
+            {
+                TabCtrl.TabPages.Remove(TabCtrl.SelectedTab);
+                BtnTabClose.Visible = false;
+            }
+            else
+            {
+                TabCtrl.TabPages.Remove(TabCtrl.SelectedTab);
+            }
+        }
+
         #region Port Active
 
         /// <summary>
@@ -353,20 +399,24 @@ namespace DotNetFramework
         /// </summary>
         private void PortOpen()
         {
-            if (SelectedPort == null)
+            if (Tree.SelectedNode.Tag.GetType() == typeof(Port))
             {
-                lblStatus.Text = Data_Runtime.String("A002");
-                return;
-            }
+                Port port = Tree.SelectedNode.Tag as Port;
 
-            //포트열기
-            if (SelectedPort.PortOpen())
-            {
-                lblStatus.Text = Data_Runtime.String("A007");
+                //포트열기
+                if (port.PortOpen())
+                {
+                    lblStatus.Text = Data_Runtime.String("A007");
+                }
+                else
+                {
+                    lblStatus.Text = Data_Runtime.String("A008");
+                }
             }
             else
             {
-                lblStatus.Text = Data_Runtime.String("A008");
+                lblStatus.Text = Data_Runtime.String("A002");
+                return;
             }
         }
 
@@ -375,36 +425,25 @@ namespace DotNetFramework
         /// </summary>
         private void PortClose()
         {
-            if (SelectedPort == null)
+            if (Tree.SelectedNode.Tag.GetType() == typeof(Port))
             {
-                lblStatus.Text = Data_Runtime.String("A002");
-                return;
-            }
+                Port port = Tree.SelectedNode.Tag as Port;
 
-            //포트열기
-            if (SelectedPort.PortClose())
-            {
-                lblStatus.Text = Data_Runtime.String("A009");
+                //포트닫기
+                if (port.PortClose())
+                {
+                    lblStatus.Text = Data_Runtime.String("A009");
+                }
+                else
+                {
+                    lblStatus.Text = Data_Runtime.String("A010");
+                }
             }
             else
             {
-                lblStatus.Text = Data_Runtime.String("A010");
-            }
-        }
-
-
-        /// <summary>
-        /// GroupBox에서 선택된 Port에 데이터 전송
-        /// </summary>
-        private void SendData()
-        {
-            if (SelectedPort == null)
-            {
                 lblStatus.Text = Data_Runtime.String("A002");
                 return;
             }
-
-            SelectedPort.PortSend();
         }
 
         #endregion Port Active End
