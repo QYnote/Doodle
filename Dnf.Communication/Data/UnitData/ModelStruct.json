@@ -1,0 +1,24 @@
+{
+    "ModelList": {
+        "1": {
+            "Name": "UnitModel1",
+            "MaxChannelCount": 5,
+            "SupportedValueType": "CV, LV, HV"
+        },
+        "2": {
+            "Name": "UnitModel2",
+            "MaxChannelCount": 5,
+            "SupportedValueType": "CV"
+        },
+        "3": {
+            "Name": "UnitModel3",
+            "MaxChannelCount": 1,
+            "SupportedValueType": "CV, LV, HV"
+        },
+        "4": {
+            "Name": "UnitModel4",
+            "MaxChannelCount": 1,
+            "SupportedValueType": "CV"
+        }
+    }
+}
