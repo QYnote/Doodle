@@ -16,14 +16,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using Dnf.Communication;
-using Dnf.Utils.Controls;
-using DotNetFramework.Communication;
-using static System.Net.WebRequestMethods;
+using Dnf.Communication.Data;
 
 //Button Resource 사이트
 
-namespace DotNetFramework
+namespace Dnf.Communication
 {
     public partial class MainForm : Dnf.Utils.Views.FrmBase
     {
@@ -53,7 +50,6 @@ namespace DotNetFramework
         private void InitControl()
         {
             CheckForIllegalCrossThreadCalls = false;
-            this.StartPosition = FormStartPosition.CenterScreen;
             this.FormClosed += FrmClosed;
 
             //Control Add
@@ -62,7 +58,8 @@ namespace DotNetFramework
             SortControl();
 
             SetBackGroundWorker();
-            this.Text = ".Net FrameWork(WinForm)";
+
+            this.Text = "통신";
         }
 
         /// <summary>

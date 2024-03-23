@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DotNetFramework
+namespace Dnf.Utils.Views
 {
     public enum CtrlType
     {
@@ -17,6 +17,9 @@ namespace DotNetFramework
         NumbericUpDown
     }
 
+    /// <summary>
+    /// Label + Control 합쳐진 ControlBox
+    /// </summary>
     public partial class ucControlBox : UserControl
     {
         public Control ctrl;            //Control Type

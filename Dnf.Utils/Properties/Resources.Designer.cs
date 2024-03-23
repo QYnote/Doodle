@@ -83,6 +83,16 @@ namespace Dnf.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
+        public static System.Drawing.Bitmap Connect_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Connect_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
         public static System.Drawing.Bitmap DownLoad_32x32 {
             get {
                 object obj = ResourceManager.GetObject("DownLoad_32x32", resourceCulture);
@@ -146,6 +156,16 @@ namespace Dnf.Utils.Properties {
         public static System.Drawing.Bitmap Stop_00_32x32 {
             get {
                 object obj = ResourceManager.GetObject("Stop_00_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Test_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Test_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

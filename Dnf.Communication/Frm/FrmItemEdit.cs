@@ -1,5 +1,5 @@
-﻿using Dnf.Communication;
-using Dnf.Utils.Controls;
+﻿using Dnf.Communication.Data;
+using Dnf.Utils.Views;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DotNetFramework.Communication
+namespace Dnf.Communication.Frm
 {
     internal class FrmItemEdit : TabPage
     {

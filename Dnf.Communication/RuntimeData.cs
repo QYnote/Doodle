@@ -1,4 +1,4 @@
-﻿using Dnf.Communication;
+﻿using Dnf.Communication.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFramework
+namespace Dnf.Communication
 {
     //프로그램 실행동안 가질 데이터
     public class RuntimeData

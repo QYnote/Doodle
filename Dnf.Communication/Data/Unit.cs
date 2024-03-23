@@ -1,6 +1,4 @@
-﻿using Dnf.Utils.Controls;
-using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -8,7 +6,7 @@ using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication
+namespace Dnf.Communication.Data
 {
     public class Unit
     {

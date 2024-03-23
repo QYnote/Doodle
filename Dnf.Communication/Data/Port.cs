@@ -1,5 +1,4 @@
-﻿using Dnf.Utils.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,7 +10,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication
+namespace Dnf.Communication.Data
 {
     public class Port
     {
@@ -190,7 +189,7 @@ namespace Dnf.Communication
 
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
                 return false;
             }

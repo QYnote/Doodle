@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Utils.Controls
+namespace Dnf.Communication.Data
 {
     /// <summary>
     /// Unit Model Group(Type)

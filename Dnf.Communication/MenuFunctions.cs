@@ -1,6 +1,5 @@
-﻿using Dnf.Communication;
-using Dnf.Utils.Controls;
-using DotNetFramework.Communication;
+﻿using Dnf.Communication.Data;
+using Dnf.Communication.Frm;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
@@ -10,9 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
-namespace DotNetFramework
+namespace Dnf.Communication
 {
     internal class MenuFunctions
     {

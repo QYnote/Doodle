@@ -43,7 +43,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls\EnumCustom.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -58,6 +57,12 @@
     <Compile Include="Views\FrmBase.Designer.cs">
       <DependentUpon>FrmBase.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\ucControlBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\ucControlBox.Designer.cs">
+      <DependentUpon>ucControlBox.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -69,6 +74,7 @@
     <Content Include="Data\PortInfo.xml" />
     <None Include="Resources\BlueCircleSetting_16x16.png" />
     <Content Include="Resources\Close_16x16.png" />
+    <None Include="Resources\Connect_32x32.png" />
     <Content Include="Resources\DownLoad_32x32.png" />
     <None Include="Resources\empty_16x16.png" />
     <Content Include="Resources\GreenSync_16x16.png" />
@@ -77,6 +83,7 @@
     <Content Include="Resources\RedPower_16x16.png" />
     <Content Include="Resources\Stop_00_32x32.png" />
     <None Include="Resources\TreeChild_16x16.png" />
+    <None Include="Resources\Test_32x32.png" />
     <Content Include="Resources\UpLoad_32x32.png" />
     <Content Include="Resources\YellowWarning_16x16.png" />
   </ItemGroup>
