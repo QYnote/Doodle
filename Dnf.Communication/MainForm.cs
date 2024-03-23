@@ -68,7 +68,6 @@ namespace Dnf.Communication
         private void CreateControl_Base()
         {
             //Text 메뉴
-            ToolStripMenuItem tmCommunication = new ToolStripMenuItem(Text = RuntimeData.String("F0602")); //통신그룹
             //파일
             ToolStripMenuItem tmFile = new ToolStripMenuItem() { Text = RuntimeData.String("F0600") }; //파일
             ToolStripMenuItem tmFileXmlSave = new ToolStripMenuItem() { Name = "TxtMenuXmlSave", Text = RuntimeData.String("F0000") };//XML 저장
@@ -79,40 +78,40 @@ namespace Dnf.Communication
             ToolStripMenuItem tmCommOpen  = new ToolStripMenuItem() { Name = "TxtMenuPortOpen" , Text = RuntimeData.String("F0201") };//Port 열기
             ToolStripMenuItem tmCommClose = new ToolStripMenuItem() { Name = "TxtMenuPortClose", Text = RuntimeData.String("F0202") };//Port 닫기
             
-            ToolStripMenuItem test = new ToolStripMenuItem() { Text = "Test" };
-
-            tmFileXmlSave.Click += ActMethod;
-            tmFileXmlLoad.Click += ActMethod;
-            tmCommCre    .Click += ActMethod;
-            tmCommOpen   .Click += ActMethod;
-            tmCommClose  .Click += ActMethod;
-
-            tmCommunication.DropDownItems.AddRange(new ToolStripItem[] { tmFile, tmComm });
-            tmFile.DropDownItems.AddRange(new ToolStripItem[] { tmFileXmlSave, tmFileXmlLoad });
-            tmComm.DropDownItems.AddRange(new ToolStripItem[] { tmCommCre, tmCommOpen, tmCommClose });
-            TextMenu.Items.AddRange(new ToolStripItem[] { tmCommunication, test });
-
+            
             //Icon 메뉴
-            ToolStripButton imFileXmlSave = new ToolStripButton() { Name = "IconMenuXmlSave"  , DisplayStyle = ToolStripItemDisplayStyle.Image };//XML 저장
-            ToolStripButton imFileXmlLoad = new ToolStripButton() { Name = "IconMenuXmlLoad"  , DisplayStyle = ToolStripItemDisplayStyle.Image };//XML 불러오기
-            ToolStripButton imCommCre     = new ToolStripButton() { Name = "IconMenuItemCre"  , DisplayStyle = ToolStripItemDisplayStyle.Image };//Port, Unit 생성
-            ToolStripButton imCommOpen    = new ToolStripButton() { Name = "IconMenuPortOpen" , DisplayStyle = ToolStripItemDisplayStyle.Image };//포트열기
-            ToolStripButton imCommClose   = new ToolStripButton() { Name = "IconMenuPortClose", DisplayStyle = ToolStripItemDisplayStyle.Image };//포트닫기
+            IconMenu.ImageScalingSize = new Size(32, 32);
+
+            ToolStripButton imFileXmlSave = new ToolStripButton() { Name = "IconMenuXmlSave"  , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0000") };//XML 저장
+            ToolStripButton imFileXmlLoad = new ToolStripButton() { Name = "IconMenuXmlLoad"  , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0001") };//XML 불러오기
+            ToolStripButton imCommCre     = new ToolStripButton() { Name = "IconMenuItemCre"  , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0204") };//Port, Unit 생성
+            ToolStripButton imCommOpen    = new ToolStripButton() { Name = "IconMenuPortOpen" , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0201") };//포트열기
+            ToolStripButton imCommClose   = new ToolStripButton() { Name = "IconMenuPortClose", DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0202") };//포트닫기
+            ToolStripButton test          = new ToolStripButton() { Name = "IconMenuTest"     , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = "테스트" }; //테스트
 
             imFileXmlSave.Image = Dnf.Utils.Properties.Resources.UpLoad_32x32;
             imFileXmlLoad.Image = Dnf.Utils.Properties.Resources.DownLoad_32x32;
             imCommCre.Image = Dnf.Utils.Properties.Resources.Plus_00_32x32;
             imCommOpen.Image = Dnf.Utils.Properties.Resources.Play_00_32x32;
             imCommClose.Image = Dnf.Utils.Properties.Resources.Stop_00_32x32;
+            test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
 
+
+
+            tmFileXmlSave.Click += ActMethod;
+            tmFileXmlLoad.Click += ActMethod;
+            tmCommCre.Click += ActMethod;
+            tmCommOpen.Click += ActMethod;
+            tmCommClose.Click += ActMethod;
             imFileXmlSave.Click += ActMethod;
             imFileXmlLoad.Click += ActMethod;
             imCommCre.Click += ActMethod;
             imCommOpen.Click += ActMethod;
             imCommClose.Click += ActMethod;
 
-            //IconMenu.ItemClicked += ActMethod;
-            IconMenu.ImageScalingSize = new Size(32,32);
+            tmFile.DropDownItems.AddRange(new ToolStripItem[] { tmFileXmlSave, tmFileXmlLoad });
+            tmComm.DropDownItems.AddRange(new ToolStripItem[] { tmCommCre, tmCommOpen, tmCommClose });
+            TextMenu.Items.AddRange(new ToolStripItem[] { tmFile, tmComm });
             IconMenu.Items.AddRange(new ToolStripItem[] { 
                 //파일
                 imFileXmlSave, imFileXmlLoad, 
@@ -120,6 +119,7 @@ namespace Dnf.Communication
                 //통신
                 imCommCre, imCommOpen, imCommClose,
                 new ToolStripSeparator(),
+                test
             });
 
             //상태바
