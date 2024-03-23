@@ -22,7 +22,8 @@ namespace Dnf.Communication.Data
     {
         UnitModel1,
         UnitModel2,
-        UnitModel3
+        UnitModel3,
+        UnitModel4
     }
 
     /// <summary>
@@ -39,5 +40,15 @@ namespace Dnf.Communication.Data
     {
         _9600,
         _14400
+    }
+
+    /// <summary>
+    /// Channel Value 종류
+    /// </summary>
+    public enum ChValueType
+    {
+        CV, //현재값
+        LV, //하한값
+        HV  //상한값
     }
 }

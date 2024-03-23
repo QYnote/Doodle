@@ -1,4 +1,5 @@
-﻿using Dnf.Communication.Data;
+﻿using Dnf.Communication.Controls;
+using Dnf.Communication.Data;
 using Dnf.Communication.Frm;
 using System;
 using System.Collections.Generic;

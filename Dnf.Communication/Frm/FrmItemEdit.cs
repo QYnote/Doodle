@@ -1,4 +1,5 @@
-﻿using Dnf.Communication.Data;
+﻿using Dnf.Communication.Controls;
+using Dnf.Communication.Data;
 using Dnf.Utils.Views;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,8 @@ namespace Dnf.Communication.Frm
     {
         MainForm mainForm;
 
+        #region Controls
+        
         //Port 정보
         Panel pnlPort;
         GroupBox gbPort;
@@ -42,6 +45,8 @@ namespace Dnf.Communication.Frm
         Button BtnUnitNew;
         Button BtnUnitSave;
         Button BtnUnitDel;
+
+        #endregion Controls End
 
         public FrmItemEdit(MainForm form)
         {

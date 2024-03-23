@@ -109,6 +109,7 @@ namespace Dnf.Communication
             imCommCre.Click += ActMethod;
             imCommOpen.Click += ActMethod;
             imCommClose.Click += ActMethod;
+            test.Click += ActMethod;
 
             tmFile.DropDownItems.AddRange(new ToolStripItem[] { tmFileXmlSave, tmFileXmlLoad });
             tmComm.DropDownItems.AddRange(new ToolStripItem[] { tmCommCre, tmCommOpen, tmCommClose });
@@ -414,6 +415,7 @@ namespace Dnf.Communication
                         case "ItemCre": method.Invoke(func, new object[] { RuntimeData.String("F0204") }); break;//Item 생성하기
                         case "XmlSave": method.Invoke(func, null); break;   //Xml 저장
                         case "XmlLoad": method.Invoke(func, null); break;   //Xml 불러오기
+                        case "Test": method.Invoke(func, new object[] { UnitType.UnitType2 }); break;   //Xml 불러오기
                     }
                 }
             }
