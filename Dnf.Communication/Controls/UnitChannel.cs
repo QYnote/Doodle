@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication.Data
+namespace Dnf.Communication.Controls
 {
     public class UnitChannel
     {

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Communication.Protocols
+namespace Dnf.Communication.Controls.Protocols
 {
     internal class ModbusRTU
     {

@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using Dnf.Communication.Controls;
 using Dnf.Communication.Data;
 
 //Button Resource 사이트

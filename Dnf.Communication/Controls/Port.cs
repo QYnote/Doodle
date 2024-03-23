@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dnf.Communication.Data;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,7 +11,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication.Data
+namespace Dnf.Communication.Controls
 {
     public class Port
     {
