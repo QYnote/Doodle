@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Dnf.Utils.Controls;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
@@ -11,42 +13,27 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication
 {
-    /// <summary>
-    /// 통신방법 종류
-    /// </summary>
-    public enum ProtocolType
-    {
-        ModBusAscii,
-        ModBusRTU,
-        ModBusTcpIp
-    }
-
-    public enum BaudRate
-    {
-        _9600,
-        _14400
-    }
-
     public class Port
     {
         public Component portComponent; //포트 구조 ex) 직렬 - SerialPort인지, EthernetPort인지
+        public ConnectionState State;   //포트 연결 상태
         public Dictionary<int, Unit> Units { get; }        //Port에 연결된 하위 Unit들(ex. PLC, 센서 등), <slaveAddr, Unit>
 
         //Serial포트 정보
         public string PortName { get; }     //UI에 표시되는 Port 이름(COM3 COM4 등)
+        public uProtocolType ProtocolType { get; }   //통신방법
         public BaudRate BaudRate { get; }   //Baud Rate
         public int DataBits { get; }        //DataBits
         public Parity Parity { get; }       //Parity Bit
         public StopBits StopBIt { get; }    //Stop Bit
-        public ProtocolType ProtocolType { get; }   //통신방법
 
         //개발용
         private string DebugStr;
 
-        public Port(string portName, ProtocolType type, BaudRate baud, int databits, Parity parity, StopBits stopBits)
+        public Port(string portName, uProtocolType type, BaudRate baud, int databits, Parity parity, StopBits stopBits)
         {
-            if (type == ProtocolType.ModBusRTU
-                || type == ProtocolType.ModBusAscii)
+            if (type == uProtocolType.ModBusRTU
+                || type == uProtocolType.ModBusAscii)
             {
                 portComponent = new SerialPort();
 
@@ -59,6 +46,7 @@ namespace Dnf.Communication
             }
 
             Units = new Dictionary<int, Unit>();
+            State = ConnectionState.Closed;
         }
 
         /// <summary>
@@ -67,8 +55,8 @@ namespace Dnf.Communication
         /// <returns>true : Success / false : Fail</returns>
         public bool PortOpen()
         {
-            if(this.ProtocolType == ProtocolType.ModBusRTU
-                || this.ProtocolType == ProtocolType.ModBusAscii)
+            if(this.ProtocolType == uProtocolType.ModBusRTU
+                || this.ProtocolType == uProtocolType.ModBusAscii)
             {
                 return SerialPort_Open();
             }
@@ -82,8 +70,8 @@ namespace Dnf.Communication
         /// <returns>true : Success / false : Fail</returns>
         public bool PortClose()
         {
-            if (this.ProtocolType == ProtocolType.ModBusRTU
-                || this.ProtocolType == ProtocolType.ModBusAscii)
+            if (this.ProtocolType == uProtocolType.ModBusRTU
+                || this.ProtocolType == uProtocolType.ModBusAscii)
             {
                 return SerialPort_Close();
             }
@@ -93,8 +81,8 @@ namespace Dnf.Communication
 
         public bool PortSend()
         {
-            if (this.ProtocolType == ProtocolType.ModBusRTU
-                || this.ProtocolType == ProtocolType.ModBusAscii)
+            if (this.ProtocolType == uProtocolType.ModBusRTU
+                || this.ProtocolType == uProtocolType.ModBusAscii)
             {
                 return SerialPort_Send();
             }
@@ -133,6 +121,9 @@ namespace Dnf.Communication
 
                 serial.DataReceived += SerialPort_Recived;
                 serial.Open();
+
+                //상태값 수정
+                this.State = ConnectionState.Open;
             }
             else
             {
@@ -168,6 +159,9 @@ namespace Dnf.Communication
 
             serial.DataReceived -= SerialPort_Recived;
             serial.Close();
+            
+            //상태값 수정
+            this.State =  ConnectionState.Closed;
 
             return true;
 

@@ -1,5 +1,5 @@
 ﻿using Dnf.Communication;
-using Dnf.Utils;
+using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -72,14 +72,14 @@ namespace DotNetFramework.Communication
             gbPort = new GroupBox();
             gbPort.Dock = DockStyle.Fill;
             gbPort.Size = new Size(gbPort.Width, 200);
-            gbPort.Text = Data_Runtime.String("F0200");
+            gbPort.Text = RuntimeData.String("F0200");
 
             int portLabelWidth = 100;
 
             //연결된 포트
             cboPortList = new ucControlBox(CtrlType.ComboBox);
             cboPortList.Dock = DockStyle.Bottom;
-            cboPortList.LblText = Data_Runtime.String("F0100");
+            cboPortList.LblText = RuntimeData.String("F0100");
             cboPortList.LblWidth = portLabelWidth;
             (cboPortList.ctrl as ComboBox).Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             if ((cboPortList.ctrl as ComboBox).Items.Count > 0)
@@ -89,15 +89,15 @@ namespace DotNetFramework.Communication
 
             //통신방법 구분
             cboProtocolType = new ucControlBox(CtrlType.ComboBox);
-            cboProtocolType.LblText = Data_Runtime.String("F0101");
+            cboProtocolType.LblText = RuntimeData.String("F0101");
             cboProtocolType.LblWidth = portLabelWidth;
             cboProtocolType.Dock = DockStyle.Bottom;
-            (cboProtocolType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(ProtocolType)).OfType<object>().ToArray());    //포트타입 enum을 통해 추가
+            (cboProtocolType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(uProtocolType)).OfType<object>().ToArray());    //포트타입 enum을 통해 추가
             (cboProtocolType.ctrl as ComboBox).SelectedIndex = 0;  //Default Value
 
             //BaudRate
             cboBaudRate = new ucControlBox(CtrlType.ComboBox);
-            cboBaudRate.LblText = Data_Runtime.String("F0102");
+            cboBaudRate.LblText = RuntimeData.String("F0102");
             cboBaudRate.LblWidth = portLabelWidth;
             cboBaudRate.Dock = DockStyle.Bottom;
             (cboBaudRate.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(BaudRate)).OfType<object>().ToArray());    //enum을 통해 추가
@@ -105,7 +105,7 @@ namespace DotNetFramework.Communication
 
             //Data Bits
             numDataBits = new ucControlBox(CtrlType.NumbericUpDown);
-            numDataBits.LblText = Data_Runtime.String("F0103");
+            numDataBits.LblText = RuntimeData.String("F0103");
             numDataBits.LblWidth = portLabelWidth;
             numDataBits.Dock = DockStyle.Bottom;
             (numDataBits.ctrl as NumericUpDown).Maximum = 8;
@@ -114,7 +114,7 @@ namespace DotNetFramework.Communication
 
             //StopBit
             cboStopBit = new ucControlBox(CtrlType.ComboBox);
-            cboStopBit.LblText = Data_Runtime.String("F0104");
+            cboStopBit.LblText = RuntimeData.String("F0104");
             cboStopBit.LblWidth = portLabelWidth;
             cboStopBit.Dock = DockStyle.Bottom;
             (cboStopBit.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(StopBits)).OfType<object>().ToArray());    //enum을 통해 추가
@@ -122,7 +122,7 @@ namespace DotNetFramework.Communication
 
             //ParityBit
             cboParity = new ucControlBox(CtrlType.ComboBox);
-            cboParity.LblText = Data_Runtime.String("F0105");
+            cboParity.LblText = RuntimeData.String("F0105");
             cboParity.LblWidth = portLabelWidth;
             cboParity.Dock = DockStyle.Bottom;
             (cboParity.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(Parity)).OfType<object>().ToArray());    //enum을 통해 추가
@@ -136,17 +136,17 @@ namespace DotNetFramework.Communication
             BtnPortNew = new Button();
             BtnPortNew.Dock = DockStyle.Right;
             BtnPortNew.Size = new Size(100, BtnPortNew.Height);
-            BtnPortNew.Text = Data_Runtime.String("F1000");
+            BtnPortNew.Text = RuntimeData.String("F1000");
 
             BtnPortSave = new Button();
             BtnPortSave.Dock = DockStyle.Right;
             BtnPortSave.Size = new Size(100, BtnPortSave.Height);
-            BtnPortSave.Text = Data_Runtime.String("F1001");
+            BtnPortSave.Text = RuntimeData.String("F1001");
 
             BtnPortDel = new Button();
             BtnPortDel.Dock = DockStyle.Right;
             BtnPortDel.Size = new Size(100, BtnPortDel.Height);
-            BtnPortDel.Text = Data_Runtime.String("F1002");
+            BtnPortDel.Text = RuntimeData.String("F1002");
 
 
             pnlPortBtn.Controls.Add(BtnPortNew);
@@ -180,14 +180,14 @@ namespace DotNetFramework.Communication
             gbUnit = new GroupBox();
             gbUnit.Dock = DockStyle.Fill;
             gbUnit.Size = new Size(gbUnit.Width, 200);
-            gbUnit.Text = Data_Runtime.String("F0400");
+            gbUnit.Text = RuntimeData.String("F0400");
 
             int unitLabelWIdth = 100;
 
             //Unit Slave Address
             numUnitAddress = new ucControlBox(CtrlType.NumbericUpDown);
             numUnitAddress.Dock = DockStyle.Bottom;
-            numUnitAddress.LblText = Data_Runtime.String("F0300");
+            numUnitAddress.LblText = RuntimeData.String("F0300");
             numUnitAddress.LblWidth = unitLabelWIdth;
             (numUnitAddress.ctrl as NumericUpDown).Maximum = 128;
             (numUnitAddress.ctrl as NumericUpDown).Minimum = 1;
@@ -196,7 +196,7 @@ namespace DotNetFramework.Communication
             //Unit 구분
             cboUnitType = new ucControlBox(CtrlType.ComboBox);
             cboUnitType.Dock = DockStyle.Bottom;
-            cboUnitType.LblText = Data_Runtime.String("F0301");
+            cboUnitType.LblText = RuntimeData.String("F0301");
             cboUnitType.LblWidth = unitLabelWIdth;
             (cboUnitType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitType)).OfType<object>().ToArray());
             (cboUnitType.ctrl as ComboBox).SelectedIndex = 0;
@@ -204,7 +204,7 @@ namespace DotNetFramework.Communication
             //Unit Model명
             cboUnitModel = new ucControlBox(CtrlType.ComboBox);
             cboUnitModel.Dock = DockStyle.Bottom;
-            cboUnitModel.LblText = Data_Runtime.String("F0302");
+            cboUnitModel.LblText = RuntimeData.String("F0302");
             cboUnitModel.LblWidth = unitLabelWIdth;
             (cboUnitModel.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitModel)).OfType<object>().ToArray());
             if ((cboUnitType.ctrl as ComboBox).Items.Count > 0)
@@ -215,7 +215,7 @@ namespace DotNetFramework.Communication
             //Unit Model명(사용자지정)
             txtUnitName = new ucControlBox(CtrlType.TextBox);
             txtUnitName.Dock = DockStyle.Bottom;
-            txtUnitName.LblText = Data_Runtime.String("F0303");
+            txtUnitName.LblText = RuntimeData.String("F0303");
             txtUnitName.LblWidth = unitLabelWIdth;
             (txtUnitName.ctrl as TextBox).Text = Convert.ToString((cboUnitModel.ctrl as ComboBox).Items[0]);
 
@@ -227,17 +227,17 @@ namespace DotNetFramework.Communication
             BtnUnitNew = new Button();
             BtnUnitNew.Dock = DockStyle.Right;
             BtnUnitNew.Size = new Size(100, BtnUnitNew.Height);
-            BtnUnitNew.Text = Data_Runtime.String("F1000");
+            BtnUnitNew.Text = RuntimeData.String("F1000");
 
             BtnUnitSave = new Button();
             BtnUnitSave.Dock = DockStyle.Right;
             BtnUnitSave.Size = new Size(100, BtnUnitSave.Height);
-            BtnUnitSave.Text = Data_Runtime.String("F1001");
+            BtnUnitSave.Text = RuntimeData.String("F1001");
 
             BtnUnitDel = new Button();
             BtnUnitDel.Dock = DockStyle.Right;
             BtnUnitDel.Size = new Size(100, BtnUnitDel.Height);
-            BtnUnitDel.Text = Data_Runtime.String("F1002");
+            BtnUnitDel.Text = RuntimeData.String("F1002");
 
             pnlUnitBtn.Controls.Add(BtnUnitNew);
             pnlUnitBtn.Controls.Add(BtnUnitSave);
@@ -268,7 +268,7 @@ namespace DotNetFramework.Communication
             gbUnit.Controls.Clear();
 
             //GroupBox들에 Item 생성
-            foreach (Port port in mainForm.ports.Values)
+            foreach (Port port in RuntimeData.Ports.Values)
             {
                 foreach (Unit unit in port.Units.Values)
                 {
@@ -336,7 +336,7 @@ namespace DotNetFramework.Communication
         private void SortGroupBox()
         {
             //Port Sort
-            foreach (var dicPairPort in mainForm.ports.OrderBy(x => x.Key))
+            foreach (var dicPairPort in RuntimeData.Ports.OrderBy(x => x.Key))
             {
                 int idxPort = 0;
 
@@ -402,10 +402,10 @@ namespace DotNetFramework.Communication
         {
             try
             {
-                ProtocolType getProtocolType = (ProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
+                uProtocolType getProtocolType = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
 
-                if (getProtocolType == ProtocolType.ModBusRTU
-                     || getProtocolType == ProtocolType.ModBusAscii)
+                if (getProtocolType == uProtocolType.ModBusRTU
+                     || getProtocolType == uProtocolType.ModBusAscii)
                 {
                     string portName = Convert.ToString((cboPortList.ctrl as ComboBox).SelectedItem);
                     BaudRate baudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
@@ -421,15 +421,15 @@ namespace DotNetFramework.Communication
                     }
 
                     //중복 포트인지 확인
-                    if (mainForm.ports.ContainsKey(portName))
+                    if (RuntimeData.Ports.ContainsKey(portName))
                     {
                         //lblStatus.Text = Data_Runtime.String("A004");
-                        throw new Exception(Data_Runtime.String("A004"));
+                        throw new Exception(RuntimeData.String("A004"));
                     }
 
                     Port port = new Port(portName, getProtocolType, baudRate, dataBits, pairty, stopBits);
                     //Port 등록
-                    mainForm.ports.Add(portName, port);
+                    RuntimeData.Ports.Add(portName, port);
 
                     //Port 등록 후처리
                     InitGroupBox(); //GroupBox 재생성
@@ -452,7 +452,7 @@ namespace DotNetFramework.Communication
             Port port = (rdo.Tag as Port);
 
             //등록된 Port 삭제
-            mainForm.ports.Remove(port.PortName);
+            RuntimeData.Ports.Remove(port.PortName);
 
             //삭제 후처리
             //GroupBox 조정
@@ -529,7 +529,7 @@ namespace DotNetFramework.Communication
             Unit unit = rdo.Tag as Unit;
 
             //등록된 Unit 삭제
-            mainForm.ports[unit.ParentPort.PortName].Units.Remove(unit.SlaveAddr);
+            RuntimeData.Ports[unit.ParentPort.PortName].Units.Remove(unit.SlaveAddr);
 
             //GroupBox 조정
             InitGroupBox();

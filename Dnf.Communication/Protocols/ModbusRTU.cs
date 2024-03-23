@@ -1,4 +1,4 @@
-﻿using Dnf.Utils;
+﻿using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Communication
+namespace Dnf.Communication.Protocols
 {
     internal class ModbusRTU
     {

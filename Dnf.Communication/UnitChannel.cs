@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication
 {
-    public class UnitRegistry
+    public class UnitChannel
     {
-        public Dictionary<int, int> RegMap;
-        public int Address;
-        public int Value;
+
     }
 }

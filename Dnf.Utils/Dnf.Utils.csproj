@@ -34,6 +34,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -42,15 +43,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data_Runtime.cs" />
+    <Compile Include="Controls\EnumCustom.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="UtilCustom.cs" />
-    <Compile Include="XmlCustom.cs" />
+    <Compile Include="Controls\UtilCustom.cs" />
+    <Compile Include="Controls\XmlCustom.cs" />
+    <Compile Include="Views\FrmBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\FrmBase.Designer.cs">
+      <DependentUpon>FrmBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -73,6 +80,7 @@
     <Content Include="Resources\UpLoad_32x32.png" />
     <Content Include="Resources\YellowWarning_16x16.png" />
   </ItemGroup>
+  <ItemGroup />
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
     <ItemGroup>

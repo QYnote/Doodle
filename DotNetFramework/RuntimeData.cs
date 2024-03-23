@@ -1,15 +1,19 @@
-﻿using System;
+﻿using Dnf.Communication;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Utils
+namespace DotNetFramework
 {
-    public class Data_Runtime
+    //프로그램 실행동안 가질 데이터
+    public class RuntimeData
     {
-        public readonly static string DataPath = string.Format("{0}Data", AppDomain.CurrentDomain.BaseDirectory);
+        public readonly static string DataPath = string.Format("{0}Data", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
+        public static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
+
         private static DataTable dt = CreateDtImsi();    //DB Code-나라별언어 Table
 
         private static DataTable CreateDtImsi()
@@ -24,6 +28,7 @@ namespace Dnf.Utils
             //F : Form / A : Alarm Message
             //Form(1)_화면순서(1)_Control순서(1)_Item번호(2)
             //메뉴
+            dtimsi.Rows.Add("F0602", "통신그룹");
             dtimsi.Rows.Add("F0600", "파일");
             dtimsi.Rows.Add("F0601", "통신");
             dtimsi.Rows.Add("F0000", "Xml 저장");
@@ -41,7 +46,7 @@ namespace Dnf.Utils
             dtimsi.Rows.Add("F0201", "Port 열기");
             dtimsi.Rows.Add("F0202", "Port 닫기");
             dtimsi.Rows.Add("F0203", "Port 삭제");
-            dtimsi.Rows.Add("F0204", "Model 생성");
+            dtimsi.Rows.Add("F0204", "Item 생성");
             //Unit 정보
             dtimsi.Rows.Add("F0300", "Slave Address");
             dtimsi.Rows.Add("F0301", "모델 구분");

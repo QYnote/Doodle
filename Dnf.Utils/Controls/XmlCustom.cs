@@ -7,20 +7,20 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Utils
+namespace Dnf.Utils.Controls
 {
     public static class XmlCustom
     {
-        public static void DataTableToXML(DataTable dt, string fileName)
+        public static void DataTableToXML(DataTable dt, string filePath, string fileName)
         {
-            string path = string.Format("{0}\\{1}.xml", Data_Runtime.DataPath, fileName);
+            string path = string.Format("{0}\\{1}.xml", filePath, fileName);
 
             dt.WriteXml(path);
         }
 
-        public static DataTable XMLtoDataTable(string fileName)
+        public static DataTable XMLtoDataTable(string filePath, string fileName)
         {
-            string path = string.Format("{0}\\{1}.xml", Data_Runtime.DataPath, fileName);
+            string path = string.Format("{0}\\{1}.xml", filePath, fileName);
             DataTable dt = null;
 
             if(File.Exists(path))
