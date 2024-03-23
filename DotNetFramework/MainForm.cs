@@ -25,22 +25,23 @@ using static System.Net.WebRequestMethods;
 
 namespace DotNetFramework
 {
-
     public partial class MainForm : Dnf.Utils.Views.FrmBase
     {
         #region Control 모음
         public MenuStrip TextMenu = new MenuStrip();   //상단 글자메뉴
         public ToolStrip IconMenu = new ToolStrip();   //상단 아이콘 메뉴
+        private StatusStrip StatusBar = new StatusStrip();   //상태 바
+        public ToolStripStatusLabel LblStatus = new ToolStripStatusLabel();
         public TabControl TabCtrl = new TabControl();  //Tab Page(주 화면)
         public Button BtnTabClose;                     //Tab Page 닫기 버튼
-        public Label lblStatus;    //상태
 
         public Panel pnlList;      //생성된 정보들모음
         public TreeView Tree;      //등록된 Port-Unit Tree
         public DataGridView gv;    //Tree에서 선택됨 Item 정보
-        #endregion Control 모음 End
 
         private BackgroundWorker bgWorker;
+        #endregion Control 모음 End
+
         private bool isAction = false;
 
         public MainForm()
@@ -51,28 +52,17 @@ namespace DotNetFramework
 
         private void InitControl()
         {
-
-            //버튼작동 상태
-            lblStatus = new Label();
-            lblStatus.Size = new Size(lblStatus.Width, 60);
-            lblStatus.Dock = DockStyle.Top;
-            lblStatus.Font = new Font(lblStatus.Font.FontFamily, (float)14.0, FontStyle.Bold);
-            lblStatus.Text = "None Action";
-            lblStatus.TextAlign = ContentAlignment.MiddleCenter;
-            lblStatus.TabIndex = 3;
-            this.Controls.Add(lblStatus);
+            CheckForIllegalCrossThreadCalls = false;
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormClosed += FrmClosed;
 
             //Control Add
             CreateControl_Base();
             CreateControl_Info();
             SortControl();
 
-            CheckForIllegalCrossThreadCalls = false;
-            this.Text = ".Net FrameWork(WinForm)";
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormClosed += FrmClosed;
-
             SetBackGroundWorker();
+            this.Text = ".Net FrameWork(WinForm)";
         }
 
         /// <summary>
@@ -135,6 +125,11 @@ namespace DotNetFramework
                 new ToolStripSeparator(),
             });
 
+            //상태바
+            StatusBar.Dock = DockStyle.Bottom;
+            LblStatus.Text = "Status";
+            StatusBar.Items.Add(LblStatus);
+
             //Tab Control
             TabCtrl.Dock = DockStyle.Fill;
 
@@ -142,21 +137,20 @@ namespace DotNetFramework
             BtnTabClose = new Button();
             BtnTabClose.Size = new Size(20, 20);
             BtnTabClose.Image = Dnf.Utils.Properties.Resources.Close_16x16;
-            BtnTabClose.Location = new Point(this.Size.Width - BtnTabClose.Width - 17,          //17 : 보정값
-                TextMenu.Height + IconMenu.Height + lblStatus.Height + BtnTabClose.Height - 6); //6  : 보정값
+            BtnTabClose.Location = new Point(this.Size.Width - BtnTabClose.Width - 17,  //너비 - 17 : 보정값
+                TextMenu.Height + IconMenu.Height + BtnTabClose.Height - 6);            //높이 - 6  : 보정값
             BtnTabClose.Anchor = AnchorStyles.Right | AnchorStyles.Top;
             BtnTabClose.Visible = false;
 
-
             this.Controls.Add(IconMenu);
             this.Controls.Add(TextMenu);
+            this.Controls.Add(StatusBar);
             this.Controls.Add(TabCtrl);
             this.Controls.Add(BtnTabClose);
 
             BtnTabClose  .Click += (sender, e) => { TabPageButton(); };
-            TabCtrl.ControlAdded += (sender, e) => { if (TabCtrl.TabPages.Count == 1) BtnTabClose.Visible = true; };
+            TabCtrl.ControlAdded += (sender, e) => { if (TabCtrl.TabPages.Count == 1) BtnTabClose.Visible = true; };    
 
-            lblStatus.BorderStyle = BorderStyle.FixedSingle;
             test  .Click += (sender, e) => {};
         }
 
@@ -233,7 +227,6 @@ namespace DotNetFramework
         {
             TextMenu.BringToFront();
             IconMenu.BringToFront();
-            lblStatus.BringToFront();
             pnlList.BringToFront();
             TabCtrl.BringToFront();
             BtnTabClose.BringToFront();
@@ -254,6 +247,7 @@ namespace DotNetFramework
         {
             Tree.Nodes[0].Nodes.Clear();    //Program Computer Node 하위항목 삭제
 
+            //Port
             foreach (Port port in RuntimeData.Ports.Values)
             {
                 TreeNode portNode = new TreeNode();
@@ -263,6 +257,7 @@ namespace DotNetFramework
                 portNode.SelectedImageIndex = portNode.ImageIndex;
                 portNode.Tag = port;
 
+                //Unit
                 foreach (Unit unit in port.Units.Values)
                 {
                     TreeNode unitNode = new TreeNode();
@@ -271,6 +266,15 @@ namespace DotNetFramework
                     unitNode.ImageIndex = 1;
                     unitNode.SelectedImageIndex = unitNode.ImageIndex;
                     unitNode.Tag = unit;
+
+                    //Channel
+                    //foreach (UnitChannel channel in unit.Channel)
+                    //{
+                    //    TreeNode channelNode = new TreeNode();
+                    //    channelNode.Name = string.Format("Ch{0:D2}",channel.ChannelNumber);
+                    //    channelNode.Text = channelNode.Name;
+                    //    channelNode.ImageIndex = 4;
+                    //}
 
                     portNode.Nodes.Add(unitNode);
                 }

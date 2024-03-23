@@ -64,16 +64,16 @@ namespace DotNetFramework
                 //포트열기
                 if (port.PortOpen())
                 {
-                    form.lblStatus.Text = RuntimeData.String("A007");
+                    form.LblStatus.Text = RuntimeData.String("A007");
                 }
                 else
                 {
-                    form.lblStatus.Text = RuntimeData.String("A008");
+                    form.LblStatus.Text = RuntimeData.String("A008");
                 }
             }
             else
             {
-                form.lblStatus.Text = RuntimeData.String("A002");
+                form.LblStatus.Text = RuntimeData.String("A002");
                 return;
             }
         }
@@ -90,16 +90,16 @@ namespace DotNetFramework
                 //포트닫기
                 if (port.PortClose())
                 {
-                    form.lblStatus.Text = RuntimeData.String("A009");
+                    form.LblStatus.Text = RuntimeData.String("A009");
                 }
                 else
                 {
-                    form.lblStatus.Text = RuntimeData.String("A010");
+                    form.LblStatus.Text = RuntimeData.String("A010");
                 }
             }
             else
             {
-                form.lblStatus.Text = RuntimeData.String("A002");
+                form.LblStatus.Text = RuntimeData.String("A002");
                 return;
             }
         }
@@ -174,7 +174,7 @@ namespace DotNetFramework
 
             xdoc.Save(string.Format("{0}\\{1}.xml", RuntimeData.DataPath, "PortInfo"));
 
-            form.lblStatus.Text = RuntimeData.String("A014");
+            form.LblStatus.Text = RuntimeData.String("A014");
         }
 
         public void XmlLoad()
@@ -220,7 +220,7 @@ namespace DotNetFramework
                 }
 
                 form.InitTreeItem();
-                form.lblStatus.Text = RuntimeData.String("A015");
+                form.LblStatus.Text = RuntimeData.String("A015");
             }
             catch (Exception ex)
             {
