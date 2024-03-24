@@ -11,5 +11,6 @@ namespace Dnf.Communication.Controls
     {
         public ChValueType ValueType;
         public int Value;
+        public DateTime vTime;
     }
 }

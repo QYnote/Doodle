@@ -20,12 +20,12 @@ namespace Dnf.Communication.Controls
         public Dictionary<int, Unit> Units { get; }        //Port에 연결된 하위 Unit들(ex. PLC, 센서 등), <slaveAddr, Unit>
 
         //Serial포트 정보
-        public string PortName { get; }     //UI에 표시되는 Port 이름(COM3 COM4 등)
-        public uProtocolType ProtocolType { get; }   //통신방법
-        public BaudRate BaudRate { get; }   //Baud Rate
-        public int DataBits { get; }        //DataBits
-        public Parity Parity { get; }       //Parity Bit
-        public StopBits StopBIt { get; }    //Stop Bit
+        public string PortName;     //UI에 표시되는 Port 이름(COM3 COM4 등)
+        public uProtocolType ProtocolType;   //통신방법
+        public BaudRate BaudRate;   //Baud Rate
+        public int DataBits;        //DataBits
+        public Parity Parity;       //Parity Bit
+        public StopBits StopBIt;    //Stop Bit
 
         //개발용
         private string DebugStr;

@@ -1,4 +1,5 @@
 ﻿using Dnf.Communication.Controls;
+using Dnf.Communication.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 namespace Dnf.Communication
 {
     //프로그램 실행동안 가질 데이터
-    public class RuntimeData
+    public static class RuntimeData
     {
         public readonly static string DataPath = string.Format("{0}Data", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
         public static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
@@ -57,6 +58,11 @@ namespace Dnf.Communication
             //생성 Unit
             dtimsi.Rows.Add("F0400", "생성된 Unit");
             dtimsi.Rows.Add("F0401", "Data 전송");
+            //Channel 정보
+            dtimsi.Rows.Add("F0700", "Model 채널");
+            dtimsi.Rows.Add("F0701", "사용 여부");
+            //생성 Channel
+
             //DataGridView
             dtimsi.Rows.Add("F0500", "속성");
             dtimsi.Rows.Add("F0501", "값");
@@ -72,6 +78,7 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("A002", "Port가 선택되지 않았습니다.");
             dtimsi.Rows.Add("A003", "Port가 생성되지 않았습니다.");
             dtimsi.Rows.Add("A004", "사용 중인 포트입니다.");
+            dtimsi.Rows.Add("A017", "이미 만들어진 Port의 Port명은 변경할 수 없습니다.");
             dtimsi.Rows.Add("A005", "Port 생성됨");
             dtimsi.Rows.Add("A006", "Port 삭제됨");
             dtimsi.Rows.Add("A007", "Port 연결성공");
@@ -80,10 +87,13 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("A010", "Port 닫기실패");
             dtimsi.Rows.Add("A011", "Unit 모델이 선택되지 않았습니다.");
             dtimsi.Rows.Add("A012", "사용 중인 Slave Address입니다.");
+            dtimsi.Rows.Add("A012", "이미 생성된 Unit의 Slave Address는 변경할 수 없습니다.");
             dtimsi.Rows.Add("A013", "Unit 생성됨");
             dtimsi.Rows.Add("A014", "XML Data 저장됨");
             dtimsi.Rows.Add("A015", "XML Data 불러옴");
             dtimsi.Rows.Add("A016", "파일이 존재하지 않습니다.");
+            dtimsi.Rows.Add("A018", "변경내역이 저장되었습니다.");
+            dtimsi.Rows.Add("A018", "변경내역이 초기화 됩니다. 취소하시겠습니까?");
 
             return dtimsi;
         }

@@ -16,10 +16,10 @@ namespace Dnf.Communication.Controls
         public UnitRegistry UnitRegistry;
         public List<UnitChannel> Channel;
 
-        public int SlaveAddr { get; }       //Unit 주소
-        public readonly UnitType UnitModelType;   //Unit 구분
-        public readonly UnitModel UnitModelName;   //Unit 구분
-        public readonly string UnitModelUserName;    //Unit 모델명
+        public int SlaveAddr;       //Unit 주소
+        public UnitType UnitModelType;   //Unit 구분
+        public UnitModel UnitModelName;   //Unit 구분
+        public string UnitModelUserName;    //Unit 모델명
 
         public Unit(Port port, int addr, UnitType type, UnitModel model, string modelName = null)
         { 

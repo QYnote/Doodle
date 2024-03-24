@@ -14,7 +14,8 @@ namespace Dnf.Utils.Views
     {
         ComboBox,
         TextBox,
-        NumbericUpDown
+        NumbericUpDown,
+        CheckBox
     }
 
     /// <summary>
@@ -51,6 +52,10 @@ namespace Dnf.Utils.Views
                 case CtrlType.NumbericUpDown:
                     ctrl = new NumericUpDown();
                     break;
+                case CtrlType.CheckBox:
+                    SetCheckBox();
+                    break;
+
             }
 
             CreateUc();
@@ -58,6 +63,9 @@ namespace Dnf.Utils.Views
 
         private void CreateUc()
         {
+            //Text칸 높이가 더 크면 높이를 Control 높이로 맞추기
+            this.Height = lbl.Height > ctrl.Height ? ctrl.Height : lbl.Height;
+
             lbl.Dock = DockStyle.Left;
             lbl.Width = (int)(this.Width * 0.3);
             lbl.Text = "None";
@@ -68,7 +76,6 @@ namespace Dnf.Utils.Views
             this.Controls.Add(ctrl);
             this.Controls.Add(lbl);
 
-            this.Height = lbl.Height > ctrl.Height ? ctrl.Height : lbl.Height;
         }
 
         private void SetComboBox()
@@ -76,6 +83,13 @@ namespace Dnf.Utils.Views
             ctrl = new ComboBox();
             ComboBox cbo = ctrl as ComboBox;
             cbo.DropDownStyle = ComboBoxStyle.DropDownList; //Combobox Text 수정 못하게 막기
+        }
+
+        private void SetCheckBox()
+        {
+            ctrl = new CheckBox();
+            CheckBox chk = ctrl as CheckBox;
+            chk.Checked = true;
         }
     }
 }

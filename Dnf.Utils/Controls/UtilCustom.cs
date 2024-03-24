@@ -37,5 +37,25 @@ namespace Dnf.Utils.Controls
             //int Bit Shift
             return new byte[] { (byte)(value >> 8), (byte)value };
         }
+
+        /// <summary>
+        /// Dictionary Key값 수정
+        /// </summary>
+        /// <typeparam name="TKey">Dictionary Key</typeparam>
+        /// <typeparam name="TValue">Dictionary value</typeparam>
+        /// <param name="dic">바꿀 Dictionary</param>
+        /// <param name="bfKey">기존 Key</param>
+        /// <param name="afKey">바꿀 Key</param>
+        /// <returns>true : Success / false : Fail</returns>
+        static public bool DictKeyChange<TKey, TValue>(IDictionary<TKey, TValue> dic, TKey bfKey, TKey afKey)
+        {
+            if(dic.ContainsKey(afKey)) { return false; }
+
+            TValue value = dic[bfKey];
+            dic.Remove(bfKey);
+            dic[afKey] = value;
+
+            return true;
+        }
     }
 }
