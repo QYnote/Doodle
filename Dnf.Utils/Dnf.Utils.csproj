@@ -71,7 +71,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Data\PortInfo.xml" />
     <None Include="Resources\BlueCircleSetting_16x16.png" />
     <Content Include="Resources\Close_16x16.png" />
     <None Include="Resources\Connect_32x32.png" />
@@ -87,7 +86,9 @@
     <Content Include="Resources\UpLoad_32x32.png" />
     <Content Include="Resources\YellowWarning_16x16.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
     <ItemGroup>

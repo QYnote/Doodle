@@ -44,7 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\ChannelValue.cs" />
-    <Compile Include="Data\EnumCustom.cs" />
+    <Compile Include="Controls\ExternalData.cs" />
+    <Compile Include="Controls\EnumCustom.cs" />
     <Compile Include="Controls\UnitChannel.cs" />
     <Compile Include="Frm\FrmItemEdit.cs">
       <SubType>Component</SubType>
@@ -78,7 +79,18 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Data\PortInfo.xml" />
     <Content Include="Data\UnitData\ModelStruct.xml" />
   </ItemGroup>
+  <!--Data폴더에 있는 File 복사-->
+  <Target Name="CopyFiles" AfterTargets="Compile">
+    <ItemGroup>
+		<CopyFiles1 Include="$(ProjectDir)Data\*.*"/>
+		<CopyFiles2 Include="$(ProjectDir)Data\UnitData\*.*"/>
+    </ItemGroup>
+    <Copy SourceFiles="@(CopyFiles1)" DestinationFolder="$(SolutionDir)DotNetFramework\$(OutDir)\Data" SkipUnchangedFiles="true"/>
+    <Copy SourceFiles="@(CopyFiles2)" DestinationFolder="$(SolutionDir)DotNetFramework\$(OutDir)\Data\UnitData" SkipUnchangedFiles="true"/>
+  </Target>
+  <!--Data복사 End-->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
