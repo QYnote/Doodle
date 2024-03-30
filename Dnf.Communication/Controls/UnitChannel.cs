@@ -8,12 +8,14 @@ namespace Dnf.Communication.Controls
 {
     public class UnitChannel
     {
+        public Unit ParentUnit;
         public int ChNumber;
         public bool ChEnable;
         public Dictionary<string, ChannelValue> ChValues;
 
-        public UnitChannel()
+        public UnitChannel(Unit unit)
         {
+            ParentUnit = unit;
             ChEnable = true;
             ChValues = new Dictionary<string, ChannelValue>();
         }

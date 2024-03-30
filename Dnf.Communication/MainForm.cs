@@ -147,7 +147,7 @@ namespace Dnf.Communication
             this.Controls.Add(TabCtrl);
             this.Controls.Add(BtnTabClose);
 
-            BtnTabClose  .Click += (sender, e) => { TabPageButton(); };
+            BtnTabClose  .Click += (sender, e) => { RemoveTabPage(TabCtrl.SelectedTab.Name); };
             TabCtrl.ControlAdded += (sender, e) => { if (TabCtrl.TabPages.Count == 1) BtnTabClose.Visible = true; };    
 
             test  .Click += (sender, e) => {};
@@ -170,6 +170,8 @@ namespace Dnf.Communication
             Tree.MinimumSize = new Size(200, 100);
             Tree.ImageList = new ImageList();
             Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.BlueCircleSetting_16x16);  //Program Computer
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.Serial_Come_16x16);        //Serial Port
+            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.LAN_Come_16x16);           //LAN Port
             Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.RedPower_16x16);           //빨강(미연결)
             Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.YellowWarning_16x16);      //노랑(연결 불량, 오류)
             Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.GreenSync_16x16);          //초록(정상연결)
@@ -260,8 +262,8 @@ namespace Dnf.Communication
                 foreach (Unit unit in port.Units.Values)
                 {
                     TreeNode unitNode = new TreeNode();
-                    unitNode.Name = unit.UnitModelUserName + unit.SlaveAddr;
-                    unitNode.Text = unit.UnitModelUserName;
+                    unitNode.Name = unit.UnitName + unit.SlaveAddr;
+                    unitNode.Text = unit.UnitName;
                     unitNode.ImageIndex = 1;
                     unitNode.SelectedImageIndex = unitNode.ImageIndex;
                     unitNode.Tag = unit;
@@ -362,25 +364,13 @@ namespace Dnf.Communication
             }
 
             dt.Rows[0][1] = unit.SlaveAddr;
-            dt.Rows[1][1] = unit.UnitModelType;
-            dt.Rows[2][1] = unit.UnitModelName;
-            dt.Rows[3][1] = unit.UnitModelUserName;
+            dt.Rows[1][1] = unit.UnitType;
+            dt.Rows[2][1] = unit.UnitModel;
+            dt.Rows[3][1] = unit.UnitName;
 
             gv.DataSource = dt;
         }
 
-        private void TabPageButton()
-        {
-            if(TabCtrl.TabPages.Count == 1)
-            {
-                TabCtrl.TabPages.Remove(TabCtrl.SelectedTab);
-                BtnTabClose.Visible = false;
-            }
-            else
-            {
-                TabCtrl.TabPages.Remove(TabCtrl.SelectedTab);
-            }
-        }
 
         /// <summary>
         /// 함수(Method, Function) 실행
@@ -452,6 +442,20 @@ namespace Dnf.Communication
         private void FrmClosed(object sender, FormClosedEventArgs e)
         {
             if (bgWorker != null&& bgWorker.IsBusy) bgWorker.CancelAsync();
+            RuntimeData.Ports = new Dictionary<string, Port>();
+        }
+
+        public void RemoveTabPage(string pageName)
+        {
+            if (TabCtrl.TabPages.Count == 1)
+            {
+                TabCtrl.TabPages.RemoveByKey(pageName);
+                BtnTabClose.Visible = false;
+            }
+            else
+            {
+                TabCtrl.TabPages.RemoveByKey(pageName);
+            }
         }
     }
 }

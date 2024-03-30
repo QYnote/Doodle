@@ -14,6 +14,7 @@ namespace Dnf.Communication
     {
         public readonly static string DataPath = string.Format("{0}Data", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
         public static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
+        public static string LangType = "Ko";
 
         private static DataTable dt = CreateDtImsi();    //DB Code-나라별언어 Table
 
@@ -55,6 +56,8 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F0303", "모델명(사용자)");
             dtimsi.Rows.Add("F0304", "Unit 생성");
             dtimsi.Rows.Add("F0305", "Unit 삭제");
+            dtimsi.Rows.Add("F0306", "IP");
+            dtimsi.Rows.Add("F0307", "Port 번호");
             //생성 Unit
             dtimsi.Rows.Add("F0400", "생성된 Unit");
             dtimsi.Rows.Add("F0401", "Data 전송");
@@ -93,14 +96,22 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("A015", "XML Data 불러옴");
             dtimsi.Rows.Add("A016", "파일이 존재하지 않습니다.");
             dtimsi.Rows.Add("A018", "변경내역이 저장되었습니다.");
-            dtimsi.Rows.Add("A018", "변경내역이 초기화 됩니다. 취소하시겠습니까?");
+            dtimsi.Rows.Add("A019", "변경내역이 초기화 됩니다. 취소하시겠습니까?");
+            dtimsi.Rows.Add("A020", "숫자만 입력 가능합니다.");
+            dtimsi.Rows.Add("A021", "입력범위를 초과하였습니다.\n입력범위 : 1 ~ 255");
+            dtimsi.Rows.Add("A022", "빈값이 존재합니다. 해당 행을 삭제 후 진행합니까? Yes or No");
 
             return dtimsi;
         }
 
+        /// <summary>
+        /// 코드에따른 Database 언어 가져오기
+        /// </summary>
+        /// <param name="strCode">호출할 코드</param>
+        /// <returns>언어별 코드 Value</returns>
         public static string String(string strCode)
         {
-            return Convert.ToString(dt.Select($"Code = '{strCode}'")[0]["Ko"]);
+            return Convert.ToString(dt.Select($"Code = '{strCode}'")[0][LangType]);
         }
     }
 }

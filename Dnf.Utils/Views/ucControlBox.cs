@@ -14,6 +14,7 @@ namespace Dnf.Utils.Views
     {
         ComboBox,
         TextBox,
+        MaskedTextBox,
         NumbericUpDown,
         CheckBox
     }
@@ -46,12 +47,9 @@ namespace Dnf.Utils.Views
                 case CtrlType.ComboBox:
                     SetComboBox();
                     break;
-                case CtrlType.TextBox:
-                    ctrl = new TextBox();
-                    break;
-                case CtrlType.NumbericUpDown:
-                    ctrl = new NumericUpDown();
-                    break;
+                case CtrlType.TextBox: ctrl = new TextBox(); break;
+                case CtrlType.MaskedTextBox: ctrl = new MaskedTextBox(); break;
+                case CtrlType.NumbericUpDown: ctrl = new NumericUpDown(); break;
                 case CtrlType.CheckBox:
                     SetCheckBox();
                     break;

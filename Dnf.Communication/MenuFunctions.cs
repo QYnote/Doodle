@@ -150,13 +150,13 @@ namespace Dnf.Communication
                     attrAddr.Value = unit.SlaveAddr.ToString();
 
                     XmlAttribute attrType = xdoc.CreateAttribute("UnitType");
-                    attrType.Value = ((int)unit.UnitModelType).ToString();
+                    attrType.Value = ((int)unit.UnitType).ToString();
 
                     XmlAttribute attrModel = xdoc.CreateAttribute("UnitModel");
-                    attrModel.Value = ((int)unit.UnitModelName).ToString();
+                    attrModel.Value = ((int)unit.UnitModel).ToString();
 
                     XmlAttribute attrUserName = xdoc.CreateAttribute("UserName");
-                    attrUserName.Value = unit.UnitModelUserName.ToString();
+                    attrUserName.Value = unit.UnitName.ToString();
 
                     unitNode.Attributes.Append(attrAddr);
                     unitNode.Attributes.Append(attrType);
@@ -196,8 +196,8 @@ namespace Dnf.Communication
                         (uProtocolType)Enum.Parse(typeof(uProtocolType), nodePort.Attributes["Protocol"].Value),
                         (BaudRate)Enum.Parse(typeof(BaudRate), nodePort.Attributes["BaudRate"].Value),
                         Convert.ToInt16(nodePort.Attributes["DataBits"].Value),
-                        (Parity)Enum.Parse(typeof(Parity), nodePort.Attributes["Parity"].Value),
-                        (StopBits)Enum.Parse(typeof(StopBits), nodePort.Attributes["StopBit"].Value)
+                        (StopBits)Enum.Parse(typeof(StopBits), nodePort.Attributes["StopBit"].Value),
+                        (Parity)Enum.Parse(typeof(Parity), nodePort.Attributes["Parity"].Value)
                         );
 
                     RuntimeData.Ports.Add(port.PortName, port);

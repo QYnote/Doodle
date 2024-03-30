@@ -31,8 +31,8 @@ namespace Dnf.Communication.Data
     /// </summary>
     public enum uProtocolType
     {
-        ModBusAscii,
         ModBusRTU,
+        ModBusAscii,
         ModBusTcpIp
     }
 

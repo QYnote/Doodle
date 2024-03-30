@@ -30,7 +30,7 @@ namespace Dnf.Communication.Controls
         //개발용
         private string DebugStr;
 
-        public Port(string portName, uProtocolType type, BaudRate baud, int databits, Parity parity, StopBits stopBits)
+        public Port(string portName, uProtocolType type, BaudRate baud, int databits, StopBits stopBits, Parity parity)
         {
             if (type == uProtocolType.ModBusRTU
                 || type == uProtocolType.ModBusAscii)

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Dnf.Utils.Controls
 {
@@ -56,6 +59,76 @@ namespace Dnf.Utils.Controls
             dic[afKey] = value;
 
             return true;
+        }
+
+        /// <summary>
+        /// DataGridView Column의 Value에 숫자만 입력하도록 하기
+        /// </summary>
+        /// <param name="gv">해당기능을 넣은 DataGridView</param>
+        /// <param name="colName">해당기능을 적용할 Column Name</param>
+        static public void ColumnOnlyNumeric(DataGridView gv, string colName)
+        {
+            gv.EditingControlShowing += (sender, e) =>
+            {
+                e.Control.KeyPress -= new KeyPressEventHandler(SlaveAddr_KeyPress);
+                if (gv.CurrentCell.ColumnIndex == gv.Columns[colName].Index)
+                {
+                    TextBox txt = e.Control as TextBox;
+                    if (txt != null)
+                    {
+                        txt.KeyPress += new KeyPressEventHandler(SlaveAddr_KeyPress);
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// ColumnOnlyNumeric의 Key검사용
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        static private void SlaveAddr_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
+        }
+
+        static public void TextBox_IP(object sender, KeyPressEventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+            string[] DotSplit = textBox.Text.Split('.');
+
+            //제어값(BackSpace, Delete 등)
+            if (!char.IsControl(e.KeyChar))
+            {
+                if(e.KeyChar == '.' && DotSplit.Length == 4)
+                {
+                    //.을 입력했을떄 이미 4번째주소를 입력한 상태면 불가능
+                    e.Handled = true;
+                }
+                else
+                {
+                    if (DotSplit[DotSplit.Length - 1].Length == 3)
+                    {
+                        //입력값이 3개이상 입력된 상태인지 점검
+                        if(e.KeyChar !=  '.')
+                        {
+                            //3개입력된 이후 .이 아니면 입력불가능
+                            e.Handled= true;
+                        }
+                    }
+                    else
+                    {
+                        //Only 숫자 or .만 입력가능
+                        if (!char.IsDigit(e.KeyChar) && !(e.KeyChar == '.'))
+                        {
+                            e.Handled = true;
+                        }
+                    }
+                }
+            }
         }
     }
 }

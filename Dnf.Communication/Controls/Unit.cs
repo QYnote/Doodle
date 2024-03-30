@@ -17,17 +17,17 @@ namespace Dnf.Communication.Controls
         public List<UnitChannel> Channel;
 
         public int SlaveAddr;       //Unit 주소
-        public UnitType UnitModelType;   //Unit 구분
-        public UnitModel UnitModelName;   //Unit 구분
-        public string UnitModelUserName;    //Unit 모델명
+        public UnitType UnitType;   //Unit 구분
+        public UnitModel UnitModel;   //Unit 구분
+        public string UnitName;    //Unit 모델명
 
         public Unit(Port port, int addr, UnitType type, UnitModel model, string modelName = null)
         { 
             ParentPort = port;
             SlaveAddr = addr;
-            UnitModelType = type;
-            UnitModelName = model;
-            UnitModelUserName = modelName == null || modelName == "" ? model.ToString() : modelName;
+            UnitType = type;
+            UnitModel = model;
+            UnitName = modelName == null || modelName == "" ? model.ToString() : modelName;
             State = ConnectionState.Closed;
 
             UnitRegistry = new UnitRegistry();

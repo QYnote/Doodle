@@ -1,11 +1,15 @@
 ﻿using Dnf.Communication.Controls;
 using Dnf.Communication.Data;
+using Dnf.Utils.Controls;
 using Dnf.Utils.Views;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,56 +18,37 @@ namespace Dnf.Communication.Frm
 {
     internal class FrmItemEdit : TabPage
     {
+        //Unit Type 선택 -> Unit Model 선택 -> 통신 Protocl 선택 -> Port 정보 입력 -> Unit Addr 선택 -> Unit Name 입력
+        //수정할거 개많네 야팔
+
         MainForm mainForm;
-        /// <summary>
-        /// 신규, 수정, 삭제한 데이터 임시 저장용
-        /// </summary>
-        Dictionary<string, Port> imsiPorts = RuntimeData.Ports;
-        bool EditingFlag = false;
-        bool isEdit = false;
 
         #region Controls
         //저장 정보
+        Panel pnlTop = new Panel();
         Panel pnlButton = new Panel();
-        Button BtnSave = new Button();     //저장    
+        Button BtnOK = new Button();     //저장    
         Button BtnCancle = new Button();   //초기화
 
         //Port 정보
-        Panel pnlPort;
-        GroupBox gbPort;
-        ucControlBox cboPortList;
-        ucControlBox cboProtocolType;
-        ucControlBox cboBaudRate;
-        ucControlBox numDataBits;
-        ucControlBox cboParity;
-        ucControlBox cboStopBit;
+        Panel pnlControlBox = new Panel();
+        ucControlBox cboPortName = new ucControlBox(CtrlType.ComboBox);      //연결된 포트
+        ucControlBox cboProtocolType = new ucControlBox(CtrlType.ComboBox);  //통신방법 구분
+        ucControlBox cboBaudRate = new ucControlBox(CtrlType.ComboBox);      //BaudRate
+        ucControlBox numDataBits = new ucControlBox(CtrlType.NumbericUpDown);//Data Bits
+        ucControlBox cboStopBit = new ucControlBox(CtrlType.ComboBox);       //StopBit
+        ucControlBox cboParity = new ucControlBox(CtrlType.ComboBox);        //ParityBit
 
-        Panel pnlPortBtn;
-        Button BtnPortNew;
-        Button BtnPortDel;
+        ucControlBox txtIPaddr = new ucControlBox(CtrlType.TextBox);        //IP
+        ucControlBox txtPortNo = new ucControlBox(CtrlType.MaskedTextBox);  //Port번호
 
         //Unit 정보
-        Panel pnlUnit;
-        GroupBox gbUnit;
-        ucControlBox numUnitAddress;
-        ucControlBox cboUnitType;
-        ucControlBox cboUnitModel;
-        ucControlBox txtUnitName;
-
-        Panel pnlUnitBtn;
-        Button BtnUnitNew;
-        Button BtnUnitDel;
-
-        //Channel 정보
-        Panel pnlCh;
-        GroupBox gbCh;
-        ucControlBox chkChEnable;
-
-        Panel  pnlChBtn;
-        Button BtnChNew;
-        Button BtnChSave;
-        Button BtnChDel;
-
+        ucControlBox cboUnitType = new ucControlBox(CtrlType.ComboBox);
+        ucControlBox cboUnitModel = new ucControlBox(CtrlType.ComboBox);
+        
+        DataGridView gv = new DataGridView();
+        DataGridViewTextBoxColumn colSlaveAddr = new DataGridViewTextBoxColumn();
+        DataGridViewTextBoxColumn colUnitName = new DataGridViewTextBoxColumn();
 
         #endregion Controls End
 
@@ -72,411 +57,229 @@ namespace Dnf.Communication.Frm
             this.mainForm = form;
 
             CreateInitial();
+            SetText();
+            SetValue();
+            SetVisible();
         }
 
         private void CreateInitial()
         {
-            CreateChannelnfo();
-            this.Controls.Add(CreateSplitLine(DockStyle.Left));
-            CreateUnitInfo();
-            this.Controls.Add(CreateSplitLine(DockStyle.Left));
-            CreatePortInfo();
-            this.Controls.Add(CreateSplitLine(DockStyle.Bottom));
-            CreateEditInfo();
+            pnlTop.Dock = DockStyle.Top;
+            pnlTop.Size = new Size(pnlTop.Width, 30);
 
-            InitGroupBox();
+            InitializeButton();
+            InitializeControlBox();
+            InitializeGrid();
+
+            Label splitLine1 = CreateSplitLine(DockStyle.Left);
+
+            this.Controls.Add(splitLine1);
+            this.Controls.Add(pnlTop);
+
+            //pnlTop.BringToFront();
+            pnlControlBox.BringToFront();
+            splitLine1.BringToFront();
+            pnlButton.BringToFront();
+            gv.BringToFront();
         }
 
-        #region ControlInitialize
+        #region Control Initialize
         
-        private void CreateEditInfo()
+        private void InitializeButton()
         {
             pnlButton.Dock = DockStyle.Bottom;
             pnlButton.Size = new Size(pnlButton.Width, 30);
 
-            BtnSave.Dock = DockStyle.Right;
-            BtnSave.Size = new Size(100, BtnSave.Height);
-            BtnSave.Text = RuntimeData.String("F1001");
-
-            BtnCancle.Dock = DockStyle.Right;
-            BtnCancle.Size = new Size(100, BtnCancle.Height);
+            //Button 정의
+            BtnOK.Text = RuntimeData.String("F1001");
             BtnCancle.Text = RuntimeData.String("F1003");
 
-            pnlButton.Controls.Add(BtnSave);
+            BtnOK.Dock = DockStyle.Right;
+            BtnCancle.Dock = DockStyle.Right;
+
+            BtnOK.Size = new Size(100, BtnOK.Height);
+            BtnCancle.Size = new Size(100, BtnCancle.Height);
+
+            //Button 추가
+            pnlButton.Controls.Add(BtnOK);
             pnlButton.Controls.Add(BtnCancle);
-
-            BtnSave.Click += SaveEnd;
-            BtnCancle.Click += CancleEvent;
-
+            //이벤트
+            BtnOK.Click += ClickButton_Check;
+            BtnCancle.Click += ClickButton_Cancle;
+            //정렬
             BtnCancle.BringToFront();
-            BtnSave.BringToFront();
+            BtnOK.BringToFront();
 
             this.Controls.Add(pnlButton);
+
         }
 
-
-        private void CreatePortInfo()
+        private void InitializeControlBox()
         {
-            pnlPort = new Panel();
-            pnlPort.Dock = DockStyle.Left;
-            pnlPort.Size = new Size(300, pnlPort.Height);
-            pnlPort.MinimumSize = new Size(300, pnlPort.Height);
-
-            gbPort = new GroupBox();
-            gbPort.Dock = DockStyle.Fill;
-            gbPort.Size = new Size(gbPort.Width, 200);
-            gbPort.Text = RuntimeData.String("F0200");
-
-            pnlPort.Controls.Add(gbPort);
-
-            cboPortList = new ucControlBox(CtrlType.ComboBox);      //연결된 포트
-            cboProtocolType = new ucControlBox(CtrlType.ComboBox);  //통신방법 구분
-            cboBaudRate = new ucControlBox(CtrlType.ComboBox);      //BaudRate
-            numDataBits = new ucControlBox(CtrlType.NumbericUpDown);//Data Bits
-            cboStopBit = new ucControlBox(CtrlType.ComboBox);       //StopBit
-            cboParity = new ucControlBox(CtrlType.ComboBox);        //ParityBit
+            pnlControlBox.Dock = DockStyle.Left;
+            pnlControlBox.Size = new Size(300, pnlControlBox.Height);
+            pnlControlBox.MinimumSize = new Size(300, pnlControlBox.Height);
 
             //Control 명(Control Type - Item구분 - 담당Property)
-            cboPortList.ctrl.Name = "Combo-Port-PortName";
+            cboUnitType.Name = "Combo-Unit-UnitType";
+            cboUnitModel.Name = "Combo-Unit-UnitModel";
+            cboPortName.ctrl.Name = "Combo-Port-PortName";
             cboProtocolType.ctrl.Name = "Combo-Port-ProtocolType";
             cboBaudRate.ctrl.Name = "Combo-Port-BaudRate";
             numDataBits.ctrl.Name = "Numeric-Port-DataBits";
             cboStopBit.ctrl.Name = "Combo-Port-StopBits";
             cboParity.ctrl.Name = "Combo-Port-Parity";
-
-            //Label 표기 Text
-            cboPortList.LblText = RuntimeData.String("F0100");
-            cboProtocolType.LblText = RuntimeData.String("F0101");
-            cboBaudRate.LblText = RuntimeData.String("F0102");
-            numDataBits.LblText = RuntimeData.String("F0103");
-            cboStopBit.LblText = RuntimeData.String("F0104");
-            cboParity.LblText = RuntimeData.String("F0105");
+            txtIPaddr.ctrl.Name = "Txt-Port-IPaddr";
+            txtPortNo.ctrl.Name = "Txt-Port-PortNo";
 
             //Items
-            (cboPortList.ctrl as ComboBox).Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
+            (cboUnitType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitType)).OfType<object>().ToArray());
+            (cboUnitModel.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitModel)).OfType<object>().ToArray());
+            (cboPortName.ctrl as ComboBox).Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             (cboProtocolType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(uProtocolType)).OfType<object>().ToArray());
-            (cboBaudRate.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(BaudRate)).OfType<object>().ToArray());     
-            (cboStopBit.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(StopBits)).OfType<object>().ToArray());      
-            (cboParity.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(Parity)).OfType<object>().ToArray());         
+            (cboBaudRate.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(BaudRate)).OfType<object>().ToArray());
+            (cboStopBit.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(StopBits)).OfType<object>().ToArray());
+            (cboParity.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(Parity)).OfType<object>().ToArray());
 
-            //Defulat Value
-            if ((cboPortList.ctrl as ComboBox).Items.Count > 0)
-            {
-                (cboPortList.ctrl as ComboBox).SelectedIndex = 0;
-            }
-            (cboProtocolType.ctrl as ComboBox).SelectedIndex = 0;
-            (cboBaudRate.ctrl as ComboBox).SelectedIndex = 0;   
-            (cboStopBit.ctrl as ComboBox).SelectedIndex = 0;    
-            (cboParity.ctrl as ComboBox).SelectedIndex = 0;     
-
-            (numDataBits.ctrl as NumericUpDown).Value = 8;      
             (numDataBits.ctrl as NumericUpDown).Maximum = 8;
-            (numDataBits.ctrl as NumericUpDown).Minimum = 5;
+            (numDataBits.ctrl as NumericUpDown).Minimum = 7;
 
-            cboPortList.Dock = DockStyle.Bottom;
-            cboProtocolType.Dock = DockStyle.Bottom;
-            cboBaudRate.Dock = DockStyle.Bottom;
-            numDataBits.Dock = DockStyle.Bottom;
-            cboStopBit.Dock = DockStyle.Bottom;
-            cboParity.Dock = DockStyle.Bottom;
+            (txtPortNo.ctrl as MaskedTextBox).ValidatingType = typeof(short);
+            (txtPortNo.ctrl as MaskedTextBox).Mask = "####";
+
+            (txtIPaddr.ctrl as TextBox).KeyPress += UtilCustom.TextBox_IP;
+
+            cboUnitType.Dock = DockStyle.Top;
+            cboUnitModel.Dock = DockStyle.Top;
+            cboPortName.Dock = DockStyle.Top;
+            cboProtocolType.Dock = DockStyle.Top;
+            cboBaudRate.Dock = DockStyle.Top;
+            numDataBits.Dock = DockStyle.Top;
+            cboStopBit.Dock = DockStyle.Top;
+            cboParity.Dock = DockStyle.Top;
+            txtIPaddr.Dock = DockStyle.Top;
+            txtPortNo.Dock = DockStyle.Top;
 
             //Label Width
             int portLabelWidth = 100;
-            cboPortList.LblWidth = portLabelWidth;
+            cboUnitType.LblWidth = portLabelWidth;
+            cboUnitModel.LblWidth = portLabelWidth;
+            cboPortName.LblWidth = portLabelWidth;
             cboProtocolType.LblWidth = portLabelWidth;
             cboBaudRate.LblWidth = portLabelWidth;
             numDataBits.LblWidth = portLabelWidth;
             cboStopBit.LblWidth = portLabelWidth;
             cboParity.LblWidth = portLabelWidth;
+            txtIPaddr.LblWidth = portLabelWidth;
+            txtPortNo.LblWidth = portLabelWidth;
 
-            pnlPort.Controls.Add(cboPortList);
-            pnlPort.Controls.Add(cboProtocolType);
-            pnlPort.Controls.Add(cboBaudRate);
-            pnlPort.Controls.Add(numDataBits);
-            pnlPort.Controls.Add(cboStopBit);
-            pnlPort.Controls.Add(cboParity);
+            (cboProtocolType.ctrl as ComboBox).SelectedValueChanged += (sender, e) => { SetVisible(); };
 
-            (cboPortList.ctrl as ComboBox).SelectedIndexChanged += EditItem;
-            (cboProtocolType.ctrl as ComboBox).SelectedIndexChanged += EditItem;
-            (cboBaudRate.ctrl as ComboBox).SelectedIndexChanged += EditItem;
-            (cboStopBit.ctrl as ComboBox).SelectedIndexChanged += EditItem;
-            (cboParity.ctrl as ComboBox).SelectedIndexChanged += EditItem;
-            (numDataBits.ctrl as NumericUpDown).ValueChanged += EditItem;
+            Label splitLine1 = CreateSplitLine(DockStyle.Top);
+            Label splitLine2 = CreateSplitLine(DockStyle.Top);
 
-            //Active 버튼
-            pnlPortBtn = new Panel();
-            pnlPortBtn.Dock = DockStyle.Bottom;
-            pnlPortBtn.Size = new Size(pnlPortBtn.Width, 30);
-
-            BtnPortNew = new Button();
-            BtnPortDel = new Button();
-
-            BtnPortNew.Text = RuntimeData.String("F1000");
-            BtnPortDel.Text = RuntimeData.String("F1002");
-
-            BtnPortNew.Dock = DockStyle.Right;
-            BtnPortDel.Dock = DockStyle.Right;
-
-            BtnPortNew.Size = new Size(100, BtnPortNew.Height);
-            BtnPortDel.Size = new Size(100, BtnPortDel.Height);
-
-            pnlPortBtn.Controls.Add(BtnPortNew);
-            pnlPortBtn.Controls.Add(BtnPortDel);
-            pnlPort.Controls.Add(pnlPortBtn);
-
-            BtnPortDel.Click += PortDelete;
-            BtnPortNew.Click += PortNew;
-
-            Label splitLine1 = CreateSplitLine(DockStyle.Bottom);
-            pnlPort.Controls.Add(splitLine1);
+            pnlControlBox.Controls.Add(splitLine1);
+            pnlControlBox.Controls.Add(splitLine2);
+            pnlControlBox.Controls.Add(cboUnitType);
+            pnlControlBox.Controls.Add(cboUnitModel);
+            pnlControlBox.Controls.Add(cboPortName);
+            pnlControlBox.Controls.Add(cboProtocolType);
+            pnlControlBox.Controls.Add(cboBaudRate);
+            pnlControlBox.Controls.Add(numDataBits);
+            pnlControlBox.Controls.Add(cboStopBit);
+            pnlControlBox.Controls.Add(cboParity);
+            pnlControlBox.Controls.Add(txtIPaddr);
+            pnlControlBox.Controls.Add(txtPortNo);
 
             //Control 정렬
-            pnlPortBtn.BringToFront();
-            cboParity.BringToFront();
-            cboStopBit.BringToFront();
-            numDataBits.BringToFront();
-            cboBaudRate.BringToFront();
-            cboProtocolType.BringToFront();
-            cboPortList.BringToFront();
-            splitLine1.BringToFront();
-            gbPort.BringToFront();
-
-            this.Controls.Add(pnlPort);
-
-        }
-
-        private void CreateUnitInfo()
-        {
-            pnlUnit = new Panel();
-            pnlUnit.Dock = DockStyle.Left;
-            pnlUnit.Size = new Size(300, pnlUnit.Height);
-            pnlUnit.MinimumSize = new Size(300, pnlUnit.Height);
-
-            gbUnit = new GroupBox();
-            gbUnit.Dock = DockStyle.Fill;
-            gbUnit.Size = new Size(gbUnit.Width, 200);
-            gbUnit.Text = RuntimeData.String("F0400");
-
-            pnlUnit.Controls.Add(gbUnit);
-
-            numUnitAddress = new ucControlBox(CtrlType.NumbericUpDown);
-            cboUnitType = new ucControlBox(CtrlType.ComboBox);
-            cboUnitModel = new ucControlBox(CtrlType.ComboBox);
-            txtUnitName = new ucControlBox(CtrlType.TextBox);
-
-            //Control 명(Control Type - Item구분 - 담당Property)
-            numUnitAddress.ctrl.Name = "Numeric-Unit-SlaveAddr";
-            cboUnitType   .ctrl.Name = "Combo-Unit-UnitType";
-            cboUnitModel  .ctrl.Name = "Combo-Unit-UnitModel";
-            txtUnitName   .ctrl.Name = "Txt-Unit-UnitName";
-
-            //Label 표기 Text
-            numUnitAddress.LblText = RuntimeData.String("F0300");
-            cboUnitType.LblText = RuntimeData.String("F0301");
-            cboUnitModel.LblText = RuntimeData.String("F0302");
-            txtUnitName.LblText = RuntimeData.String("F0303");
-
-            //Items
-            (cboUnitType.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitType)).OfType<object>().ToArray());
-            (cboUnitModel.ctrl as ComboBox).Items.AddRange(Enum.GetValues(typeof(UnitModel)).OfType<object>().ToArray());
-            (txtUnitName.ctrl as TextBox).Text = Convert.ToString((cboUnitModel.ctrl as ComboBox).Items[0]);
-
-            //Defulat Value
-            (cboUnitType.ctrl as ComboBox).SelectedIndex = 0;
-            (cboUnitModel.ctrl as ComboBox).SelectedIndex = 0;
-
-            (numUnitAddress.ctrl as NumericUpDown).Value = 1;
-            (numUnitAddress.ctrl as NumericUpDown).Maximum = 128;
-            (numUnitAddress.ctrl as NumericUpDown).Minimum = 1;
-
-            numUnitAddress.Dock = DockStyle.Bottom;
-            cboUnitType.Dock = DockStyle.Bottom;
-            cboUnitModel.Dock = DockStyle.Bottom;
-            txtUnitName.Dock = DockStyle.Bottom;
-
-            //Label Width
-            int unitLabelWIdth = 100;
-            numUnitAddress.LblWidth = unitLabelWIdth;
-            cboUnitType.LblWidth = unitLabelWIdth;
-            cboUnitModel.LblWidth = unitLabelWIdth;
-            txtUnitName.LblWidth = unitLabelWIdth;
-
-            pnlUnit.Controls.Add(numUnitAddress);
-            pnlUnit.Controls.Add(cboUnitType);
-            pnlUnit.Controls.Add(cboUnitModel);
-            pnlUnit.Controls.Add(txtUnitName);
-
-            (cboUnitType.ctrl as ComboBox).SelectedIndexChanged += EditItem;
-            (cboUnitModel.ctrl as ComboBox).SelectedIndexChanged += EditItem;
-            (numUnitAddress.ctrl as NumericUpDown).ValueChanged += EditItem;
-            (txtUnitName.ctrl as TextBox).TextChanged += EditItem;
-
-            //Active 버튼
-            pnlUnitBtn = new Panel();
-            pnlUnitBtn.Size = new Size(pnlUnitBtn.Width, 30);
-
-            BtnUnitNew = new Button();
-            BtnUnitDel = new Button();
-
-            BtnUnitNew.Text = RuntimeData.String("F1000");
-            BtnUnitDel.Text = RuntimeData.String("F1002");
-
-            pnlUnitBtn.Dock = DockStyle.Bottom;
-            BtnUnitNew.Dock = DockStyle.Right;
-            BtnUnitDel.Dock = DockStyle.Right;
-
-            BtnUnitNew.Size = new Size(100, BtnUnitNew.Height);
-            BtnUnitDel.Size = new Size(100, BtnUnitDel.Height);
-
-            pnlUnitBtn.Controls.Add(BtnUnitNew);
-            pnlUnitBtn.Controls.Add(BtnUnitDel);
-            pnlUnit.Controls.Add(pnlUnitBtn);
-
-            BtnUnitDel.Click += UnitDelete;
-            BtnUnitNew.Click += UnitNew;
-
-            Label splitLine1 = CreateSplitLine(DockStyle.Bottom);
-            pnlUnit.Controls.Add(splitLine1);
-
-            pnlUnitBtn.BringToFront();
-            txtUnitName.BringToFront();
-            cboUnitModel.BringToFront();
             cboUnitType.BringToFront();
-            numUnitAddress.BringToFront();
+            cboUnitModel.BringToFront();
             splitLine1.BringToFront();
-            gbUnit.BringToFront();
+            cboProtocolType.BringToFront();
+            splitLine2.BringToFront();
+            cboPortName.BringToFront();
+            cboBaudRate.BringToFront();
+            numDataBits.BringToFront();
+            cboStopBit.BringToFront();
+            cboParity.BringToFront();
+            txtIPaddr.BringToFront();
+            txtPortNo.BringToFront();
 
-            this.Controls.Add(pnlUnit);
+            this.Controls.Add(pnlControlBox);
         }
 
-        private void CreateChannelnfo()
+        private void InitializeGrid()
         {
-            pnlCh = new Panel();
-            pnlCh.Dock = DockStyle.Left;
-            pnlCh.Size = new Size(300, pnlCh.Height);
-            pnlCh.MinimumSize = new Size(300, pnlCh.Height);
+            gv.Dock = DockStyle.Fill;
+            gv.AllowUserToAddRows = false;
+            gv.AllowUserToOrderColumns = false;
+            gv.AllowUserToResizeRows = false;
+            gv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gv.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            gv.MultiSelect = false;
 
-            gbCh = new GroupBox();
-            gbCh.Dock = DockStyle.Fill;
-            gbCh.Size = new Size(gbCh.Width, 200);
-            gbCh.Text = RuntimeData.String("F0700");
+            DataGridViewCheckBoxColumn colCheck = new DataGridViewCheckBoxColumn();
 
-            int chLabelWIdth = 100;
+            colCheck.HeaderText = "";
+            colCheck.Width = 30;
+            colSlaveAddr.Width = 60;
+            colUnitName.Width = 120;
+            colSlaveAddr.ReadOnly = true;
 
-            //사용여부
-            chkChEnable = new ucControlBox(CtrlType.CheckBox);
-            chkChEnable.Dock = DockStyle.Bottom;
-            chkChEnable.LblWidth = chLabelWIdth;
-            chkChEnable.LblText = RuntimeData.String("F0701");
+            colCheck.Name = "ColUnitCheck";
+            colSlaveAddr.Name = "ColSlaveAddr";
+            colUnitName.Name = "ColUnitName";
 
-            //Active 버튼
-            pnlChBtn = new Panel();
-            pnlChBtn.Dock = DockStyle.Bottom;
-            pnlChBtn.Size = new Size(pnlChBtn.Width, 30);
+            colCheck.DisplayIndex = 0;
+            colSlaveAddr.DisplayIndex = 1;
+            colUnitName.DisplayIndex = 2;
 
-            BtnChNew = new Button();
-            BtnChNew.Dock = DockStyle.Right;
-            BtnChNew.Size = new Size(100, BtnChNew.Height);
-            BtnChNew.Text = RuntimeData.String("F1000");
+            colCheck.ValueType = typeof(bool);
+            colSlaveAddr.ValueType = typeof(byte);
+            colUnitName.ValueType = typeof(string);
 
-            BtnChSave = new Button();
-            BtnChSave.Dock = DockStyle.Right;
-            BtnChSave.Size = new Size(100, BtnChSave.Height);
-            BtnChSave.Text = RuntimeData.String("F1001");
+            colCheck.DataPropertyName = "Check";
+            colSlaveAddr.DataPropertyName = "SlaveAddr";
+            colUnitName.DataPropertyName = "UnitName";
 
-            BtnChDel = new Button();
-            BtnChDel.Dock = DockStyle.Right;
-            BtnChDel.Size = new Size(100, BtnChDel.Height);
-            BtnChDel.Text = RuntimeData.String("F1002");
+            colSlaveAddr.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colSlaveAddr.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colUnitName.SortMode = DataGridViewColumnSortMode.NotSortable;
 
-            pnlCh.Controls.Add(gbCh);
-            pnlCh.Controls.Add(CreateSplitLine(DockStyle.Bottom));
-            pnlCh.Controls.Add(chkChEnable);
-            pnlCh.Controls.Add(pnlChBtn);
+            gv.Columns.AddRange(new DataGridViewColumn[] { colCheck, colSlaveAddr, colUnitName });
 
-            pnlChBtn.Controls.Add(BtnChNew);
-            pnlChBtn.Controls.Add(BtnChSave);
-            pnlChBtn.Controls.Add(BtnChDel);
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Check", typeof(bool));
+            dt.Columns.Add("SlaveAddr", typeof(short));
+            dt.Columns.Add("UnitName", typeof(string));
 
-            this.Controls.Add(pnlCh);
-        }
-
-        /// <summary>
-        /// GroupBox Controls초기화 후 생성하기
-        /// </summary>
-        private void InitGroupBox()
-        {
-            //GroupBox Clear
-            gbPort.Controls.Clear();
-            gbUnit.Controls.Clear();
-
-            //GroupBox들에 Item 생성
-            foreach (Port port in imsiPorts.Values)
+            for (int i = 0; i < 32; i++)
             {
-                foreach (Unit unit in port.Units.Values)
-                {
-                    RadioButton rdoUnit = new RadioButton();
-                    rdoUnit.Name = port.PortName + unit.SlaveAddr.ToString("D2");  //GroupBox Controls 탐색방식
-                    rdoUnit.Text = unit.UnitModelUserName;
-                    rdoUnit.Dock = DockStyle.Top;
-                    rdoUnit.Visible = true;
-                    rdoUnit.Tag = unit;
-
-                    rdoUnit.CheckedChanged += (sender, e) => { RdoCheckedChanged(rdoUnit); };
-
-                    gbUnit.Controls.Add(rdoUnit);
-                }
-
-                RadioButton rdoPort = new RadioButton();
-                rdoPort.Name = port.PortName;
-                rdoPort.Text = port.PortName;
-                rdoPort.Dock = DockStyle.Top;
-                rdoPort.Visible = true;
-                rdoPort.Tag = port;
-
-                rdoPort.CheckedChanged += (sender, e) => { RdoCheckedChanged(rdoPort); };
-
-                gbPort.Controls.Add(rdoPort);
+                dt.Rows.Add(new object[] { false, i + 1, "" });
             }
+            gv.DataSource = dt;
 
-            //Item 정렬
-            SortGroupBox();
+            gv.CellClick += Gv_CellClick;
+
+            this.Controls.Add(gv);
         }
 
-        /// <summary>
-        /// GroupBox 정렬
-        /// </summary>
-        private void SortGroupBox()
+        private void Gv_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            //Port Sort
-            foreach (var dicPairPort in imsiPorts.OrderBy(x => x.Key))
+            if (e.RowIndex < 0) return;
+
+            bool curValue = (bool)gv.Rows[e.RowIndex].Cells["ColUnitCheck"].Value;
+
+            //Slave Address 클릭 시 체크박스 On/Off 처리
+            if (e.ColumnIndex == gv.Columns["ColSlaveAddr"].Index)
             {
-                int idxPort = 0;
-
-                //Port Name == Group Box Name 비교
-                foreach (Control ctrl in gbPort.Controls)
+                if (curValue)
                 {
-                    if (ctrl.Name == dicPairPort.Key)
-                    {
-                        gbPort.Controls.SetChildIndex(ctrl, idxPort);
-                        break;
-                    }
+                    gv.Rows[e.RowIndex].Cells["ColUnitCheck"].Value = false;
                 }
-
-                //Unit Sort
-                foreach (var dicPairUnit in dicPairPort.Value.Units.OrderBy(x => x.Key))
+                else
                 {
-                    int idxUnit = 0;
-
-                    //Unit 유저지정명 == GroupBox Name 비교
-                    foreach (Control ctrl in gbUnit.Controls)
-                    {
-                        if (ctrl.Text == dicPairUnit.Value.UnitModelUserName)
-                        {
-                            gbUnit.Controls.SetChildIndex(ctrl, idxUnit);
-                            break;
-                        }
-                    }
+                    gv.Rows[e.RowIndex].Cells["ColUnitCheck"].Value = true;
                 }
             }
         }
@@ -507,357 +310,170 @@ namespace Dnf.Communication.Frm
             return lbl;
         }
 
+        private void SetValue()
+        {
+            //Defulat Value
+            if ((cboPortName.ctrl as ComboBox).Items.Count > 0)
+            {
+                (cboPortName.ctrl as ComboBox).SelectedIndex = 0;
+            }
+            (cboProtocolType.ctrl as ComboBox).SelectedIndex = 0;
+            (cboBaudRate.ctrl as ComboBox).SelectedIndex = 0;
+            (cboStopBit.ctrl as ComboBox).SelectedIndex = 0;
+            (cboParity.ctrl as ComboBox).SelectedIndex = 0;
+            (numDataBits.ctrl as NumericUpDown).Value = 8;
+
+            (cboUnitType.ctrl as ComboBox).SelectedIndex = 0;
+            (cboUnitModel.ctrl as ComboBox).SelectedIndex = 0;
+
+            (txtIPaddr.ctrl as TextBox).Text = "192.168.0.1";
+            (txtPortNo.ctrl as MaskedTextBox).Text = "0502";
+        }
+
+        private void SetText()
+        {
+            //Label 표기 Text
+            cboUnitType.LblText = RuntimeData.String("F0301");
+            cboUnitModel.LblText = RuntimeData.String("F0302");
+
+            cboPortName.LblText = RuntimeData.String("F0100");
+            cboProtocolType.LblText = RuntimeData.String("F0101");
+            cboBaudRate.LblText = RuntimeData.String("F0102");
+            numDataBits.LblText = RuntimeData.String("F0103");
+            cboStopBit.LblText = RuntimeData.String("F0104");
+            cboParity.LblText = RuntimeData.String("F0105");
+            txtIPaddr.LblText = RuntimeData.String("F0306");
+            txtPortNo.LblText = RuntimeData.String("F0307");
+
+            //GridColumn Header Text
+            colSlaveAddr.HeaderText = RuntimeData.String("F0300");
+            colUnitName.HeaderText = RuntimeData.String("F0303");
+        }
+
         #endregion ControlInitialize End
 
-        #region Port
-        /// <summary>
-        /// Port 신규 생성
-        /// </summary>
-        private void PortNew(object sender, EventArgs e)
-        {
-            try
-            {
-                string portName = "Empty Port";
-
-                if (imsiPorts.ContainsKey(portName))
-                {
-                    //중복 포트 검사
-                    return;
-                }
-
-                //신규생성
-                Port port = null;
-                uProtocolType getProtocolType = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
-
-                //통신 규칙 구분
-                if (getProtocolType == uProtocolType.ModBusRTU
-                     || getProtocolType == uProtocolType.ModBusAscii)
-                {
-                    BaudRate baudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
-                    int dataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value);
-                    Parity pairty = (Parity)(cboParity.ctrl as ComboBox).SelectedItem;
-                    StopBits stopBits = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem;
-
-                    port = new Port(portName, getProtocolType, baudRate, dataBits, pairty, stopBits);
-
-                    imsiPorts.Add(portName, port);
-                }
-
-                //후처리
-                if (port != null)
-                {
-                    InitGroupBox(); //GroupBox 재생성
-
-                    (gbPort.Controls[port.PortName] as RadioButton).Checked = true; //Check 유지
-
-                    
-                }
-            }
-            catch(Exception ex)
-            { 
-                MessageBox.Show(ex.Message);
-            }
-        }
+        #region Event
 
         /// <summary>
-        /// Port 삭제
+        /// 저장 버튼 클릭
         /// </summary>
-        private void PortDelete(object sender, EventArgs e)
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ClickButton_Check(object sender, EventArgs e)
         {
-            //선택중인 RadioButton 가져오기
-            RadioButton rdo = GetSelectGroupBoxItem("Port");
-
-            if (rdo != null)
+            if (ConfirmCreate())
             {
-                Port port = rdo.Tag as Port;
+                Port port = CreatePort();
 
-                //등록된 Port 삭제
-                imsiPorts.Remove(port.PortName);
-
-                //삭제 후처리
-                //GroupBox 조정
-                InitGroupBox();
-            }
-        }
-
-        #endregion Port End
-
-        #region Unit
-
-        private void UnitNew(object sender, EventArgs e)
-        {
-            //선택된 Port에 Unit 추가
-            try
-            {
-                //선택된 Port없는지 검사
-                Port port = GetSelectGroupBoxItem("Port").Tag as Port;
-                if (port == null)
+                foreach (DataGridViewRow dr in gv.Rows)
                 {
-                    return;
+                    if (dr.IsNewRow) continue;
+                    if (Convert.ToBoolean(dr.Cells["ColUnitCheck"].Value) == false) continue;
+
+                    CreateUnit(port, dr);
                 }
 
-                //사용중인 SlaveAddress 검색
-                int slaveAddr = Convert.ToInt32((numUnitAddress.ctrl as NumericUpDown).Maximum);
-
-                if (port.Units.ContainsKey(slaveAddr))
-                {
-                    return;
-                }
-
-                //신규 생성
-                UnitType type = (UnitType)(cboUnitType.ctrl as ComboBox).SelectedItem;
-                UnitModel model = (UnitModel)(cboUnitModel.ctrl as ComboBox).SelectedItem;
-                string name = "Empty Unit";
-
-                Unit unit = new Unit(port, slaveAddr, type, model, name);
-                //Unit 등록
-                port.Units.Add(slaveAddr, unit);
-
-                //이하 Unit등록 후처리
-                InitGroupBox();
-
-                (gbPort.Controls[port.PortName] as RadioButton).Checked = true;
-                (gbUnit.Controls[port.PortName + unit.SlaveAddr.ToString("D2")] as RadioButton).Checked = true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+                //mainForm 트리 그리기
+                mainForm.InitTreeItem();
+                //화면 종료
+                mainForm.RemoveTabPage(this.Name);
             }
         }
 
-        private void UnitDelete(object sender, EventArgs e)
+        private void ClickButton_Cancle(object sender, EventArgs e)
         {
-            RadioButton rdo = GetSelectGroupBoxItem("Unit");
-            if (rdo != null)
+            mainForm.RemoveTabPage(this.Name);
+        }
+
+        private void SetVisible()
+        {
+            //Protocol Type에 따라서 Visible 처리
+            uProtocolType type = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
+
+            if (type == uProtocolType.ModBusTcpIp)
             {
-                Unit unit = rdo.Tag as Unit;
+                cboPortName.Visible = false;
+                cboBaudRate.Visible = false;
+                numDataBits.Visible = false;
+                cboStopBit.Visible = false;
+                cboParity.Visible = false;
 
-                //등록된 Unit 삭제
-                imsiPorts[unit.ParentPort.PortName].Units.Remove(unit.SlaveAddr);
+                txtIPaddr.Visible = true;
+                txtPortNo.Visible = true;
+            }
+            else
+            {
+                cboPortName.Visible = true;
+                cboBaudRate.Visible = true;
+                numDataBits.Visible = true;
+                cboStopBit.Visible = true;
+                cboParity.Visible = true;
 
-                //GroupBox 조정
-                InitGroupBox();
-
-                (gbPort.Controls[unit.ParentPort.PortName] as RadioButton).Checked = true;
+                txtIPaddr.Visible = false;
+                txtPortNo.Visible = false;
             }
         }
 
-        #endregion Unit End
+        #endregion Event End
 
         /// <summary>
-        /// 정보 Control 데이터 수정 이벤트
+        /// Create 확인 절차
         /// </summary>
-        private void EditItem(object sender, EventArgs e)
+        /// <returns>true : OK / false : Error</returns>
+        private bool ConfirmCreate()
         {
-            //Radio 변경으로인한 Item 변경 Flag 확인
-            if (!EditingFlag)
+            //사전 검사
+            //Port명 중복 검사
+            string portName = (cboPortName.ctrl as ComboBox).SelectedItem.ToString();
+            if (portName == "") return false;
+
+            if (RuntimeData.Ports.ContainsKey(portName))
             {
-                string ctrlName = (sender as Control).Name;
-                string[] obj = ctrlName.Split('-'); //Name 부여 상단 규칙 참고
-
-                RadioButton rdo = GetSelectGroupBoxItem(obj[1]);
-
-                if (rdo != null)
-                {
-                    isEdit = true;  //화면 연 후 변경내역 확인용 - 저장, 초기화에 사용
-
-                    //Item 구분
-                    if (obj[1] == "Port")
-                    {
-                        Port port = rdo.Tag as Port;
-
-                        //Property 구분
-                        switch (obj[2])
-                        {
-                            case "PortName":
-                                string afName = (cboPortList.ctrl as ComboBox).SelectedItem.ToString();
-                                if (!Dnf.Utils.Controls.UtilCustom.DictKeyChange(RuntimeData.Ports, port.PortName, afName))
-                                {
-                                    MessageBox.Show(RuntimeData.String("A017"));
-                                    return;
-                                }
-                                imsiPorts[afName].PortName = afName;
-
-                                //후처리
-                                InitGroupBox(); //GroupBox 재생성
-
-                                (gbPort.Controls[afName] as RadioButton).Checked = true; //Check 유지
-                                break;
-                            case "ProtocolType": port.ProtocolType = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem; break;
-                            case "BaudRate": port.BaudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem; break;
-                            case "DataBits": port.DataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value); break;
-                            case "StopBits": port.StopBIt = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem; break;
-                            case "Parity": port.Parity = (Parity)(cboParity.ctrl as ComboBox).SelectedItem; break;
-                        }
-                    }
-                    else if (obj[1] == "Unit")
-                    {
-                        Unit unit = rdo.Tag as Unit;
-
-                        //Property 구분
-                        switch (obj[2])
-                        {
-                            case "SlaveAddr":
-                                int afAddr = Convert.ToInt32((numUnitAddress.ctrl as NumericUpDown).Value);
-                                if (!Dnf.Utils.Controls.UtilCustom.DictKeyChange(unit.ParentPort.Units, unit.SlaveAddr, afAddr))
-                                {
-                                    MessageBox.Show(RuntimeData.String("A012"));
-                                    return;
-                                }
-                                imsiPorts[unit.ParentPort.PortName].Units[afAddr].SlaveAddr = afAddr;
-                                imsiPorts[unit.ParentPort.PortName].Units[afAddr].UnitModelUserName = (txtUnitName.ctrl as TextBox).Text;
-
-                                //후처리
-                                InitGroupBox();
-
-                                (gbPort.Controls[unit.ParentPort.PortName] as RadioButton).Checked = true;
-                                (gbUnit.Controls[unit.ParentPort.PortName + afAddr.ToString("D2")] as RadioButton).Checked = true;
-                                break;
-                            case "UnitType": unit.UnitModelType = (UnitType)(cboUnitType.ctrl as ComboBox).SelectedItem; break;
-                            case "UnitModel":
-                                unit.UnitModelName = (UnitModel)(cboUnitModel.ctrl as ComboBox).SelectedItem;
-                                //Model에 따른 Channel 변경
-                                break;
-                            case "UnitName":
-                                unit.UnitModelUserName = (txtUnitName.ctrl as TextBox).Text;
-
-                                InitGroupBox();
-
-                                (gbPort.Controls[unit.ParentPort.PortName] as RadioButton).Checked = true;
-                                (gbUnit.Controls[unit.ParentPort.PortName + unit.SlaveAddr.ToString("D2")] as RadioButton).Checked = true;
-                                break;
-                        }
-                    }
-                }
+                MessageBox.Show(RuntimeData.String("A004"));
+                return false;
             }
+
+            //Unit값 빈값 있는지 검사
+            bool checkFlag = false;
+
+            foreach (DataGridViewRow dr in gv.Rows)
+            {
+                if (Convert.ToBoolean(dr.Cells["ColUnitCheck"].Value) == true) { checkFlag = true; break; }
+            }
+            if (!checkFlag) { return false; }
+
+            return true;
         }
 
-        /// <summary>
-        /// GroupBox에서 선택된 RadioButton 변경 이벤트
-        /// </summary>
-        /// <param name="rdo">변경된 RadioButton</param>
-        private void RdoCheckedChanged(RadioButton rdo)
+        private Port CreatePort()
         {
-            //신규생성 상태에서 Item Radio 선택 시 신규선택 상태 해제
-            if (rdo.Checked)
-            {
-                string rdoType = rdo.Tag.GetType().Name;
+            Port port = null;
 
-                //GroupBox Visible 조정
-                if (rdoType == "Port")
-                {
-                    Port port = rdo.Tag as Port;
+            //Port 작업
+            string portName = (cboPortName.ctrl as ComboBox).SelectedItem.ToString();
+            uProtocolType protocolType = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
+            BaudRate baudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
+            int dataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value);
+            StopBits stopBits = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem;
+            Parity parity = (Parity)(cboParity.ctrl as ComboBox).SelectedItem;
 
-                    if (port != null)
-                    {
-                        EditingFlag = true;
+            port = new Port(portName, protocolType, baudRate, dataBits, stopBits, parity);
+            RuntimeData.Ports.Add(portName, port);
 
-                        //선택된 Radio값 지정
-                        (cboPortList.ctrl as ComboBox).SelectedItem = port.PortName;
-                        (cboProtocolType.ctrl as ComboBox).SelectedItem = port.ProtocolType;
-                        (cboBaudRate.ctrl as ComboBox).SelectedItem = port.BaudRate;
-                        (numDataBits.ctrl as NumericUpDown).Value = port.DataBits;
-                        (cboStopBit.ctrl as ComboBox).SelectedItem = port.StopBIt;
-                        (cboParity.ctrl as ComboBox).SelectedItem = port.Parity;
-
-                        //Unit Visible 조정
-                        foreach (Control ctrl in gbUnit.Controls)
-                        {
-                            RadioButton rdoUnit = ctrl as RadioButton;
-                            Unit gbUnit = rdoUnit.Tag as Unit;
-
-                            //전체 Visible 숨김 처리
-                            rdoUnit.Visible = false;
-
-                            foreach (Unit portUnit in port.Units.Values)
-                            {
-                                //GroupBox Unit이 선택된 Port의 Unit에 있으면 보이기
-                                if (portUnit.ParentPort == gbUnit.ParentPort)
-                                {
-                                    rdoUnit.Visible = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        //Channel Visible 조정
-
-                        EditingFlag = false;
-                    }
-                }
-                else if (rdoType == "Unit")
-                {
-                    Unit unit = rdo.Tag as Unit;
-
-                    if (unit != null)
-                    {
-                        EditingFlag = true;
-
-                        //선택된 Radio값 수정
-                        (numUnitAddress.ctrl as NumericUpDown).Value = unit.SlaveAddr;
-                        (cboUnitType.ctrl as ComboBox).SelectedItem = unit.UnitModelType;
-                        (cboUnitModel.ctrl as ComboBox).SelectedItem = unit.UnitModelName;
-                        (txtUnitName.ctrl as TextBox).Text = unit.UnitModelUserName;
-
-                        //UnitModel에따른 Channel 설정
-
-                        EditingFlag = false;
-                    }
-                }
-            }
+            return RuntimeData.Ports[portName];
         }
 
-
-        /// <summary>
-        /// GoupBox에 선택된 RadioButton 찾기
-        /// </summary>
-        /// <param name="type">Port, Unit 택 1</param>
-        /// <returns>선택된 RadioButton</returns>
-        private RadioButton GetSelectGroupBoxItem(string type)
+        private void CreateUnit(Port port, DataGridViewRow dr)
         {
-            GroupBox box = null;
-            RadioButton rdoPort = null;
+            Unit unit = null;
 
-            //GroupBox 어떤건지 고르기
-            if (type == "Port") box = gbPort;
-            else if (type == "Unit") box = gbUnit;
-            else return null;
+            byte Addr = Convert.ToByte(dr.Cells["ColSlaveAddr"].Value);
+            UnitType unitType = (UnitType)(cboUnitType.ctrl as ComboBox).SelectedItem;
+            UnitModel unitModel = (UnitModel)(cboUnitModel.ctrl as ComboBox).SelectedItem;
+            string unitName = dr.Cells["ColUnitName"].Value.ToString();
 
-            //해당 GroupBOx에서 검색
-            foreach (Control ctrl in box.Controls)
-            {
-                rdoPort = ctrl as RadioButton;
-
-                if (rdoPort.Checked)
-                {
-                    return rdoPort;
-                }
-            }
-
-            return null;
-        }
-
-        private void SaveEnd(object sender, EventArgs e)
-        {
-            if (isEdit)
-            {
-                RuntimeData.Ports = imsiPorts;
-                mainForm.InitTreeItem();    //MainForm Tree 재구성
-
-                MessageBox.Show(RuntimeData.String("A018"));
-            }
-        }
-
-        private void CancleEvent(object sender, EventArgs e)
-        {
-            if (isEdit)
-            {
-                //취소 시 기존 데이터로 복구
-                if(MessageBox.Show(RuntimeData.String("A019"), "", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
-                {
-                    imsiPorts = RuntimeData.Ports;
-                }
-            }
+            unit = new Unit(port, Addr, unitType, unitModel, unitName);
+            port.Units.Add(Addr, unit);
         }
     }
 }

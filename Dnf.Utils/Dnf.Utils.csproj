@@ -76,10 +76,13 @@
     <None Include="Resources\Connect_32x32.png" />
     <Content Include="Resources\DownLoad_32x32.png" />
     <None Include="Resources\empty_16x16.png" />
+    <None Include="Resources\Erase_16x16.png" />
     <Content Include="Resources\GreenSync_16x16.png" />
+    <Content Include="Resources\LAN_Come_16x16.png" />
     <Content Include="Resources\Play_00_32x32.png" />
     <Content Include="Resources\Plus_00_32x32.png" />
     <Content Include="Resources\RedPower_16x16.png" />
+    <Content Include="Resources\Serial_Come_16x16.png" />
     <Content Include="Resources\Stop_00_32x32.png" />
     <None Include="Resources\TreeChild_16x16.png" />
     <None Include="Resources\Test_32x32.png" />

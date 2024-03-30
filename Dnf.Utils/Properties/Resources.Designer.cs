@@ -113,9 +113,29 @@ namespace Dnf.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
+        public static System.Drawing.Bitmap Erase_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("Erase_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
         public static System.Drawing.Bitmap GreenSync_16x16 {
             get {
                 object obj = ResourceManager.GetObject("GreenSync_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap LAN_Come_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("LAN_Come_16x16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -146,6 +166,16 @@ namespace Dnf.Utils.Properties {
         public static System.Drawing.Bitmap RedPower_16x16 {
             get {
                 object obj = ResourceManager.GetObject("RedPower_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Serial_Come_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("Serial_Come_16x16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
