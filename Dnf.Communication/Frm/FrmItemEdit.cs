@@ -28,7 +28,7 @@ namespace Dnf.Communication.Frm
         Panel pnlTop = new Panel();
         Panel pnlButton = new Panel();
         Button BtnOK = new Button();     //저장    
-        Button BtnCancle = new Button();   //초기화
+        Button BtnCancel = new Button();   //초기화
 
         //Port 정보
         Panel pnlControlBox = new Panel();
@@ -92,22 +92,22 @@ namespace Dnf.Communication.Frm
 
             //Button 정의
             BtnOK.Text = RuntimeData.String("F1001");
-            BtnCancle.Text = RuntimeData.String("F1003");
+            BtnCancel.Text = RuntimeData.String("F1003");
 
             BtnOK.Dock = DockStyle.Right;
-            BtnCancle.Dock = DockStyle.Right;
+            BtnCancel.Dock = DockStyle.Right;
 
             BtnOK.Size = new Size(100, BtnOK.Height);
-            BtnCancle.Size = new Size(100, BtnCancle.Height);
+            BtnCancel.Size = new Size(100, BtnCancel.Height);
 
             //Button 추가
             pnlButton.Controls.Add(BtnOK);
-            pnlButton.Controls.Add(BtnCancle);
+            pnlButton.Controls.Add(BtnCancel);
             //이벤트
             BtnOK.Click += ClickButton_Check;
-            BtnCancle.Click += ClickButton_Cancle;
+            BtnCancel.Click += ClickButton_Cancel;
             //정렬
-            BtnCancle.BringToFront();
+            BtnCancel.BringToFront();
             BtnOK.BringToFront();
 
             this.Controls.Add(pnlButton);
@@ -380,7 +380,7 @@ namespace Dnf.Communication.Frm
             }
         }
 
-        private void ClickButton_Cancle(object sender, EventArgs e)
+        private void ClickButton_Cancel(object sender, EventArgs e)
         {
             mainForm.RemoveTabPage(this.Name);
         }
@@ -450,17 +450,34 @@ namespace Dnf.Communication.Frm
             Port port = null;
 
             //Port 작업
-            string portName = (cboPortName.ctrl as ComboBox).SelectedItem.ToString();
             uProtocolType protocolType = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
-            BaudRate baudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
-            int dataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value);
-            StopBits stopBits = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem;
-            Parity parity = (Parity)(cboParity.ctrl as ComboBox).SelectedItem;
 
-            port = new Port(portName, protocolType, baudRate, dataBits, stopBits, parity);
-            RuntimeData.Ports.Add(portName, port);
+            if(protocolType == uProtocolType.ModBusRTU || protocolType == uProtocolType.ModBusAscii)
+            {
+                string portName = (cboPortName.ctrl as ComboBox).SelectedItem.ToString();
+                BaudRate baudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
+                int dataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value);
+                StopBits stopBits = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem;
+                Parity parity = (Parity)(cboParity.ctrl as ComboBox).SelectedItem;
 
-            return RuntimeData.Ports[portName];
+                port = new Custom_SerialPort(portName, protocolType, baudRate, dataBits, stopBits, parity);
+            }
+            else if(protocolType == uProtocolType.ModBusTcpIp)
+            {
+                IPAddress ip = IPAddress.Parse((txtIPaddr.ctrl as TextBox).Text);
+                ushort portNo = ushort.Parse((txtPortNo.ctrl as TextBox).Text);
+
+                port = new Custom_EthernetPort(protocolType, ip, portNo);
+            }
+
+            //정상처리시 Runtime에 추가
+            if (port != null)
+            {
+                RuntimeData.Ports.Add(port.PortName, port);
+                return RuntimeData.Ports[port.PortName];
+            }
+
+            return null;
         }
 
         private void CreateUnit(Port port, DataGridViewRow dr)

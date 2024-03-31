@@ -1,6 +1,7 @@
 ﻿using Dnf.Communication.Controls;
 using Dnf.Communication.Data;
 using Dnf.Communication.Frm;
+using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
@@ -60,15 +61,15 @@ namespace Dnf.Communication
             {
                 Port port = node.Tag as Port;
 
-                //포트열기
-                if (port.PortOpen())
-                {
-                    form.LblStatus.Text = RuntimeData.String("A007");
-                }
-                else
-                {
-                    form.LblStatus.Text = RuntimeData.String("A008");
-                }
+                ////포트열기
+                //if (port.PortOpen())
+                //{
+                //    form.LblStatus.Text = RuntimeData.String("A007");
+                //}
+                //else
+                //{
+                //    form.LblStatus.Text = RuntimeData.String("A008");
+                //}
             }
             else
             {
@@ -86,15 +87,15 @@ namespace Dnf.Communication
             {
                 Port port = node.Tag as Port;
 
-                //포트닫기
-                if (port.PortClose())
-                {
-                    form.LblStatus.Text = RuntimeData.String("A009");
-                }
-                else
-                {
-                    form.LblStatus.Text = RuntimeData.String("A010");
-                }
+                ////포트닫기
+                //if (port.PortClose())
+                //{
+                //    form.LblStatus.Text = RuntimeData.String("A009");
+                //}
+                //else
+                //{
+                //    form.LblStatus.Text = RuntimeData.String("A010");
+                //}
             }
             else
             {
@@ -113,8 +114,10 @@ namespace Dnf.Communication
             XmlDocument xdoc = new XmlDocument();
             XmlNode rootNode = xdoc.CreateElement("Root");
 
-            foreach (Port port in RuntimeData.Ports.Values)
+            foreach (Port portValue in RuntimeData.Ports.Values)
             {
+                Custom_SerialPort port = portValue as Custom_SerialPort;
+
                 XmlNode portNode = xdoc.CreateElement("Port");
 
                 XmlAttribute attrPortName = xdoc.CreateAttribute("PortName");
@@ -191,13 +194,13 @@ namespace Dnf.Communication
 
                 foreach (XmlNode nodePort in root.ChildNodes)
                 {
-                    Port port = new Port(
+                    Port port = new Custom_SerialPort(
                         nodePort.Attributes["PortName"].Value,
-                        (uProtocolType)Enum.Parse(typeof(uProtocolType), nodePort.Attributes["Protocol"].Value),
-                        (BaudRate)Enum.Parse(typeof(BaudRate), nodePort.Attributes["BaudRate"].Value),
+                        UtilCustom.StringToEnum<uProtocolType>(nodePort.Attributes["Protocol"].Value),
+                        UtilCustom.StringToEnum<BaudRate>(nodePort.Attributes["BaudRate"].Value),
                         Convert.ToInt16(nodePort.Attributes["DataBits"].Value),
-                        (StopBits)Enum.Parse(typeof(StopBits), nodePort.Attributes["StopBit"].Value),
-                        (Parity)Enum.Parse(typeof(Parity), nodePort.Attributes["Parity"].Value)
+                        UtilCustom.StringToEnum<StopBits>(nodePort.Attributes["StopBit"].Value),
+                        UtilCustom.StringToEnum<Parity>(nodePort.Attributes["Parity"].Value)
                         );
 
                     RuntimeData.Ports.Add(port.PortName, port);
@@ -209,8 +212,8 @@ namespace Dnf.Communication
                         Unit unit = new Unit(
                             port,
                             addr,
-                            (UnitType)Enum.Parse(typeof(UnitType), nodeUnit.Attributes["UnitType"].Value),
-                            (UnitModel)Enum.Parse(typeof(UnitModel), nodeUnit.Attributes["UnitModel"].Value),
+                            UtilCustom.StringToEnum<UnitType>(nodePort.Attributes["UnitType"].Value),
+                            UtilCustom.StringToEnum<UnitModel>(nodePort.Attributes["UnitModel"].Value),
                             nodeUnit.Attributes["UserName"].Value
                             );
 
