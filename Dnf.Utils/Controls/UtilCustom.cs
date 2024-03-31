@@ -13,6 +13,59 @@ namespace Dnf.Utils.Controls
 {
     static public class UtilCustom
     {
+        #region 데이터 형태 변환
+
+        /// <summary>
+        /// DataRow값이나 object값 int32형태로 변환
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        static public int ToInt32_Custom(this object obj)
+        {
+            if (obj == null || obj == DBNull.Value || obj.ToString() == "")
+                return -1;
+            else
+                return Convert.ToInt32(obj);
+        }
+
+        /// <summary>
+        /// int -> 2byte로 변환
+        /// </summary>
+        /// <param name="value">변환할 int Value(Max 65535)</param>
+        /// <returns></returns>
+        static public byte[] IntToByte2(int value)
+        {
+            if (value > 65535) return null;
+
+            //int Bit Shift
+            return new byte[] { (byte)(value >> 8), (byte)value };
+        }
+
+        /// <summary>
+        /// string -> Enum값으로 변경
+        /// </summary>
+        /// <typeparam name="T">변경될 Enum</typeparam>
+        /// <param name="str">변경할 string</param>
+        /// <returns>Enum값</returns>
+        static public T StringToEnum<T>(this string str)
+        {
+            return (T)Enum.Parse(typeof(T), str);
+        }
+
+        /// <summary>
+        /// Enum List -> object[]값으로 변경
+        /// </summary>
+        /// <typeparam name="T">변환할 Enum</typeparam>
+        /// <returns>ItemList</returns>
+        static public object[] EnumToItems<T>()
+        {
+            return Enum.GetValues(typeof(T)).OfType<object>().ToArray();
+        }
+
+        #endregion 데이터 형태 변환 End
+
+        #region 기능
+
         /// <summary>
         /// Byte Array 합치기
         /// </summary>
@@ -31,19 +84,6 @@ namespace Dnf.Utils.Controls
         }
 
         /// <summary>
-        /// int -> 2byte로 변환
-        /// </summary>
-        /// <param name="value">변환할 int Value(Max 65535)</param>
-        /// <returns></returns>
-        static public byte[] IntToByte2(int value)
-        {
-            if(value > 65535) return null;
-
-            //int Bit Shift
-            return new byte[] { (byte)(value >> 8), (byte)value };
-        }
-
-        /// <summary>
         /// Dictionary Key값 수정
         /// </summary>
         /// <typeparam name="TKey">Dictionary Key</typeparam>
@@ -54,7 +94,7 @@ namespace Dnf.Utils.Controls
         /// <returns>true : Success / false : Fail</returns>
         static public bool DictKeyChange<TKey, TValue>(IDictionary<TKey, TValue> dic, TKey bfKey, TKey afKey)
         {
-            if(dic.ContainsKey(afKey)) { return false; }
+            if (dic.ContainsKey(afKey)) { return false; }
 
             TValue value = dic[bfKey];
             dic.Remove(bfKey);
@@ -62,6 +102,10 @@ namespace Dnf.Utils.Controls
 
             return true;
         }
+
+        #endregion 기능 End
+
+        #region Event
 
         /// <summary>
         /// DataGridView Column의 Value에 숫자만 입력하도록 하기
@@ -97,6 +141,11 @@ namespace Dnf.Utils.Controls
             }
         }
 
+        /// <summary>
+        /// TextBox IP만 입력가능하도록 변경
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         static public void TextBox_IP(object sender, KeyPressEventArgs e)
         {
             TextBox textBox = sender as TextBox;
@@ -105,7 +154,7 @@ namespace Dnf.Utils.Controls
             //제어값(BackSpace, Delete 등)
             if (!char.IsControl(e.KeyChar))
             {
-                if(e.KeyChar == '.' && DotSplit.Length == 4)
+                if (e.KeyChar == '.' && DotSplit.Length == 4)
                 {
                     //.을 입력했을떄 이미 4번째주소를 입력한 상태면 불가능
                     e.Handled = true;
@@ -115,10 +164,10 @@ namespace Dnf.Utils.Controls
                     if (DotSplit[DotSplit.Length - 1].Length == 3)
                     {
                         //입력값이 3개이상 입력된 상태인지 점검
-                        if(e.KeyChar !=  '.')
+                        if (e.KeyChar != '.')
                         {
                             //3개입력된 이후 .이 아니면 입력불가능
-                            e.Handled= true;
+                            e.Handled = true;
                         }
                     }
                     else
@@ -133,26 +182,9 @@ namespace Dnf.Utils.Controls
             }
         }
 
-        /// <summary>
-        /// string값 Enum값으로 변경
-        /// </summary>
-        /// <typeparam name="T">변경될 Enum</typeparam>
-        /// <param name="str">변경할 string</param>
-        /// <returns>Enum값</returns>
-        static public T StringToEnum<T>(this string str)
-        {
-            return (T)Enum.Parse(typeof(T), str);
-        }
+        #endregion Event End
 
-        /// <summary>
-        /// Enum값들을 object[]값으로 변경
-        /// </summary>
-        /// <typeparam name="T">변환할 Enum</typeparam>
-        /// <returns>ItemList</returns>
-        static public object[] EnumToItems<T>()
-        {
-            return Enum.GetValues(typeof(T)).OfType<object>().ToArray();
-        }
+        #region 공통Type Control생성
 
         /// <summary>
         /// Panel 경계선 그리기
@@ -180,12 +212,6 @@ namespace Dnf.Utils.Controls
             return lbl;
         }
 
-        static public int ToInt32_Custom(this object obj)
-        {
-            if (obj == null || obj == DBNull.Value || obj.ToString() == "")
-                return -1;
-            else
-                return Convert.ToInt32(obj);
-        }
+        #endregion 공통Type Control생성 End
     }
 }

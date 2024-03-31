@@ -20,10 +20,6 @@ namespace Dnf.Communication.Frm
     public partial class FrmPort : Form
     {
         /// <summary>
-        /// 상위 Form
-        /// </summary>
-        MainForm mainForm;
-        /// <summary>
         /// Form Open 형태, New : 신규생성, Edit : 수정
         /// </summary>
         FrmEditType OpenType;
@@ -59,14 +55,16 @@ namespace Dnf.Communication.Frm
         /// <param name="frm">상위 Form</param>
         /// <param name="type">Form 열리는 Type / New, Edit</param>
         /// <param name="port">Edit일 때 수정할 Port</param>
-        public FrmPort(MainForm frm, FrmEditType type, Port port = null)
+        public FrmPort(FrmEditType type, Port port = null)
         {
-            mainForm = frm;
             OpenType = type;
             frmPort = port;
 
             InitializeComponent();
             InitialForm();
+
+            if(type == FrmEditType.New) { this.Text = "Create Port"; }
+            else if(type == FrmEditType.Edit) { this.Text = "Edit Port"; }
         }
 
         private void InitialForm()
@@ -353,7 +351,7 @@ namespace Dnf.Communication.Frm
             //화면 종료
             if(OpenType == FrmEditType.New && frmPort != null)
             {
-                FrmUnit frmUnit = new FrmUnit(mainForm, FrmEditType.New, frmPort);
+                FrmUnit frmUnit = new FrmUnit(FrmEditType.New, frmPort);
 
                 //정상처리시 Runtime에 추가
                 if (port != null && frmUnit.ShowDialog() == DialogResult.OK)

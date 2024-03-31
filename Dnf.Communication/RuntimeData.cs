@@ -49,6 +49,7 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F0202", "Port 닫기");
             dtimsi.Rows.Add("F0203", "Port 삭제");
             dtimsi.Rows.Add("F0204", "Item 생성");
+            dtimsi.Rows.Add("F0205", "Port 수정");
             //Unit 정보
             dtimsi.Rows.Add("F0300", "Slave Address");
             dtimsi.Rows.Add("F0301", "모델 구분");
@@ -58,6 +59,7 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F0305", "Unit 삭제");
             dtimsi.Rows.Add("F0306", "IP");
             dtimsi.Rows.Add("F0307", "Port 번호");
+            dtimsi.Rows.Add("F0308", "Unit 수정");
             //생성 Unit
             dtimsi.Rows.Add("F0400", "생성된 Unit");
             dtimsi.Rows.Add("F0401", "Data 전송");

@@ -18,10 +18,6 @@ namespace Dnf.Communication.Frm
     public partial class FrmUnit : Form
     {
         /// <summary>
-        /// 상위 Form
-        /// </summary>
-        MainForm mainForm;
-        /// <summary>
         /// Form Open 형태, New : 신규생성, Edit : 수정
         /// </summary>
         FrmEditType OpenType;
@@ -62,9 +58,8 @@ namespace Dnf.Communication.Frm
         /// </summary>
         bool EditFlag = false;
 
-        public FrmUnit(MainForm frm, FrmEditType type, Port port, Unit unit = null)
+        public FrmUnit(FrmEditType type, Port port, Unit unit = null)
         {
-            mainForm = frm;
             OpenType = type;
             BasePort = port;
             SelectedUnit = unit;
@@ -192,39 +187,6 @@ namespace Dnf.Communication.Frm
             this.Controls.Add(pnlControlBox);
         }
 
-        private void Changed_UnitProperty(object sender, EventArgs e)
-        {
-            if (EditFlag)
-            {
-                DataRow dr = GetSelectedGridDataRow();
-                string CtrlName = (sender as Control).Parent.Name;
-
-                if (dr == null) return;
-                Unit unit = dr["Unit"] as Unit;
-
-
-                if (CtrlName == "numUnitAddr")
-                {
-                    unit.SlaveAddr = (int)(sender as NumericUpDown).Value;
-                }
-                else if(CtrlName == "cboUnitType")
-                {
-                    //UnitModel 리스트 변경
-                }
-                else if (CtrlName == "cboUnitModel")
-                {
-                    //Protocol 사용할 수 있는 Model인지 확인절차
-
-                    //Model 적용
-                    unit.UnitModel = (UnitModel)(sender as ComboBox).SelectedItem;
-                }
-                else if(CtrlName == "txtUnitName")
-                {
-                    unit.UnitName = (sender as TextBox).Text;
-                }
-            }
-        }
-
         /// <summary>
         /// DataGridView Control 셋팅
         /// </summary>
@@ -275,7 +237,6 @@ namespace Dnf.Communication.Frm
 
             this.Controls.Add(gv);
         }
-
 
         /// <summary>
         /// Dock 순서 조정
@@ -474,6 +435,69 @@ namespace Dnf.Communication.Frm
             this.DialogResult = DialogResult.Cancel;
         }
 
+        /// <summary>
+        /// Unit속성 변경 이벤트
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Changed_UnitProperty(object sender, EventArgs e)
+        {
+            if (EditFlag)
+            {
+                DataRow dr = GetSelectedGridDataRow();
+                string CtrlName = (sender as Control).Parent.Name;
+
+                if (dr == null) return;
+                Unit unit = dr["Unit"] as Unit;
+
+
+                if (CtrlName == "numUnitAddr")
+                {
+                    //Slave Address 변경
+                    int afAddr = (int)(sender as NumericUpDown).Value;
+                    bool useAddr = true;
+
+                    //변경될 값이 DataTble에 있는지 확인
+                    foreach (DataRow drComp in dr.Table.Rows)
+                    {
+                        if (drComp != dr)
+                        {
+                            if (drComp["SlaveAddr"].ToInt32_Custom() == afAddr)
+                            {
+                                MessageBox.Show(RuntimeData.String("A012"));
+                                useAddr = false;
+                                return;
+                            }
+                        }
+                    }
+
+                    //중복Addr 없으면 적용
+                    if (useAddr)
+                    {
+                        unit.SlaveAddr = afAddr;
+                        dr["SlaveAddr"] = unit.SlaveAddr;
+                    }
+                }
+                else if (CtrlName == "cboUnitType")
+                {
+                    //UnitModel 리스트 변경
+                }
+                else if (CtrlName == "cboUnitModel")
+                {
+                    //Protocol 사용할 수 있는 Model인지 확인절차
+
+                    //Model 적용
+                    unit.UnitModel = (UnitModel)(sender as ComboBox).SelectedItem;
+                }
+                else if (CtrlName == "txtUnitName")
+                {
+                    //UnitName 변경
+                    unit.UnitName = (sender as TextBox).Text;
+                    dr["UnitName"] = unit.UnitName;
+                }
+            }
+        }
+
         #endregion Event End
 
         private DataRow GetSelectedGridDataRow()
@@ -494,7 +518,6 @@ namespace Dnf.Communication.Frm
 
             return null;
         }
-
 
         private Unit CreateUnit(DataRow dr)
         {

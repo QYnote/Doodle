@@ -38,8 +38,15 @@ namespace Dnf.Communication
 
         public Panel pnlList;      //생성된 정보들모음
         public TreeView Tree;      //등록된 Port-Unit Tree
-        public ContextMenu TreeMenu = new ContextMenu();  //Tree 우클릭 메뉴
         private ImageList ImgList = new ImageList();
+        public ContextMenuStrip TreeMenu = new ContextMenuStrip();  //Tree 우클릭 메뉴
+        private ToolStripMenuItem menu_CreatePort = new ToolStripMenuItem();
+        private ToolStripMenuItem menu_EditPort = new ToolStripMenuItem();
+        private ToolStripMenuItem menu_CreateUnit = new ToolStripMenuItem();
+        private ToolStripMenuItem menu_EditUnit = new ToolStripMenuItem();
+
+        ToolStripSeparator MenuLine1 = new ToolStripSeparator();
+
         public DataGridView gv;    //Tree에서 선택됨 Item 정보
 
         private BackgroundWorker bgWorker;
@@ -59,12 +66,13 @@ namespace Dnf.Communication
             this.FormClosed += FrmClosed;
 
             //Control Add
-            CreateControl_Base();
-            CreateControl_Info();
-            SortControl();
+            InitializeControl_Base();
+            InitializeControl_Info();
+            Initialize_TreeMenu_RightClick();
 
-            SetBackGroundWorker();
+            SortControl();
             SetImageList();
+            InitializeBackGroundWorker();
 
             this.Text = "통신";
         }
@@ -72,7 +80,7 @@ namespace Dnf.Communication
         /// <summary>
         /// 메뉴, TabControl 생성
         /// </summary>
-        private void CreateControl_Base()
+        private void InitializeControl_Base()
         {
             //Text 메뉴
             //파일
@@ -160,7 +168,7 @@ namespace Dnf.Communication
         /// <summary>
         /// Port, Unit 정보창 Panel
         /// </summary>
-        private void CreateControl_Info()
+        private void InitializeControl_Info()
         {
             //정보 Panel
             pnlList = new Panel();
@@ -222,12 +230,102 @@ namespace Dnf.Communication
             //Tree.AfterSelect += (sender, e) => { InitItemInfo(Tree.SelectedNode); };
         }
 
+        private void Initialize_TreeMenu_RightClick()
+        {
+            menu_CreatePort.Name = "TreeMenu_CreatePort";
+            menu_EditPort.Name = "TreeMenu_EditPort";
+            menu_CreateUnit.Name = "TreeMenu_CreateUnit";
+            menu_EditUnit.Name = "TreeMenu_EditUnit";
+
+            menu_CreatePort.Text = RuntimeData.String("F0106");
+            menu_EditPort.Text = RuntimeData.String("F0205");
+            menu_CreateUnit.Text = RuntimeData.String("F0304");
+            menu_EditUnit.Text = RuntimeData.String("F0308");
+
+            TreeMenu.Items.Add(menu_CreatePort);
+            TreeMenu.Items.Add(menu_EditPort);
+            TreeMenu.Items.Add(MenuLine1);
+            TreeMenu.Items.Add(menu_CreateUnit);
+            TreeMenu.Items.Add(menu_EditUnit);
+
+            menu_CreatePort.Click += (sender, e) => { CreatePort(); };
+            menu_EditPort.Click   += (sender, e) => { EditPort(); };
+            menu_CreateUnit.Click += (sender, e) => { CreateUnit(); };
+            menu_EditUnit.Click   += (sender, e) => { EditUnit(); };
+
+            Tree.NodeMouseClick += Tree_NodeMouseClick; ;
+        }
+
+        /// <summary>
+        /// Main Form Tree 재지정
+        /// </summary>
+        public void InitTreeItem()
+        {
+            Tree.Nodes[0].Nodes.Clear();    //Program Computer Node 하위항목 삭제
+
+            //Port
+            foreach (Port port in RuntimeData.Ports.Values)
+            {
+                TreeNode portNode = new TreeNode();
+                portNode.Name = port.PortName;
+                portNode.Text = port.PortName;
+                portNode.Tag = port;
+
+                if (port.ProtocolType == uProtocolType.ModBusTcpIp)
+                {
+                    portNode.ImageKey = "LANPort";
+                }
+                else
+                {
+                    portNode.ImageKey = "SerialPort";
+                }
+                portNode.SelectedImageKey = portNode.ImageKey;
+
+                //Unit
+                foreach (Unit unit in port.Units.Values)
+                {
+                    TreeNode unitNode = new TreeNode();
+                    unitNode.Name = unit.UnitName + unit.SlaveAddr;
+                    unitNode.Text = unit.UnitName;
+                    unitNode.ImageKey = "DisConnect";
+                    unitNode.SelectedImageKey = unitNode.ImageKey;
+                    unitNode.Tag = unit;
+
+                    //Channel
+                    //foreach (UnitChannel channel in unit.Channel)
+                    //{
+                    //    TreeNode channelNode = new TreeNode();
+                    //    channelNode.Name = string.Format("Ch{0:D2}",channel.ChannelNumber);
+                    //    channelNode.Text = channelNode.Name;
+                    //    channelNode.ImageKey = "TreeChild";
+                    //}
+
+                    portNode.Nodes.Add(unitNode);
+                }
+
+                Tree.Nodes[0].Nodes.Add(portNode);
+            }
+
+            Tree.ExpandAll();
+        }
+
+        /// <summary>
+        /// BackGroundWorker 생성 및 시작
+        /// </summary>
+        private void InitializeBackGroundWorker()
+        {
+            bgWorker = new BackgroundWorker();
+            bgWorker.WorkerSupportsCancellation = false;
+            //bgWorker.DoWork += BackgroundWorkder_DoWork;
+            //bgWorker.RunWorkerAsync();
+        }
+
         #region Event
 
         /// <summary>
         /// Tree에서 Item 선택 시 정보창
         /// </summary>
-        private void InitItemInfo(TreeNode node)
+        private void SelectTreeItem(TreeNode node)
         {
             //선택 Item 정보 표시
             Type tagType = node.Tag?.GetType();
@@ -309,7 +407,156 @@ namespace Dnf.Communication
             gv.DataSource = dt;
         }
 
+        /// <summary>
+        /// TreeView 우클릭 이벤트
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Tree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                Tree.SelectedNode = e.Node;
+
+                VisibleTreeMenu(e.Node.Level);
+                e.Node.ContextMenuStrip = TreeMenu;
+            }
+        }
+
+        /// <summary>
+        /// TreeView 우클릭 시 나오는 Menu Visible 처리
+        /// </summary>
+        /// <param name="nodeLvl"></param>
+        private void VisibleTreeMenu(int nodeLvl)
+        {
+            //Root
+            if (nodeLvl == 0)
+            {
+                menu_CreatePort.Visible = true;
+                menu_EditPort.Visible = false;
+                MenuLine1.Visible = false;
+                menu_CreateUnit.Visible = false;
+                menu_EditUnit.Visible = false;
+            }
+            //Port
+            else if (nodeLvl == 1)
+            {
+                menu_CreatePort.Visible = false;
+                menu_EditPort.Visible = true;
+                MenuLine1.Visible = true;
+                menu_CreateUnit.Visible = true;
+                menu_EditUnit.Visible = false;
+            }
+            //Unit
+            else if (nodeLvl == 2)
+            {
+                menu_CreatePort.Visible = false;
+                menu_EditPort.Visible = false;
+                MenuLine1.Visible = false;
+                menu_CreateUnit.Visible = false;
+                menu_EditUnit.Visible = true;
+            }
+            //Channel
+            else if (nodeLvl == 3) { }
+            else if (nodeLvl == 4) { }
+        }
+
         #endregion Event End
+
+        /// <summary>
+        /// Port 생성
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CreatePort()
+        {
+            //Port 생성
+            FrmPort frmPort = new FrmPort(FrmEditType.New);
+
+            if (frmPort.ShowDialog() == DialogResult.OK)
+            {
+                InitTreeItem();
+            }
+        }
+
+        /// <summary>
+        /// Port 수정
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void EditPort()
+        {
+            //Port 수정
+            TreeNode node = Tree.SelectedNode;
+
+            if(node != null || node.Tag != null)
+            {
+                if(node.Tag.GetType().Name == "Custom_SerialPort"
+                    || node.Tag.GetType().Name == "Custom_EthernetPort")
+                {
+                    FrmPort frmPort = new FrmPort(FrmEditType.Edit, node.Tag as Port);
+
+                    if (frmPort.ShowDialog() == DialogResult.OK)
+                    {
+                        InitTreeItem();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Unit 생성
+        /// </summary>
+        private void CreateUnit()
+        {
+            TreeNode node = Tree.SelectedNode;
+
+            if (node != null || node.Tag != null)
+            {
+                FrmUnit frmUnit = null;
+                if (node.Tag.GetType().Name == "Custom_SerialPort"
+                    || node.Tag.GetType().Name == "Custom_EthernetPort")
+                {
+                    frmUnit = new FrmUnit(FrmEditType.New, node.Tag as Port);
+                }
+                else if (node.Tag.GetType().Name == "Unit")
+                {
+                    frmUnit = new FrmUnit(FrmEditType.New, node.Parent.Tag as Port);
+                }
+
+                if (frmUnit != null)
+                {
+                    if (frmUnit.ShowDialog() == DialogResult.OK)
+                    {
+                        InitTreeItem();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Unit 수정
+        /// </summary>
+        private void EditUnit()
+        {
+            TreeNode node = Tree.SelectedNode;
+
+            if (node != null || node.Tag != null)
+            {
+                if (node.Tag.GetType().Name == "Unit")
+                {
+                    FrmUnit frmUnit = new FrmUnit(FrmEditType.Edit, node.Parent.Tag as Port, node.Tag as Unit);
+
+                    if (frmUnit.ShowDialog() == DialogResult.OK)
+                    {
+                        InitTreeItem();
+                    }
+                }
+            }
+        }
+
+
+
 
         private void SetImageList()
         {
@@ -331,67 +578,6 @@ namespace Dnf.Communication
             pnlList.BringToFront();
             TabCtrl.BringToFront();
             BtnTabClose.BringToFront();
-        }
-
-        private void SetBackGroundWorker()
-        {
-            bgWorker = new BackgroundWorker();
-            bgWorker.WorkerSupportsCancellation = false;
-            //bgWorker.DoWork += BackgroundWorkder_DoWork;
-            //bgWorker.RunWorkerAsync();
-        }
-
-        /// <summary>
-        /// Main Form Tree 재지정
-        /// </summary>
-        public void InitTreeItem()
-        {
-            Tree.Nodes[0].Nodes.Clear();    //Program Computer Node 하위항목 삭제
-
-            //Port
-            foreach (Port port in RuntimeData.Ports.Values)
-            {
-                TreeNode portNode = new TreeNode();
-                portNode.Name = port.PortName;
-                portNode.Text = port.PortName;
-                portNode.Tag = port;
-
-                if (port.ProtocolType == uProtocolType.ModBusTcpIp)
-                {
-                    portNode.ImageKey = "LANPort";
-                }
-                else
-                {
-                    portNode.ImageKey = "SerialPort";
-                }
-                portNode.SelectedImageKey = portNode.ImageKey;
-
-                //Unit
-                foreach (Unit unit in port.Units.Values)
-                {
-                    TreeNode unitNode = new TreeNode();
-                    unitNode.Name = unit.UnitName + unit.SlaveAddr;
-                    unitNode.Text = unit.UnitName;
-                    unitNode.ImageKey = "DisConnect";
-                    unitNode.SelectedImageKey = unitNode.ImageKey;
-                    unitNode.Tag = unit;
-
-                    //Channel
-                    //foreach (UnitChannel channel in unit.Channel)
-                    //{
-                    //    TreeNode channelNode = new TreeNode();
-                    //    channelNode.Name = string.Format("Ch{0:D2}",channel.ChannelNumber);
-                    //    channelNode.Text = channelNode.Name;
-                    //    channelNode.ImageKey = "TreeChild";
-                    //}
-
-                    portNode.Nodes.Add(unitNode);
-                }
-
-                Tree.Nodes[0].Nodes.Add(portNode);
-            }
-
-            Tree.ExpandAll();
         }
 
         /// <summary>
@@ -482,7 +668,7 @@ namespace Dnf.Communication
 
         private void TestFunction()
         {
-            FrmPort frmPort = new FrmPort(this, FrmEditType.New);
+            FrmPort frmPort = new FrmPort(FrmEditType.New);
 
             if (frmPort.ShowDialog() == DialogResult.OK)
             {
