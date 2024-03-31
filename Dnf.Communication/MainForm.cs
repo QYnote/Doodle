@@ -18,6 +18,9 @@ using System.Xml;
 using System.Xml.Linq;
 using Dnf.Communication.Controls;
 using Dnf.Communication.Data;
+using Dnf.Communication.Frm;
+using Dnf.Utils.Controls;
+using Dnf.Utils.Views;
 
 //Button Resource 사이트
 
@@ -35,6 +38,8 @@ namespace Dnf.Communication
 
         public Panel pnlList;      //생성된 정보들모음
         public TreeView Tree;      //등록된 Port-Unit Tree
+        public ContextMenu TreeMenu = new ContextMenu();  //Tree 우클릭 메뉴
+        private ImageList ImgList = new ImageList();
         public DataGridView gv;    //Tree에서 선택됨 Item 정보
 
         private BackgroundWorker bgWorker;
@@ -59,6 +64,7 @@ namespace Dnf.Communication
             SortControl();
 
             SetBackGroundWorker();
+            SetImageList();
 
             this.Text = "통신";
         }
@@ -96,8 +102,6 @@ namespace Dnf.Communication
             imCommOpen.Image = Dnf.Utils.Properties.Resources.Play_00_32x32;
             imCommClose.Image = Dnf.Utils.Properties.Resources.Stop_00_32x32;
             test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
-
-
 
             tmFileXmlSave.Click += ActMethod;
             tmFileXmlLoad.Click += ActMethod;
@@ -150,7 +154,7 @@ namespace Dnf.Communication
             BtnTabClose  .Click += (sender, e) => { RemoveTabPage(TabCtrl.SelectedTab.Name); };
             TabCtrl.ControlAdded += (sender, e) => { if (TabCtrl.TabPages.Count == 1) BtnTabClose.Visible = true; };    
 
-            test  .Click += (sender, e) => {};
+            test  .Click += (sender, e) => { TestFunction(); };
         }
 
         /// <summary>
@@ -168,15 +172,7 @@ namespace Dnf.Communication
             Tree.Dock = DockStyle.Fill;
             Tree.Size = new Size(Tree.Width, 100);
             Tree.MinimumSize = new Size(200, 100);
-            Tree.ImageList = new ImageList();
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.BlueCircleSetting_16x16);  //Program Computer
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.Serial_Come_16x16);        //Serial Port
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.LAN_Come_16x16);           //LAN Port
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.RedPower_16x16);           //빨강(미연결)
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.YellowWarning_16x16);      //노랑(연결 불량, 오류)
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.GreenSync_16x16);          //초록(정상연결)
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.TreeChild_16x16);          //Unit 미만 항목
-            Tree.ImageList.Images.Add(Dnf.Utils.Properties.Resources.empty_16x16);              //Default 아이콘
+            Tree.ImageList = ImgList;
             Tree.Nodes.Add("Program Computer");
             Tree.Nodes[0].ImageIndex = 0;
             Tree.Nodes[0].SelectedImageIndex = Tree.Nodes[0].ImageIndex;
@@ -196,6 +192,7 @@ namespace Dnf.Communication
             //속성 Column
             DataGridViewColumn colName = new DataGridViewTextBoxColumn();
             colName.HeaderText = RuntimeData.String("F0500");
+            colName.Name = "P";
             colName.DataPropertyName = "P";
             colName.Width = 90;
             colName.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -207,6 +204,7 @@ namespace Dnf.Communication
             //Value Column
             DataGridViewColumn colValue = new DataGridViewTextBoxColumn();
             colValue.HeaderText = RuntimeData.String("F0501");
+            colValue.Name = "V";
             colValue.DataPropertyName = "V";
             colValue.Width = pnlList.Width - colName.Width - 3;
             colValue.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -221,7 +219,109 @@ namespace Dnf.Communication
             pnlList.Controls.Add(gv);
             this.Controls.Add(pnlList);
 
-            Tree.AfterSelect += (sender, e) => { InitItemInfo(Tree.SelectedNode); };
+            //Tree.AfterSelect += (sender, e) => { InitItemInfo(Tree.SelectedNode); };
+        }
+
+        #region Event
+
+        /// <summary>
+        /// Tree에서 Item 선택 시 정보창
+        /// </summary>
+        private void InitItemInfo(TreeNode node)
+        {
+            //선택 Item 정보 표시
+            Type tagType = node.Tag?.GetType();
+
+            if (tagType == typeof(Port))
+            {
+                //Port Node 선택 시
+                SetPortInfoTable(node);
+            }
+            else if (tagType == typeof(Unit))
+            {
+                //Unit Node 선택 시
+                SetUnitInfotable(node);
+            }
+            else
+            {
+                //지정된 Tag 없거나 미사용일 시
+                gv.DataSource = null;
+            }
+        }
+
+        private void SetPortInfoTable(TreeNode node)
+        {
+            DataTable dt = gv.DataSource == null ? new DataTable() : gv.DataSource as DataTable;
+            Port port = node.Tag as Port;
+
+            if (dt.TableName != "Port")
+            {
+                //Port Table이 아니였을 시 데이터 수정
+                dt.TableName = "Port";
+                dt.Columns.Clear();
+                dt.Columns.Add("P", typeof(string));
+                dt.Columns.Add("V", typeof(object));
+
+                dt.Rows.Clear();
+                dt.Rows.Add(new object[] { RuntimeData.String("F0100"), null });
+                dt.Rows.Add(new object[] { RuntimeData.String("F0101"), null });
+                dt.Rows.Add(new object[] { RuntimeData.String("F0102"), null });
+                dt.Rows.Add(new object[] { RuntimeData.String("F0103"), null });
+                dt.Rows.Add(new object[] { RuntimeData.String("F0104"), null });
+                dt.Rows.Add(new object[] { RuntimeData.String("F0105"), null });
+            }
+
+            //dt.Rows[0][1] = port.PortName;
+            //dt.Rows[1][1] = port.ProtocolType;
+            //dt.Rows[2][1] = port.BaudRate;
+            //dt.Rows[3][1] = port.DataBits;
+            //dt.Rows[4][1] = port.StopBIt;
+            //dt.Rows[5][1] = port.Parity;
+
+            gv.DataSource = dt;
+        }
+
+        private void SetUnitInfotable(TreeNode node)
+        {
+            DataTable dt = gv.DataSource == null ? new DataTable() : gv.DataSource as DataTable;
+            Unit unit = node.Tag as Unit;
+
+            if (dt.TableName != "Unit")
+            {
+                //Port Table이 아니였을 시 데이터 수정
+                dt.TableName = "Unit";
+                dt.Columns.Clear();
+                dt.Columns.Add("P", typeof(string));
+                dt.Columns.Add("V", typeof(object));
+
+                dt.Rows.Clear();
+                dt.Rows.Add(new object[] { RuntimeData.String("F0300"), null });   //Slave Addr
+                dt.Rows.Add(new object[] { RuntimeData.String("F0301"), null });   //모델 구분
+                dt.Rows.Add(new object[] { RuntimeData.String("F0302"), null });   //모델
+                dt.Rows.Add(new object[] { RuntimeData.String("F0303"), null });   //모델명(사용자지정)
+            }
+
+            //dt.Rows[0][1] = unit.SlaveAddr;
+            //dt.Rows[1][1] = unit.UnitType;
+            //dt.Rows[2][1] = unit.UnitModel;
+            //dt.Rows[3][1] = unit.UnitName;
+
+            gv.DataSource = dt;
+        }
+
+        #endregion Event End
+
+        private void SetImageList()
+        {
+            //Image 보관
+            ImgList.Images.Add("Root", Dnf.Utils.Properties.Resources.BlueCircleSetting_16x16);     //Program Computer
+            ImgList.Images.Add("SerialPort", Dnf.Utils.Properties.Resources.Serial_Come_16x16);     //Serial Port
+            ImgList.Images.Add("LANPort", Dnf.Utils.Properties.Resources.LAN_Come_16x16);           //LAN Port
+            ImgList.Images.Add("DisConnect", Dnf.Utils.Properties.Resources.RedPower_16x16);        //빨강(미연결)
+            ImgList.Images.Add("ConnectError", Dnf.Utils.Properties.Resources.YellowWarning_16x16); //노랑(연결 불량, 오류)
+            ImgList.Images.Add("Connect", Dnf.Utils.Properties.Resources.GreenSync_16x16);          //초록(정상연결)
+            ImgList.Images.Add("TreeChild", Dnf.Utils.Properties.Resources.TreeChild_16x16);        //Unit 미만 항목
+            ImgList.Images.Add("Empty", Dnf.Utils.Properties.Resources.empty_16x16);                //Default 아이콘
         }
 
         private void SortControl()
@@ -254,9 +354,17 @@ namespace Dnf.Communication
                 TreeNode portNode = new TreeNode();
                 portNode.Name = port.PortName;
                 portNode.Text = port.PortName;
-                portNode.ImageIndex = 1;
-                portNode.SelectedImageIndex = portNode.ImageIndex;
                 portNode.Tag = port;
+
+                if (port.ProtocolType == uProtocolType.ModBusTcpIp)
+                {
+                    portNode.ImageKey = "LANPort";
+                }
+                else
+                {
+                    portNode.ImageKey = "SerialPort";
+                }
+                portNode.SelectedImageKey = portNode.ImageKey;
 
                 //Unit
                 foreach (Unit unit in port.Units.Values)
@@ -264,8 +372,8 @@ namespace Dnf.Communication
                     TreeNode unitNode = new TreeNode();
                     unitNode.Name = unit.UnitName + unit.SlaveAddr;
                     unitNode.Text = unit.UnitName;
-                    unitNode.ImageIndex = 1;
-                    unitNode.SelectedImageIndex = unitNode.ImageIndex;
+                    unitNode.ImageKey = "DisConnect";
+                    unitNode.SelectedImageKey = unitNode.ImageKey;
                     unitNode.Tag = unit;
 
                     //Channel
@@ -274,7 +382,7 @@ namespace Dnf.Communication
                     //    TreeNode channelNode = new TreeNode();
                     //    channelNode.Name = string.Format("Ch{0:D2}",channel.ChannelNumber);
                     //    channelNode.Text = channelNode.Name;
-                    //    channelNode.ImageIndex = 4;
+                    //    channelNode.ImageKey = "TreeChild";
                     //}
 
                     portNode.Nodes.Add(unitNode);
@@ -285,92 +393,6 @@ namespace Dnf.Communication
 
             Tree.ExpandAll();
         }
-
-        /// <summary>
-        /// Tree에서 Item 선택 시 정보창
-        /// </summary>
-        private void InitItemInfo(TreeNode node)
-        {
-            //선택 Item 정보 표시
-            Type tagType = node.Tag?.GetType();
-
-            if(tagType == typeof(Port))
-            {
-                //Port Node 선택 시
-                SetPortInfoTable(node);
-            }
-            else if(tagType == typeof(Unit))
-            {
-                //Unit Node 선택 시
-                SetUnitInfotable(node);
-            }
-            else
-            {
-                //지정된 Tag 없거나 미사용일 시
-                gv.DataSource = null;   
-            }
-        }
-
-        private void SetPortInfoTable(TreeNode node)
-        {
-            DataTable dt = gv.DataSource == null ? new DataTable() : gv.DataSource as DataTable;
-            Port port = node.Tag as Port;
-
-            if (dt.TableName != "Port")
-            {
-                //Port Table이 아니였을 시 데이터 수정
-                dt.TableName = "Port";
-                dt.Columns.Clear();
-                dt.Columns.Add("P", typeof(string));
-                dt.Columns.Add("V", typeof(object));
-
-                dt.Rows.Clear();
-                dt.Rows.Add(new object[] { RuntimeData.String("F0100"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0101"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0102"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0103"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0104"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0105"), null });
-            }
-
-            dt.Rows[0][1] = port.PortName;
-            dt.Rows[1][1] = port.ProtocolType;
-            dt.Rows[2][1] = port.BaudRate;
-            dt.Rows[3][1] = port.DataBits;
-            dt.Rows[4][1] = port.StopBIt;
-            dt.Rows[5][1] = port.Parity;
-
-            gv.DataSource = dt; 
-        }
-
-        private void SetUnitInfotable(TreeNode node)
-        {
-            DataTable dt = gv.DataSource == null ? new DataTable() : gv.DataSource as DataTable;
-            Unit unit = node.Tag as Unit;
-
-            if (dt.TableName != "Unit")
-            {
-                //Port Table이 아니였을 시 데이터 수정
-                dt.TableName = "Unit";
-                dt.Columns.Clear();
-                dt.Columns.Add("P", typeof(string));
-                dt.Columns.Add("V", typeof(object));
-
-                dt.Rows.Clear();
-                dt.Rows.Add(new object[] { RuntimeData.String("F0300"), null });   //Slave Addr
-                dt.Rows.Add(new object[] { RuntimeData.String("F0301"), null });   //모델 구분
-                dt.Rows.Add(new object[] { RuntimeData.String("F0302"), null });   //모델
-                dt.Rows.Add(new object[] { RuntimeData.String("F0303"), null });   //모델명(사용자지정)
-            }
-
-            dt.Rows[0][1] = unit.SlaveAddr;
-            dt.Rows[1][1] = unit.UnitType;
-            dt.Rows[2][1] = unit.UnitModel;
-            dt.Rows[3][1] = unit.UnitName;
-
-            gv.DataSource = dt;
-        }
-
 
         /// <summary>
         /// 함수(Method, Function) 실행
@@ -433,10 +455,10 @@ namespace Dnf.Communication
 
         private void SetNodeImage(TreeNode node, ConnectionState state)
         {
-            if (state == ConnectionState.Closed) { node.ImageIndex = 1; }      //미연결
-            else if (state == ConnectionState.Executing) { node.ImageIndex = 2; } //연결중
-            else if (state == ConnectionState.Open) { node.ImageIndex = 3; }  //연결됨
-            node.SelectedImageIndex = node.ImageIndex;
+            if (state == ConnectionState.Closed) { node.ImageKey = "DisConnect"; }      //미연결
+            else if (state == ConnectionState.Executing) { node.ImageKey = "ConnectError"; } //연결중
+            else if (state == ConnectionState.Open) { node.ImageKey = "Connect"; }  //연결됨
+            node.SelectedImageKey = node.ImageKey;
         }
 
         private void FrmClosed(object sender, FormClosedEventArgs e)
@@ -455,6 +477,16 @@ namespace Dnf.Communication
             else
             {
                 TabCtrl.TabPages.RemoveByKey(pageName);
+            }
+        }
+
+        private void TestFunction()
+        {
+            FrmPort frmPort = new FrmPort(this, FrmEditType.New);
+
+            if (frmPort.ShowDialog() == DialogResult.OK)
+            {
+                InitTreeItem();
             }
         }
     }

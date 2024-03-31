@@ -1,0 +1,511 @@
+﻿using Dnf.Communication.Controls;
+using Dnf.Communication.Data;
+using Dnf.Utils.Controls;
+using Dnf.Utils.Views;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Dnf.Communication.Frm
+{
+    public partial class FrmUnit : Form
+    {
+        /// <summary>
+        /// 상위 Form
+        /// </summary>
+        MainForm mainForm;
+        /// <summary>
+        /// Form Open 형태, New : 신규생성, Edit : 수정
+        /// </summary>
+        FrmEditType OpenType;
+        /// <summary>
+        /// Form 내부 Port
+        /// </summary>
+        Port BasePort;
+        /// <summary>
+        /// 선택된 Unit
+        /// </summary>
+        Unit SelectedUnit;
+
+        #region Controls
+        Panel pnlButton = new Panel();
+        Button BtnOK = new Button();
+        Button BtnCancel = new Button();
+
+        Panel pnlControlBox = new Panel();
+        ucControlBox cboProtocolType = new ucControlBox(CtrlType.ComboBox);
+        ucControlBox numUnitAddr = new ucControlBox(CtrlType.NumbericUpDown);
+        ucControlBox cboUnitType = new ucControlBox(CtrlType.ComboBox);
+        ucControlBox cboUnitModel = new ucControlBox(CtrlType.ComboBox);
+        ucControlBox txtUnitName = new ucControlBox(CtrlType.TextBox);
+        Button BtnNew = new Button();
+
+        DataGridView gv = new DataGridView();
+        DataGridViewTextBoxColumn colSlaveAddr = new DataGridViewTextBoxColumn();
+        DataGridViewTextBoxColumn colUnitName = new DataGridViewTextBoxColumn();
+        DataGridViewImageColumn colErase = new DataGridViewImageColumn();
+        #endregion Controls End
+
+        /// <summary>
+        /// Row Remove하면 SelectionRow가 사라져서 쓰는 Flag
+        /// </summary>
+        bool removeFlag = false;
+        /// <summary>
+        /// Form이 틀어지거나 Unit 선택할때 Value Changed이벤트 막는용도
+        /// </summary>
+        bool EditFlag = false;
+
+        public FrmUnit(MainForm frm, FrmEditType type, Port port, Unit unit = null)
+        {
+            mainForm = frm;
+            OpenType = type;
+            BasePort = port;
+            SelectedUnit = unit;
+
+            InitializeComponent();
+            InitialForm();
+        }
+
+        private void InitialForm()
+        {
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            this.ShowInTaskbar = false;
+            this.Size = new Size(280, 400);
+
+            InitializeButton();
+            InitializeControlBox();
+            InitializeDockIndex();
+
+            SetGridData();
+            SetText();
+            SetDefaultValue();
+            SetEnable();
+        }
+
+        /// <summary>
+        /// Button Control 생성
+        /// </summary>
+        private void InitializeButton()
+        {
+            pnlButton.Dock = DockStyle.Bottom;
+            pnlButton.Size = new Size(pnlButton.Width, 30);
+
+            //Button 정의
+            BtnOK.Text = RuntimeData.String("F1001");
+            BtnCancel.Text = RuntimeData.String("F1003");
+
+            BtnOK.Dock = DockStyle.Right;
+            BtnCancel.Dock = DockStyle.Right;
+
+            BtnOK.Size = new Size(100, BtnOK.Height);
+            BtnCancel.Size = new Size(100, BtnCancel.Height);
+
+            //Button 추가
+            pnlButton.Controls.Add(BtnOK);
+            pnlButton.Controls.Add(BtnCancel);
+            //이벤트
+            BtnOK.Click += ClickButton_Check;
+            BtnCancel.Click += ClickButton_Cancel;
+            //정렬
+            BtnCancel.BringToFront();
+            BtnOK.BringToFront();
+
+            this.Controls.Add(pnlButton);
+        }
+
+        /// <summary>
+        /// 조작 Control 생성
+        /// </summary>
+        private void InitializeControlBox()
+        {
+            pnlControlBox.Dock = DockStyle.Top;
+            pnlControlBox.MinimumSize = new Size(pnlControlBox.Width, 135);
+
+            //Control 명(Control Type - Item구분 - 담당Property)
+            cboProtocolType.Name = "cboProtocolType";
+            numUnitAddr.Name = "numUnitAddr";
+            cboUnitType.Name = "cboUnitType";
+            cboUnitModel.Name = "cboUnitModel";
+            txtUnitName.Name = "txtUnitName";
+
+            //Items
+            (cboProtocolType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());;
+            (cboUnitType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<UnitType>());;
+            (cboUnitModel.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<UnitModel>());;
+
+            (numUnitAddr.ctrl as NumericUpDown).Minimum = 1;
+            (numUnitAddr.ctrl as NumericUpDown).Maximum = 255;
+
+            //Dock
+            cboProtocolType.Dock = DockStyle.Top;
+            numUnitAddr.Dock = DockStyle.Top;
+            cboUnitType.Dock = DockStyle.Top;
+            cboUnitModel.Dock = DockStyle.Top;
+            txtUnitName.Dock = DockStyle.Top;
+            BtnNew.Dock = DockStyle.Fill;
+
+            //Label Width
+            int portLabelWidth = 100;
+            cboProtocolType.LblWidth = portLabelWidth;
+            numUnitAddr.LblWidth = portLabelWidth;
+            cboUnitType.LblWidth = portLabelWidth;
+            cboUnitModel.LblWidth = portLabelWidth;
+            txtUnitName.LblWidth = portLabelWidth;
+            BtnNew.Height = 30;
+
+            Label splitLine1 = UtilCustom.CreateSplitLine(DockStyle.Top);
+
+            pnlControlBox.Controls.Add(splitLine1);
+            pnlControlBox.Controls.Add(numUnitAddr);
+            pnlControlBox.Controls.Add(cboProtocolType);
+            pnlControlBox.Controls.Add(cboUnitType);
+            pnlControlBox.Controls.Add(cboUnitModel);
+            pnlControlBox.Controls.Add(txtUnitName);
+            pnlControlBox.Controls.Add(BtnNew);
+
+            cboProtocolType.BringToFront();
+            splitLine1.BringToFront();
+            numUnitAddr.BringToFront();
+            cboUnitType.BringToFront();
+            cboUnitModel.BringToFront();
+            txtUnitName.BringToFront();
+            BtnNew.BringToFront();
+
+            BtnNew.Click += Click_NewRow;
+            (numUnitAddr.ctrl as NumericUpDown).ValueChanged += Changed_UnitProperty;
+            (cboUnitModel.ctrl as ComboBox).SelectedIndexChanged += Changed_UnitProperty;
+            (cboUnitType.ctrl as ComboBox).SelectedIndexChanged += Changed_UnitProperty;
+            (txtUnitName.ctrl as TextBox).TextChanged += Changed_UnitProperty;
+
+
+            //Grid는 내용이 많아서 따로 생성
+            InitializeUnitGrid();
+
+            this.Controls.Add(pnlControlBox);
+        }
+
+        private void Changed_UnitProperty(object sender, EventArgs e)
+        {
+            if (EditFlag)
+            {
+                DataRow dr = GetSelectedGridDataRow();
+                string CtrlName = (sender as Control).Parent.Name;
+
+                if (dr == null) return;
+                Unit unit = dr["Unit"] as Unit;
+
+
+                if (CtrlName == "numUnitAddr")
+                {
+                    unit.SlaveAddr = (int)(sender as NumericUpDown).Value;
+                }
+                else if(CtrlName == "cboUnitType")
+                {
+                    //UnitModel 리스트 변경
+                }
+                else if (CtrlName == "cboUnitModel")
+                {
+                    //Protocol 사용할 수 있는 Model인지 확인절차
+
+                    //Model 적용
+                    unit.UnitModel = (UnitModel)(sender as ComboBox).SelectedItem;
+                }
+                else if(CtrlName == "txtUnitName")
+                {
+                    unit.UnitName = (sender as TextBox).Text;
+                }
+            }
+        }
+
+        /// <summary>
+        /// DataGridView Control 셋팅
+        /// </summary>
+        private void InitializeUnitGrid()
+        {
+            gv.Dock = DockStyle.Fill;
+            gv.AllowUserToAddRows = false;
+            gv.AllowUserToOrderColumns = false;
+            gv.AllowUserToResizeRows = false;
+            gv.AutoGenerateColumns = false;
+            gv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gv.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            gv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            gv.MultiSelect = false;
+
+            //Column Setting
+            colSlaveAddr.Width = 60;
+            colUnitName.Width = 120;
+            colErase.Width = 20;
+
+            colSlaveAddr.ReadOnly = true;
+            colUnitName.ReadOnly = true;
+
+            colSlaveAddr.Name = "colSlaveAddr";
+            colUnitName.Name = "colUnitName";
+            colErase.Name = "colErase";
+
+            colSlaveAddr.DisplayIndex = 0;
+            colUnitName.DisplayIndex = 1;
+            colErase.DisplayIndex = 2;
+
+            colSlaveAddr.ValueType = typeof(byte);
+            colUnitName.ValueType = typeof(string);
+
+            colSlaveAddr.DataPropertyName = "SlaveAddr";
+            colUnitName.DataPropertyName = "UnitName";
+
+            colErase.Image = Dnf.Utils.Properties.Resources.Erase_16x16;
+
+            colSlaveAddr.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colSlaveAddr.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colUnitName.SortMode = DataGridViewColumnSortMode.NotSortable;
+
+            gv.Columns.AddRange(new DataGridViewColumn[] { colSlaveAddr, colUnitName, colErase });
+
+            gv.CellContentClick += EraseColumnClick;
+            gv.SelectionChanged += RowSelected;
+
+            this.Controls.Add(gv);
+        }
+
+
+        /// <summary>
+        /// Dock 순서 조정
+        /// </summary>
+        private void InitializeDockIndex()
+        {
+            pnlControlBox.BringToFront();
+            pnlButton.BringToFront();
+            gv.BringToFront();
+        }
+
+        /// <summary>
+        /// Grid DataSource 셋팅
+        /// </summary>
+        private void SetGridData()
+        {
+            BindingSource binding = new BindingSource();
+            DataTable dt = new DataTable();
+            dt.Columns.Add("SlaveAddr", typeof(short));
+            dt.Columns.Add("UnitName", typeof(string));
+            dt.Columns.Add("Unit", typeof(Unit));
+
+            foreach (Unit unit in BasePort.Units.Values)
+            {
+                dt.Rows.Add(new object[] { unit.SlaveAddr, unit.UnitName, unit });
+            }
+
+            binding.DataSource = dt;
+            gv.DataSource = binding;
+        }
+
+        /// <summary>
+        /// Controls 기본값 지정
+        /// </summary>
+        private void SetDefaultValue()
+        {
+            EditFlag = false;
+
+            //Port Protocol 정보
+            (cboProtocolType.ctrl as ComboBox).SelectedItem = BasePort.ProtocolType;
+
+            if (OpenType == FrmEditType.New)
+            {
+                (numUnitAddr.ctrl as NumericUpDown).Value = 1;
+                (cboUnitType.ctrl as ComboBox).SelectedIndex = 0;
+                (cboUnitModel.ctrl as ComboBox).SelectedIndex = 0;
+                (txtUnitName.ctrl as TextBox).Text = "";
+            }
+            else if (OpenType == FrmEditType.Edit && SelectedUnit != null)
+            {
+                (numUnitAddr.ctrl as NumericUpDown).Value = SelectedUnit.SlaveAddr;
+                (cboUnitType.ctrl as ComboBox).SelectedItem = SelectedUnit.UnitType;
+                (cboUnitModel.ctrl as ComboBox).SelectedItem = SelectedUnit.UnitModel;
+                (txtUnitName.ctrl as TextBox).Text = SelectedUnit.UnitName;
+            }
+
+            EditFlag = true;
+        }
+
+        /// <summary>
+        /// Controls 비활성화 처리
+        /// </summary>
+        private void SetEnable()
+        {
+            cboProtocolType.Enabled = false;
+
+            if (OpenType == FrmEditType.Edit)
+            {
+                
+            }
+        }
+
+        /// <summary>
+        /// Controls Text 지정
+        /// </summary>
+        private void SetText()
+        {
+            //Label 표기 Text
+            cboProtocolType.LblText = RuntimeData.String("F0101");
+            numUnitAddr.LblText = RuntimeData.String("F0300");
+            cboUnitType.LblText = RuntimeData.String("F0103");
+            cboUnitModel.LblText = RuntimeData.String("F0104");
+            txtUnitName.LblText = RuntimeData.String("F0303");
+            BtnNew.Text = RuntimeData.String("F1000");
+
+            //Grid
+            colSlaveAddr.HeaderText = RuntimeData.String("F0300");
+            colUnitName.HeaderText = RuntimeData.String("F0303");
+            colErase.HeaderText = "";
+        }
+
+        #region Event
+
+        /// <summary>
+        /// Grid에서 삭제아이콘 클릭 이벤트
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void EraseColumnClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if(e.RowIndex == gv.NewRowIndex) return;
+
+            if(e.ColumnIndex == colErase.Index)
+            {
+                removeFlag = true;
+                gv.Rows.RemoveAt(e.RowIndex);
+                removeFlag = false;
+            }
+        }
+
+        /// <summary>
+        /// 신규추가 Button Click 시
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Click_NewRow(object sender, EventArgs e)
+        {
+            BindingSource binding = gv.DataSource as BindingSource;
+            DataTable dt = binding.DataSource as DataTable;
+            DataRow dr = dt.NewRow();
+
+
+            if(dt.Rows.Count == 0)
+            {
+                dr["SlaveAddr"] = 1;
+            }
+            else
+            {
+                int maxAddr = 1;
+                foreach (DataRow row in dt.Rows)
+                {
+                    int addr = row["SlaveAddr"].ToInt32_Custom();
+                    if (maxAddr <= addr) { maxAddr = addr + 1; continue; }
+                }
+
+                dr["SlaveAddr"] = maxAddr;
+            }
+            dr["UnitName"] = "";
+            dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32_Custom(), UnitType.UnitType1, UnitModel.UnitModel1);
+
+            dt.Rows.Add(dr);
+
+            binding.ResetBindings(false);
+        }
+
+        /// <summary>
+        /// Grid Row 선택 시
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void RowSelected(object sender, EventArgs e)
+        {
+            if (gv.SelectedRows.Count == 0) return;
+            if (removeFlag) return;
+
+            DataRow dr = GetSelectedGridDataRow();
+            Unit unit = dr["Unit"] as Unit;
+            EditFlag = false;
+
+            (numUnitAddr.ctrl as NumericUpDown).Value = unit.SlaveAddr;
+            (cboUnitType.ctrl as ComboBox).SelectedItem = unit.UnitType;
+            (cboUnitModel.ctrl as ComboBox).SelectedItem = unit.UnitModel;
+            (txtUnitName.ctrl as TextBox).Text = unit.UnitName;
+
+            EditFlag = true;
+        }
+
+        /// <summary>
+        /// 저장버튼 Click
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ClickButton_Check(object sender, EventArgs e)
+        {
+            DataTable dt = (gv.DataSource as BindingSource).DataSource as DataTable;
+
+            BasePort.Units.Clear();
+            foreach (DataRow dr in dt.Rows)
+            {
+                Unit unit = dr["Unit"] as Unit;
+                if (unit == null)
+                {
+                    MessageBox.Show("Unit Create Error");
+                    return;
+                }
+
+                BasePort.Units.Add(unit.SlaveAddr, unit);
+            }
+
+            this.DialogResult = DialogResult.OK;
+        }
+
+        private void ClickButton_Cancel(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+        }
+
+        #endregion Event End
+
+        private DataRow GetSelectedGridDataRow()
+        {
+            if (gv.SelectedRows.Count == 0) return null;
+
+            DataTable dt = (gv.DataSource as BindingSource).DataSource as DataTable;
+            DataGridViewRow drv = gv.SelectedRows[0];
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                //Addr이 같은 DataRow 탐색
+                if (dr["SlaveAddr"].ToInt32_Custom() == drv.Cells["colSlaveAddr"].Value.ToInt32_Custom())
+                {
+                    return dr;
+                }
+            }
+
+            return null;
+        }
+
+
+        private Unit CreateUnit(DataRow dr)
+        {
+            Unit unit = dr["Unit"] as Unit;
+
+            int addr = unit.SlaveAddr;
+            UnitType unitType = unit.UnitType;
+            UnitModel unitModel = unit.UnitModel;
+            string unitName = unit.UnitName;
+
+            return new Unit(BasePort, addr, unitType, unitModel, unitName);
+        }
+    }
+}

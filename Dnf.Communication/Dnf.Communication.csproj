@@ -43,12 +43,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\Custom_EthernetPort.cs" />
     <Compile Include="Controls\ChannelValue.cs" />
     <Compile Include="Controls\ExternalData.cs" />
     <Compile Include="Controls\EnumCustom.cs" />
+    <Compile Include="Controls\Custom_SerialPort.cs" />
     <Compile Include="Controls\UnitChannel.cs" />
     <Compile Include="Frm\FrmItemEdit.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmPort.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmPort.Designer.cs">
+      <DependentUpon>FrmPort.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm\FrmUnit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmUnit.Designer.cs">
+      <DependentUpon>FrmUnit.cs</DependentUpon>
     </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -85,11 +99,11 @@
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
     <ItemGroup>
-		<CopyFiles1 Include="$(ProjectDir)Data\*.*"/>
-		<CopyFiles2 Include="$(ProjectDir)Data\UnitData\*.*"/>
+      <CopyFiles1 Include="$(ProjectDir)Data\*.*" />
+      <CopyFiles2 Include="$(ProjectDir)Data\UnitData\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(CopyFiles1)" DestinationFolder="$(SolutionDir)DotNetFramework\$(OutDir)\Data" SkipUnchangedFiles="true"/>
-    <Copy SourceFiles="@(CopyFiles2)" DestinationFolder="$(SolutionDir)DotNetFramework\$(OutDir)\Data\UnitData" SkipUnchangedFiles="true"/>
+    <Copy SourceFiles="@(CopyFiles1)" DestinationFolder="$(SolutionDir)DotNetFramework\$(OutDir)\Data" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(CopyFiles2)" DestinationFolder="$(SolutionDir)DotNetFramework\$(OutDir)\Data\UnitData" SkipUnchangedFiles="true" />
   </Target>
   <!--Data복사 End-->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

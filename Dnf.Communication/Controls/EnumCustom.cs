@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication.Data
 {
+    public enum FrmEditType
+    {
+        New,    //신규
+        Edit    //수정
+    }
+
+
     /// <summary>
     /// Unit Model Group(Type)
     /// </summary>
