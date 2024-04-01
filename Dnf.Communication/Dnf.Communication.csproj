@@ -44,14 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\Custom_EthernetPort.cs" />
-    <Compile Include="Controls\ChannelValue.cs" />
     <Compile Include="Controls\ExternalData.cs" />
     <Compile Include="Controls\EnumCustom.cs" />
     <Compile Include="Controls\Custom_SerialPort.cs" />
-    <Compile Include="Controls\UnitChannel.cs" />
-    <Compile Include="Frm\FrmItemEdit.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Frm\FrmPort.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -70,12 +65,10 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="MenuFunctions.cs" />
     <Compile Include="Controls\Protocols\ModbusRTU.cs" />
     <Compile Include="Controls\Port.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controls\Unit.cs" />
-    <Compile Include="Controls\UnitRegistry.cs" />
     <Compile Include="RuntimeData.cs" />
   </ItemGroup>
   <ItemGroup>

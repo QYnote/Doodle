@@ -11,16 +11,22 @@ namespace Dnf.Communication.Controls
     //외부 데이터 연동
     public class ExternalData
     {
-        public string FilePath = RuntimeData.DataPath;
+        public static string FilePath = RuntimeData.DataPath;
 
         #region XML
 
-        public string XmlLoad_ModelStruct(UnitModel model, string attribute)
+        /// <summary>
+        /// Model정보 가져오기 ver.XML
+        /// </summary>
+        /// <param name="model">가져올 Model</param>
+        /// <param name="attribute">가져올 Attribute</param>
+        /// <returns></returns>
+        public static string XmlLoad_ModelStruct(UnitModel model, string attribute)
         {
             XmlDocument xdoc = new XmlDocument();
             try
             {
-                string path = string.Format("{0}\\{1}.xml", FilePath, "ModelStruct");
+                string path = string.Format("{0}\\UnitData\\{1}.xml", FilePath, "ModelStruct");
 
                 if (!System.IO.File.Exists(path)) { throw new Exception(RuntimeData.String("XmlLoad ModelStruct Error")); }
 

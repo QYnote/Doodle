@@ -45,8 +45,8 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F0106", "Port 생성");
             //생성 Port
             dtimsi.Rows.Add("F0200", "생성된 Port");
-            dtimsi.Rows.Add("F0201", "Port 열기");
-            dtimsi.Rows.Add("F0202", "Port 닫기");
+            dtimsi.Rows.Add("F0201", "통신 열기");
+            dtimsi.Rows.Add("F0202", "통신 닫기");
             dtimsi.Rows.Add("F0203", "Port 삭제");
             dtimsi.Rows.Add("F0204", "Item 생성");
             dtimsi.Rows.Add("F0205", "Port 수정");

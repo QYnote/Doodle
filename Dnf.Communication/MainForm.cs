@@ -2,25 +2,15 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.IO.Ports;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Runtime.Remoting.Channels;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Linq;
 using Dnf.Communication.Controls;
 using Dnf.Communication.Data;
 using Dnf.Communication.Frm;
-using Dnf.Utils.Controls;
-using Dnf.Utils.Views;
 
 //Button Resource 사이트
 
@@ -29,30 +19,49 @@ namespace Dnf.Communication
     public partial class MainForm : Dnf.Utils.Views.FrmBase
     {
         #region Control 모음
-        public MenuStrip TextMenu = new MenuStrip();   //상단 글자메뉴
-        public ToolStrip IconMenu = new ToolStrip();   //상단 아이콘 메뉴
+        private MenuStrip TextMenu = new MenuStrip();   //상단 글자메뉴
+        private ToolStripMenuItem TextMenu_File = new ToolStripMenuItem();
+        private ToolStripMenuItem TextMenu_File_XmlSave = new ToolStripMenuItem();
+        private ToolStripMenuItem TextMenu_File_XmlLoad = new ToolStripMenuItem();
+        private ToolStripMenuItem TextMenu_Comm = new ToolStripMenuItem();
+        private ToolStripMenuItem TextMenu_Comm_Cre = new ToolStripMenuItem();
+        private ToolStripMenuItem TextMenu_Comm_Open = new ToolStripMenuItem();
+        private ToolStripMenuItem TextMenu_Comm_Close = new ToolStripMenuItem();
+        private ToolStrip IconMenu = new ToolStrip();   //상단 아이콘 메뉴
+        private ToolStripButton IconMenu_File_XmlSave = new ToolStripButton();
+        private ToolStripButton IconMenu_File_XmlLoad = new ToolStripButton();
+        private ToolStripButton IconMenu_Comm_CreatePort = new ToolStripButton();
+        private ToolStripButton IconMenu_Comm_PortOpen = new ToolStripButton();
+        private ToolStripButton IconMenu_Comm_PortClose = new ToolStripButton();
+        private ToolStripButton IconMenu_Test = new ToolStripButton();
+
         private StatusStrip StatusBar = new StatusStrip();   //상태 바
-        public ToolStripStatusLabel LblStatus = new ToolStripStatusLabel();
+        private ToolStripStatusLabel LblStatus = new ToolStripStatusLabel();
+
         public TabControl TabCtrl = new TabControl();  //Tab Page(주 화면)
-        public Button BtnTabClose;                     //Tab Page 닫기 버튼
+        private Button BtnTabClose;                     //Tab Page 닫기 버튼
 
-        public Panel pnlList;      //생성된 정보들모음
-        public TreeView Tree;      //등록된 Port-Unit Tree
-        private ImageList ImgList = new ImageList();
-        public ContextMenuStrip TreeMenu = new ContextMenuStrip();  //Tree 우클릭 메뉴
-        private ToolStripMenuItem menu_CreatePort = new ToolStripMenuItem();
-        private ToolStripMenuItem menu_EditPort = new ToolStripMenuItem();
-        private ToolStripMenuItem menu_CreateUnit = new ToolStripMenuItem();
-        private ToolStripMenuItem menu_EditUnit = new ToolStripMenuItem();
+        private Panel pnlList;      //생성된 정보들모음
+        private TreeView Tree;      //등록된 Port-Unit Tree
+        private ImageList TreeImgList = new ImageList();
+        private ContextMenuStrip TreeMenu = new ContextMenuStrip();  //Tree 우클릭 메뉴
+        private ToolStripMenuItem TreeMenu_CreatePort = new ToolStripMenuItem();
+        private ToolStripMenuItem TreeMenu_EditPort = new ToolStripMenuItem();
+        private ToolStripSeparator TreeMenuLine1 = new ToolStripSeparator();
+        private ToolStripMenuItem TreeMenu_CreateUnit = new ToolStripMenuItem();
+        private ToolStripMenuItem TreeMenu_EditUnit = new ToolStripMenuItem();
+        private ToolStripSeparator TreeMenuLine2 = new ToolStripSeparator();
+        private ToolStripMenuItem TreeMenu_PortOpen = new ToolStripMenuItem();
+        private ToolStripMenuItem TreeMenu_PortClose = new ToolStripMenuItem();
 
-        ToolStripSeparator MenuLine1 = new ToolStripSeparator();
-
-        public DataGridView gv;    //Tree에서 선택됨 Item 정보
+        private Panel pnlProperty = new Panel();
+        private DataGridView gvPort = new DataGridView();
+        private DataGridView gvUnit = new DataGridView();
+        private DataGridViewColumn colPropertyName = new DataGridViewTextBoxColumn();
+        private DataGridViewColumn colPropertyValue = new DataGridViewTextBoxColumn();
 
         private BackgroundWorker bgWorker;
         #endregion Control 모음 End
-
-        private bool isAction = false;
 
         public MainForm()
         {
@@ -68,13 +77,14 @@ namespace Dnf.Communication
             //Control Add
             InitializeControl_Base();
             InitializeControl_Info();
-            Initialize_TreeMenu_RightClick();
+            Initialize_TreeMenu();
 
-            SortControl();
+            InitializeDockIndex();
             SetImageList();
-            InitializeBackGroundWorker();
+            SetText();
 
             this.Text = "통신";
+            InitializeBackGroundWorker();
         }
 
         /// <summary>
@@ -82,59 +92,8 @@ namespace Dnf.Communication
         /// </summary>
         private void InitializeControl_Base()
         {
-            //Text 메뉴
-            //파일
-            ToolStripMenuItem tmFile = new ToolStripMenuItem() { Text = RuntimeData.String("F0600") }; //파일
-            ToolStripMenuItem tmFileXmlSave = new ToolStripMenuItem() { Name = "TxtMenuXmlSave", Text = RuntimeData.String("F0000") };//XML 저장
-            ToolStripMenuItem tmFileXmlLoad = new ToolStripMenuItem() { Name = "TxtMenuXmlLoad", Text = RuntimeData.String("F0001") };//XML 불러오기
-            //통신
-            ToolStripMenuItem tmComm = new ToolStripMenuItem() { Text = RuntimeData.String("F0601") }; //통신
-            ToolStripMenuItem tmCommCre   = new ToolStripMenuItem() { Name = "TxtMenuItemCre"  , Text = RuntimeData.String("F0204") };//Model 생성
-            ToolStripMenuItem tmCommOpen  = new ToolStripMenuItem() { Name = "TxtMenuPortOpen" , Text = RuntimeData.String("F0201") };//Port 열기
-            ToolStripMenuItem tmCommClose = new ToolStripMenuItem() { Name = "TxtMenuPortClose", Text = RuntimeData.String("F0202") };//Port 닫기
-            
-            
-            //Icon 메뉴
-            IconMenu.ImageScalingSize = new Size(32, 32);
-
-            ToolStripButton imFileXmlSave = new ToolStripButton() { Name = "IconMenuXmlSave"  , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0000") };//XML 저장
-            ToolStripButton imFileXmlLoad = new ToolStripButton() { Name = "IconMenuXmlLoad"  , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0001") };//XML 불러오기
-            ToolStripButton imCommCre     = new ToolStripButton() { Name = "IconMenuItemCre"  , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0204") };//Port, Unit 생성
-            ToolStripButton imCommOpen    = new ToolStripButton() { Name = "IconMenuPortOpen" , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0201") };//포트열기
-            ToolStripButton imCommClose   = new ToolStripButton() { Name = "IconMenuPortClose", DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = RuntimeData.String("F0202") };//포트닫기
-            ToolStripButton test          = new ToolStripButton() { Name = "IconMenuTest"     , DisplayStyle = ToolStripItemDisplayStyle.Image, ToolTipText = "테스트" }; //테스트
-
-            imFileXmlSave.Image = Dnf.Utils.Properties.Resources.UpLoad_32x32;
-            imFileXmlLoad.Image = Dnf.Utils.Properties.Resources.DownLoad_32x32;
-            imCommCre.Image = Dnf.Utils.Properties.Resources.Plus_00_32x32;
-            imCommOpen.Image = Dnf.Utils.Properties.Resources.Play_00_32x32;
-            imCommClose.Image = Dnf.Utils.Properties.Resources.Stop_00_32x32;
-            test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
-
-            tmFileXmlSave.Click += ActMethod;
-            tmFileXmlLoad.Click += ActMethod;
-            tmCommCre.Click += ActMethod;
-            tmCommOpen.Click += ActMethod;
-            tmCommClose.Click += ActMethod;
-            imFileXmlSave.Click += ActMethod;
-            imFileXmlLoad.Click += ActMethod;
-            imCommCre.Click += ActMethod;
-            imCommOpen.Click += ActMethod;
-            imCommClose.Click += ActMethod;
-            test.Click += ActMethod;
-
-            tmFile.DropDownItems.AddRange(new ToolStripItem[] { tmFileXmlSave, tmFileXmlLoad });
-            tmComm.DropDownItems.AddRange(new ToolStripItem[] { tmCommCre, tmCommOpen, tmCommClose });
-            TextMenu.Items.AddRange(new ToolStripItem[] { tmFile, tmComm });
-            IconMenu.Items.AddRange(new ToolStripItem[] { 
-                //파일
-                imFileXmlSave, imFileXmlLoad, 
-                new ToolStripSeparator(),
-                //통신
-                imCommCre, imCommOpen, imCommClose,
-                new ToolStripSeparator(),
-                test
-            });
+            InitializeControl_TextMenu();
+            InitializeControl_IconMenu();
 
             //상태바
             StatusBar.Dock = DockStyle.Bottom;
@@ -161,8 +120,57 @@ namespace Dnf.Communication
 
             BtnTabClose  .Click += (sender, e) => { RemoveTabPage(TabCtrl.SelectedTab.Name); };
             TabCtrl.ControlAdded += (sender, e) => { if (TabCtrl.TabPages.Count == 1) BtnTabClose.Visible = true; };    
+        }
 
-            test  .Click += (sender, e) => { TestFunction(); };
+        /// <summary>
+        /// Text Menu 생성
+        /// </summary>
+        private void InitializeControl_TextMenu()
+        {
+            TextMenu_File.Name = "TextMenu_File";
+            TextMenu_File_XmlSave.Name = "TextMenu_File_XmlSave";
+            TextMenu_File_XmlLoad.Name = "TextMenu_File_XmlLoad";
+            TextMenu_Comm.Name = "TextMenu_Comm";
+            TextMenu_Comm_Cre.Name = "TextMenu_Comm_Cre";
+            TextMenu_Comm_Open.Name = "TextMenu_Comm_Open";
+            TextMenu_Comm_Close.Name = "TextMenu_Comm_Close";
+
+            //TextMenu_File.DropDownItems.AddRange(new ToolStripItem[] { TextMenu_File_XmlSave, TextMenu_File_XmlLoad });
+            TextMenu_Comm.DropDownItems.AddRange(new ToolStripItem[] { TextMenu_Comm_Cre, TextMenu_Comm_Open, TextMenu_Comm_Close });
+            TextMenu.Items.AddRange(new ToolStripItem[] { 
+                TextMenu_File, 
+                new ToolStripSeparator(), 
+                TextMenu_Comm
+            });
+
+        }
+
+        private void InitializeControl_IconMenu()
+        {
+            IconMenu.ImageScalingSize = new Size(32, 32);
+
+            IconMenu_File_XmlSave.Name = "IconMenu_File_XmlSave";
+            IconMenu_File_XmlLoad.Name = "IconMenu_File_XmlLoad";
+            IconMenu_Comm_CreatePort.Name = "IconMenu_Comm_CreatePort";
+            IconMenu_Comm_PortOpen.Name = "IconMenu_Comm_PortOpen";
+            IconMenu_Comm_PortClose.Name = "IconMenu_Comm_PortClose";
+            IconMenu_Test.Name = "IconMenu_Test";
+
+            IconMenu_File_XmlSave.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            IconMenu_File_XmlLoad.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            IconMenu_Comm_CreatePort.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            IconMenu_Comm_PortOpen.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            IconMenu_Comm_PortClose.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            IconMenu_Test.DisplayStyle = ToolStripItemDisplayStyle.Image;
+
+            //IconMenusms ImageList 사용해서 가져오면 Image 깨짐
+            IconMenu_Comm_CreatePort.Image = Dnf.Utils.Properties.Resources.Plus_00_32x32;
+            IconMenu_Test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
+
+            IconMenu.Items.AddRange(new ToolStripItem[] { IconMenu_Comm_CreatePort, IconMenu_Test });
+
+            IconMenu_Comm_CreatePort.Click += (sender, e) => { CreatePort(); };
+            IconMenu_Test.Click += (sender, e) => { TestFunction(); };
         }
 
         /// <summary>
@@ -180,80 +188,113 @@ namespace Dnf.Communication
             Tree.Dock = DockStyle.Fill;
             Tree.Size = new Size(Tree.Width, 100);
             Tree.MinimumSize = new Size(200, 100);
-            Tree.ImageList = ImgList;
+            Tree.ImageList = TreeImgList;
             Tree.Nodes.Add("Program Computer");
             Tree.Nodes[0].ImageIndex = 0;
             Tree.Nodes[0].SelectedImageIndex = Tree.Nodes[0].ImageIndex;
             Tree.SelectedImageIndex = 5;    //선택한 Node Image 기본값
 
-            //선택한 Port, Unit 정보 Grid
-            gv = new DataGridView();
-            gv.Dock = DockStyle.Bottom;
-            gv.AutoGenerateColumns = false;
-            gv.Size = new Size(gv.Width, 200);
-            gv.MinimumSize = new Size(200, 200);
-            gv.AutoGenerateColumns = false;     //DataTable에 따른 Column 자동생성 숨기기
-            gv.AllowUserToAddRows = false;      //Runtime 중 유저가 Row 추가하는 공간 숨기기
-            gv.AllowUserToResizeRows = false;   //유저가 Row높이 수정 막기
-            gv.RowHeadersVisible = false;       //현재 Row 화살표 숨기기
-
-            //속성 Column
-            DataGridViewColumn colName = new DataGridViewTextBoxColumn();
-            colName.HeaderText = RuntimeData.String("F0500");
-            colName.Name = "P";
-            colName.DataPropertyName = "P";
-            colName.Width = 90;
-            colName.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colName.ReadOnly = true;
-            colName.SortMode = DataGridViewColumnSortMode.NotSortable;  //정렬 불가능
-            colName.Resizable = DataGridViewTriState.False;             //너비조절 불가능
-
-            //Value Column
-            DataGridViewColumn colValue = new DataGridViewTextBoxColumn();
-            colValue.HeaderText = RuntimeData.String("F0501");
-            colValue.Name = "V";
-            colValue.DataPropertyName = "V";
-            colValue.Width = pnlList.Width - colName.Width - 3;
-            colValue.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colValue.ReadOnly = true;
-            colValue.SortMode = DataGridViewColumnSortMode.NotSortable; //정렬 불가능
-            colValue.Resizable = DataGridViewTriState.False;            //너비조절 불가능
-
-            gv.Columns.Add(colName);
-            gv.Columns.Add(colValue);
-
             pnlList.Controls.Add(Tree);
-            pnlList.Controls.Add(gv);
+            Initialize_PropertyGrid();
+
             this.Controls.Add(pnlList);
 
             //Tree.AfterSelect += (sender, e) => { InitItemInfo(Tree.SelectedNode); };
         }
 
-        private void Initialize_TreeMenu_RightClick()
+        private void Initialize_PropertyGrid()
         {
-            menu_CreatePort.Name = "TreeMenu_CreatePort";
-            menu_EditPort.Name = "TreeMenu_EditPort";
-            menu_CreateUnit.Name = "TreeMenu_CreateUnit";
-            menu_EditUnit.Name = "TreeMenu_EditUnit";
+            pnlProperty.Dock = DockStyle.Bottom;
+            pnlProperty.Size = new Size(pnlProperty.Width, 200);
+            pnlProperty.MinimumSize = new Size(200, 200);
 
-            menu_CreatePort.Text = RuntimeData.String("F0106");
-            menu_EditPort.Text = RuntimeData.String("F0205");
-            menu_CreateUnit.Text = RuntimeData.String("F0304");
-            menu_EditUnit.Text = RuntimeData.String("F0308");
+            //Grid조정
+            gvPort.Dock = DockStyle.Fill;
+            gvUnit.Dock = DockStyle.Fill;
+            //DataTable에 따른 Column 자동생성 숨기기
+            gvPort.AutoGenerateColumns = false;
+            gvUnit.AutoGenerateColumns = false;
+            //Runtime 중 유저가 Row 추가하는 공간 숨기기
+            gvPort.AllowUserToAddRows = false;
+            gvUnit.AllowUserToAddRows = false;
+            //유저가 Row높이 수정 막기
+            gvPort.AllowUserToResizeRows = false;
+            gvUnit.AllowUserToResizeRows = false;
+            //현재 Row 화살표 숨기기
+            gvPort.RowHeadersVisible = false;
+            gvUnit.RowHeadersVisible = false;
+            //초기 Visible값 숨기기
+            gvPort.Visible = false;
+            gvUnit.Visible = false;
 
-            TreeMenu.Items.Add(menu_CreatePort);
-            TreeMenu.Items.Add(menu_EditPort);
-            TreeMenu.Items.Add(MenuLine1);
-            TreeMenu.Items.Add(menu_CreateUnit);
-            TreeMenu.Items.Add(menu_EditUnit);
+            //Column 조정
+            colPropertyName.Name = "P";
+            colPropertyValue.Name = "V";
+            //너비
+            colPropertyName.Width = 90;
+            colPropertyValue.Width = pnlList.Width - colPropertyName.Width - 3;
+            //DataTable 연동할 Column명
+            colPropertyName.DataPropertyName = "P";
+            colPropertyValue.DataPropertyName = "V";
+            //Header Text정렬
+            colPropertyName.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colPropertyValue.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            //Value Text 정렬
+            colPropertyName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colPropertyValue.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            //읽기만 가능
+            colPropertyName.ReadOnly = true;
+            colPropertyValue.ReadOnly = true;
+            //정렬 불가능
+            colPropertyName.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colPropertyValue.SortMode = DataGridViewColumnSortMode.NotSortable;
+            //너비조절 불가능
+            colPropertyName.Resizable = DataGridViewTriState.False;
+            colPropertyValue.Resizable = DataGridViewTriState.False;
 
-            menu_CreatePort.Click += (sender, e) => { CreatePort(); };
-            menu_EditPort.Click   += (sender, e) => { EditPort(); };
-            menu_CreateUnit.Click += (sender, e) => { CreateUnit(); };
-            menu_EditUnit.Click   += (sender, e) => { EditUnit(); };
+            gvPort.Columns.AddRange(colPropertyName.Clone() as DataGridViewColumn, colPropertyValue.Clone() as DataGridViewColumn);
+            gvUnit.Columns.AddRange(colPropertyName.Clone() as DataGridViewColumn, colPropertyValue.Clone() as DataGridViewColumn);
+
+            pnlList.Controls.Add(pnlProperty);
+        }
+
+        /// <summary>
+        /// Tree 우클릭 Menu
+        /// </summary>
+        private void Initialize_TreeMenu()
+        {
+            TreeMenu_CreatePort.Name = "TreeMenu_CreatePort";
+            TreeMenu_EditPort.Name = "TreeMenu_EditPort";
+            TreeMenu_CreateUnit.Name = "TreeMenu_CreateUnit";
+            TreeMenu_EditUnit.Name = "TreeMenu_EditUnit";
+
+            TreeMenu.Items.Add(TreeMenu_PortOpen);
+            TreeMenu.Items.Add(TreeMenu_PortClose);
+            TreeMenu.Items.Add(TreeMenuLine1);
+            TreeMenu.Items.Add(TreeMenu_CreatePort);
+            TreeMenu.Items.Add(TreeMenu_EditPort);
+            TreeMenu.Items.Add(TreeMenuLine2);
+            TreeMenu.Items.Add(TreeMenu_CreateUnit);
+            TreeMenu.Items.Add(TreeMenu_EditUnit);
+
+            TreeMenu_CreatePort.Click += (sender, e) => { CreatePort(); };
+            TreeMenu_EditPort.Click   += (sender, e) => { EditPort(); };
+            TreeMenu_CreateUnit.Click += (sender, e) => { CreateUnit(); };
+            TreeMenu_EditUnit.Click   += (sender, e) => { EditUnit(); };
 
             Tree.NodeMouseClick += Tree_NodeMouseClick; ;
+        }
+
+        /// <summary>
+        /// Dock 순서 조정
+        /// </summary>
+        private void InitializeDockIndex()
+        {
+            TextMenu.BringToFront();
+            IconMenu.BringToFront();
+            pnlList.BringToFront();
+            TabCtrl.BringToFront();
+            BtnTabClose.BringToFront();
         }
 
         /// <summary>
@@ -320,92 +361,58 @@ namespace Dnf.Communication
             //bgWorker.RunWorkerAsync();
         }
 
-        #region Event
+        /// <summary>
+        /// TreeView ImageList
+        /// </summary>
+        private void SetImageList()
+        {
+            //Tree
+            TreeImgList.Images.Add("Root", Dnf.Utils.Properties.Resources.BlueCircleSetting_16x16);     //Program Computer
+            TreeImgList.Images.Add("SerialPort", Dnf.Utils.Properties.Resources.Serial_Come_16x16);     //Serial Port
+            TreeImgList.Images.Add("LANPort", Dnf.Utils.Properties.Resources.LAN_Come_16x16);           //LAN Port
+            TreeImgList.Images.Add("DisConnect", Dnf.Utils.Properties.Resources.RedPower_16x16);        //빨강(미연결)
+            TreeImgList.Images.Add("ConnectError", Dnf.Utils.Properties.Resources.YellowWarning_16x16); //노랑(연결 불량, 오류)
+            TreeImgList.Images.Add("Connect", Dnf.Utils.Properties.Resources.GreenSync_16x16);          //초록(정상연결)
+            TreeImgList.Images.Add("TreeChild", Dnf.Utils.Properties.Resources.TreeChild_16x16);        //Unit 미만 항목
+            TreeImgList.Images.Add("Empty", Dnf.Utils.Properties.Resources.empty_16x16);                //Default 아이콘
+        }
 
         /// <summary>
-        /// Tree에서 Item 선택 시 정보창
+        /// 화면에 표기되는 Text들
         /// </summary>
-        private void SelectTreeItem(TreeNode node)
+        private void SetText()
         {
-            //선택 Item 정보 표시
-            Type tagType = node.Tag?.GetType();
+            //TextMenu
+            TextMenu_File.Text = RuntimeData.String("F0600");
+            TextMenu_File_XmlSave.Text = RuntimeData.String("F0000");
+            TextMenu_File_XmlLoad.Text = RuntimeData.String("F0001");
+            TextMenu_Comm.Text = RuntimeData.String("F0601");
+            TextMenu_Comm_Cre.Text = RuntimeData.String("F0106");
+            TextMenu_Comm_Open.Text = RuntimeData.String("F0201");
+            TextMenu_Comm_Close.Text = RuntimeData.String("F0202");
 
-            if (tagType == typeof(Port))
-            {
-                //Port Node 선택 시
-                SetPortInfoTable(node);
-            }
-            else if (tagType == typeof(Unit))
-            {
-                //Unit Node 선택 시
-                SetUnitInfotable(node);
-            }
-            else
-            {
-                //지정된 Tag 없거나 미사용일 시
-                gv.DataSource = null;
-            }
+            //IconMenu
+            IconMenu_File_XmlSave.ToolTipText = RuntimeData.String("F0000");
+            IconMenu_File_XmlLoad.ToolTipText = RuntimeData.String("F0001");
+            IconMenu_Comm_CreatePort.ToolTipText = RuntimeData.String("F0204");
+            IconMenu_Comm_PortOpen.ToolTipText = RuntimeData.String("F0201");
+            IconMenu_Comm_PortClose.ToolTipText = RuntimeData.String("F0202");
+            IconMenu_Test.ToolTipText = "테스트";
+
+            //TreeMenu
+            TreeMenu_CreatePort.Text = RuntimeData.String("F0106");
+            TreeMenu_EditPort.Text = RuntimeData.String("F0205");
+            TreeMenu_CreateUnit.Text = RuntimeData.String("F0304");
+            TreeMenu_EditUnit.Text = RuntimeData.String("F0308");
+            TreeMenu_PortOpen.Text = RuntimeData.String("F0201");
+            TreeMenu_PortClose.Text = RuntimeData.String("F0202");
+
+            //Property Grid
+            colPropertyName.HeaderText = RuntimeData.String("F0500");
+            colPropertyValue.HeaderText = RuntimeData.String("F0501");
         }
 
-        private void SetPortInfoTable(TreeNode node)
-        {
-            DataTable dt = gv.DataSource == null ? new DataTable() : gv.DataSource as DataTable;
-            Port port = node.Tag as Port;
-
-            if (dt.TableName != "Port")
-            {
-                //Port Table이 아니였을 시 데이터 수정
-                dt.TableName = "Port";
-                dt.Columns.Clear();
-                dt.Columns.Add("P", typeof(string));
-                dt.Columns.Add("V", typeof(object));
-
-                dt.Rows.Clear();
-                dt.Rows.Add(new object[] { RuntimeData.String("F0100"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0101"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0102"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0103"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0104"), null });
-                dt.Rows.Add(new object[] { RuntimeData.String("F0105"), null });
-            }
-
-            //dt.Rows[0][1] = port.PortName;
-            //dt.Rows[1][1] = port.ProtocolType;
-            //dt.Rows[2][1] = port.BaudRate;
-            //dt.Rows[3][1] = port.DataBits;
-            //dt.Rows[4][1] = port.StopBIt;
-            //dt.Rows[5][1] = port.Parity;
-
-            gv.DataSource = dt;
-        }
-
-        private void SetUnitInfotable(TreeNode node)
-        {
-            DataTable dt = gv.DataSource == null ? new DataTable() : gv.DataSource as DataTable;
-            Unit unit = node.Tag as Unit;
-
-            if (dt.TableName != "Unit")
-            {
-                //Port Table이 아니였을 시 데이터 수정
-                dt.TableName = "Unit";
-                dt.Columns.Clear();
-                dt.Columns.Add("P", typeof(string));
-                dt.Columns.Add("V", typeof(object));
-
-                dt.Rows.Clear();
-                dt.Rows.Add(new object[] { RuntimeData.String("F0300"), null });   //Slave Addr
-                dt.Rows.Add(new object[] { RuntimeData.String("F0301"), null });   //모델 구분
-                dt.Rows.Add(new object[] { RuntimeData.String("F0302"), null });   //모델
-                dt.Rows.Add(new object[] { RuntimeData.String("F0303"), null });   //모델명(사용자지정)
-            }
-
-            //dt.Rows[0][1] = unit.SlaveAddr;
-            //dt.Rows[1][1] = unit.UnitType;
-            //dt.Rows[2][1] = unit.UnitModel;
-            //dt.Rows[3][1] = unit.UnitName;
-
-            gv.DataSource = dt;
-        }
+        #region Event
 
         /// <summary>
         /// TreeView 우클릭 이벤트
@@ -418,50 +425,101 @@ namespace Dnf.Communication
             {
                 Tree.SelectedNode = e.Node;
 
-                VisibleTreeMenu(e.Node.Level);
+                EnableMenu(e.Node);
+                VisibleMenu(e.Node.Level);
                 e.Node.ContextMenuStrip = TreeMenu;
             }
+        }
+
+        /// <summary>
+        /// TreeView 우클릭 시 나오는 Menu Enable 처리
+        /// </summary>
+        /// <param name="node"></param>
+        private void EnableMenu(TreeNode node)
+        {
+
         }
 
         /// <summary>
         /// TreeView 우클릭 시 나오는 Menu Visible 처리
         /// </summary>
         /// <param name="nodeLvl"></param>
-        private void VisibleTreeMenu(int nodeLvl)
+        private void VisibleMenu(int nodeLvl)
         {
             //Root
             if (nodeLvl == 0)
             {
-                menu_CreatePort.Visible = true;
-                menu_EditPort.Visible = false;
-                MenuLine1.Visible = false;
-                menu_CreateUnit.Visible = false;
-                menu_EditUnit.Visible = false;
+                //TreeMenu
+                TreeMenu_CreatePort.Visible = true;
+                TreeMenu_EditPort.Visible = false;
+                TreeMenuLine1.Visible = false;
+                TreeMenu_CreateUnit.Visible = false;
+                TreeMenu_EditUnit.Visible = false;
+                TreeMenuLine2.Visible = false;
+                TreeMenu_PortOpen.Visible = false;
+                TreeMenu_PortClose.Visible = false;
             }
             //Port
             else if (nodeLvl == 1)
             {
-                menu_CreatePort.Visible = false;
-                menu_EditPort.Visible = true;
-                MenuLine1.Visible = true;
-                menu_CreateUnit.Visible = true;
-                menu_EditUnit.Visible = false;
+                //TreeMenu
+                TreeMenu_CreatePort.Visible = false;
+                TreeMenu_EditPort.Visible = true;
+                TreeMenuLine1.Visible = true;
+                TreeMenu_CreateUnit.Visible = true;
+                TreeMenu_EditUnit.Visible = false;
+                TreeMenuLine2.Visible = true;
+                TreeMenu_PortOpen.Visible = true;
+                TreeMenu_PortClose.Visible = true;
             }
             //Unit
             else if (nodeLvl == 2)
             {
-                menu_CreatePort.Visible = false;
-                menu_EditPort.Visible = false;
-                MenuLine1.Visible = false;
-                menu_CreateUnit.Visible = false;
-                menu_EditUnit.Visible = true;
+                //TreeMenu
+                TreeMenu_CreatePort.Visible = false;
+                TreeMenu_EditPort.Visible = false;
+                TreeMenuLine1.Visible = false;
+                TreeMenu_CreateUnit.Visible = false;
+                TreeMenu_EditUnit.Visible = true;
+                TreeMenuLine2.Visible = false;
+                TreeMenu_PortOpen.Visible = false;
+                TreeMenu_PortClose.Visible = false;
             }
             //Channel
             else if (nodeLvl == 3) { }
             else if (nodeLvl == 4) { }
         }
 
+        private void BackgroundWorkder_DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (true)
+            {
+                if (!bgWorker.CancellationPending)
+                {
+
+                }
+                else
+                {
+                    //Background Error 날경우 잠깐 휴식
+                    Thread.Sleep(500);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Form 닫기 이벤트
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FrmClosed(object sender, FormClosedEventArgs e)
+        {
+            if (bgWorker != null && bgWorker.IsBusy) bgWorker.CancelAsync();
+            RuntimeData.Ports = new Dictionary<string, Port>();
+        }
+
         #endregion Event End
+
+        #region Menu Function
 
         /// <summary>
         /// Port 생성
@@ -489,17 +547,15 @@ namespace Dnf.Communication
             //Port 수정
             TreeNode node = Tree.SelectedNode;
 
-            if(node != null || node.Tag != null)
+            string type = GetNodeTagType(Tree.SelectedNode);
+            if (type == "Port")
             {
-                if(node.Tag.GetType().Name == "Custom_SerialPort"
-                    || node.Tag.GetType().Name == "Custom_EthernetPort")
-                {
-                    FrmPort frmPort = new FrmPort(FrmEditType.Edit, node.Tag as Port);
 
-                    if (frmPort.ShowDialog() == DialogResult.OK)
-                    {
-                        InitTreeItem();
-                    }
+                FrmPort frmPort = new FrmPort(FrmEditType.Edit, node.Tag as Port);
+
+                if (frmPort.ShowDialog() == DialogResult.OK)
+                {
+                    InitTreeItem();
                 }
             }
         }
@@ -510,20 +566,22 @@ namespace Dnf.Communication
         private void CreateUnit()
         {
             TreeNode node = Tree.SelectedNode;
+            string type = GetNodeTagType(Tree.SelectedNode);
 
-            if (node != null || node.Tag != null)
+            if (type != string.Empty)
             {
                 FrmUnit frmUnit = null;
-                if (node.Tag.GetType().Name == "Custom_SerialPort"
-                    || node.Tag.GetType().Name == "Custom_EthernetPort")
+
+                if (type == "Port")
                 {
                     frmUnit = new FrmUnit(FrmEditType.New, node.Tag as Port);
                 }
-                else if (node.Tag.GetType().Name == "Unit")
+                else if (type == "Unit")
                 {
                     frmUnit = new FrmUnit(FrmEditType.New, node.Parent.Tag as Port);
                 }
 
+                //정상적으로 진행되면 수정 Form 열기
                 if (frmUnit != null)
                 {
                     if (frmUnit.ShowDialog() == DialogResult.OK)
@@ -540,104 +598,22 @@ namespace Dnf.Communication
         private void EditUnit()
         {
             TreeNode node = Tree.SelectedNode;
+            string type = GetNodeTagType(Tree.SelectedNode);
 
-            if (node != null || node.Tag != null)
+            if(type == "Unit")
             {
-                if (node.Tag.GetType().Name == "Unit")
-                {
-                    FrmUnit frmUnit = new FrmUnit(FrmEditType.Edit, node.Parent.Tag as Port, node.Tag as Unit);
+                FrmUnit frmUnit = new FrmUnit(FrmEditType.Edit, node.Parent.Tag as Port, node.Tag as Unit);
 
-                    if (frmUnit.ShowDialog() == DialogResult.OK)
-                    {
-                        InitTreeItem();
-                    }
+                if (frmUnit.ShowDialog() == DialogResult.OK)
+                {
+                    InitTreeItem();
                 }
             }
         }
 
+        #endregion Menu Function End
 
 
-
-        private void SetImageList()
-        {
-            //Image 보관
-            ImgList.Images.Add("Root", Dnf.Utils.Properties.Resources.BlueCircleSetting_16x16);     //Program Computer
-            ImgList.Images.Add("SerialPort", Dnf.Utils.Properties.Resources.Serial_Come_16x16);     //Serial Port
-            ImgList.Images.Add("LANPort", Dnf.Utils.Properties.Resources.LAN_Come_16x16);           //LAN Port
-            ImgList.Images.Add("DisConnect", Dnf.Utils.Properties.Resources.RedPower_16x16);        //빨강(미연결)
-            ImgList.Images.Add("ConnectError", Dnf.Utils.Properties.Resources.YellowWarning_16x16); //노랑(연결 불량, 오류)
-            ImgList.Images.Add("Connect", Dnf.Utils.Properties.Resources.GreenSync_16x16);          //초록(정상연결)
-            ImgList.Images.Add("TreeChild", Dnf.Utils.Properties.Resources.TreeChild_16x16);        //Unit 미만 항목
-            ImgList.Images.Add("Empty", Dnf.Utils.Properties.Resources.empty_16x16);                //Default 아이콘
-        }
-
-        private void SortControl()
-        {
-            TextMenu.BringToFront();
-            IconMenu.BringToFront();
-            pnlList.BringToFront();
-            TabCtrl.BringToFront();
-            BtnTabClose.BringToFront();
-        }
-
-        /// <summary>
-        /// 함수(Method, Function) 실행
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ActMethod(object sender, EventArgs e)
-        {
-            string itemName = (sender as ToolStripItem).Name;
-            if (itemName == null || itemName == "") return;
-
-            //함수만 뽑기위해 삭제할 텍스트
-            string[] removeTxt = new string[] { "TxtMenu", "IconMenu" };
-
-            foreach (string txt in removeTxt)
-            {
-                itemName = itemName.Replace(txt, "");
-            }
-
-            try
-            {
-                MenuFunctions func = new MenuFunctions(this);   //기능 저장된 Class
-                MethodInfo method = typeof(MenuFunctions).GetMethod(itemName);   //함수 가져오기
-
-                if (method != null)
-                {
-                    //함수 실행(Class, Input Parameter)
-                    switch (itemName)
-                    {
-                        case "PortOpen": method.Invoke(func, new object[] { Tree.SelectedNode }); break;        //포트열기
-                        case "PortClose": method.Invoke(func, new object[] { Tree.SelectedNode }); break;       //포트닫기
-                        case "ItemCre": method.Invoke(func, new object[] { RuntimeData.String("F0204") }); break;//Item 생성하기
-                        case "XmlSave": method.Invoke(func, null); break;   //Xml 저장
-                        case "XmlLoad": method.Invoke(func, null); break;   //Xml 불러오기
-                        case "Test": method.Invoke(func, new object[] { UnitType.UnitType2 }); break;   //Xml 불러오기
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void BackgroundWorkder_DoWork(object sender, DoWorkEventArgs e)
-        {
-            while (true)
-            {
-                if (!bgWorker.CancellationPending)
-                {
-
-                }
-                else
-                {
-                    //Background Error 날경우 잠깐 휴식
-                    Thread.Sleep(500);
-                }
-            }
-        }
 
         private void SetNodeImage(TreeNode node, ConnectionState state)
         {
@@ -647,12 +623,10 @@ namespace Dnf.Communication
             node.SelectedImageKey = node.ImageKey;
         }
 
-        private void FrmClosed(object sender, FormClosedEventArgs e)
-        {
-            if (bgWorker != null&& bgWorker.IsBusy) bgWorker.CancelAsync();
-            RuntimeData.Ports = new Dictionary<string, Port>();
-        }
-
+        /// <summary>
+        /// TabPage 종료
+        /// </summary>
+        /// <param name="pageName"></param>
         public void RemoveTabPage(string pageName)
         {
             if (TabCtrl.TabPages.Count == 1)
@@ -666,6 +640,32 @@ namespace Dnf.Communication
             }
         }
 
+        /// <summary>
+        /// Node의 Tag Type 가져오기
+        /// </summary>
+        /// <param name="node">가져올 Node</param>
+        /// <returns>Success : Port, Unit / Error : string.Empty</returns>
+        private string GetNodeTagType(TreeNode node)
+        {
+            string type = string.Empty;
+
+            if (node != null || node.Tag != null)
+            {
+                string typeName = node.Tag.GetType().Name;
+                if (typeName == "Custom_SerialPort"
+                    || typeName == "Custom_EthernetPort")
+                {
+                    return "Port";
+                }
+                else if (typeName == "Unit")
+                {
+                    return "Unit";
+                }
+            }
+
+            return type;
+        }
+
         private void TestFunction()
         {
             FrmPort frmPort = new FrmPort(FrmEditType.New);
@@ -675,5 +675,6 @@ namespace Dnf.Communication
                 InitTreeItem();
             }
         }
+
     }
 }

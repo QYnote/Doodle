@@ -12,9 +12,7 @@ namespace Dnf.Communication.Controls
     public class Unit
     {
         public ConnectionState State;
-        public readonly Port ParentPort;  //등록된 
-        public UnitRegistry UnitRegistry;
-        public List<UnitChannel> Channel;
+        public readonly Port ParentPort;  //등록된 Port
 
         public int SlaveAddr;       //Unit 주소
         public UnitType UnitType;   //Unit 구분
@@ -29,9 +27,6 @@ namespace Dnf.Communication.Controls
             UnitModel = model;
             UnitName = modelName == null || modelName == "" ? model.ToString() : modelName;
             State = ConnectionState.Closed;
-
-            UnitRegistry = new UnitRegistry();
-            Channel = new List<UnitChannel>();
         }
     }
 }
