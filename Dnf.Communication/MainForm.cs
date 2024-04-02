@@ -19,7 +19,9 @@ namespace Dnf.Communication
     public partial class MainForm : Dnf.Utils.Views.FrmBase
     {
         #region Control 모음
-        private MenuStrip TextMenu = new MenuStrip();   //상단 글자메뉴
+        private MenuStrip TextMenu = new MenuStrip();   
+        private ToolStripMenuItem TextMenu_Basic = new ToolStripMenuItem();
+        private ToolStripMenuItem TextMenu_Basic_Unit = new ToolStripMenuItem();
         private ToolStripMenuItem TextMenu_File = new ToolStripMenuItem();
         private ToolStripMenuItem TextMenu_File_XmlSave = new ToolStripMenuItem();
         private ToolStripMenuItem TextMenu_File_XmlLoad = new ToolStripMenuItem();
@@ -85,7 +87,7 @@ namespace Dnf.Communication
             SetImageList();
             SetText();
 
-            this.Text = "통신";
+            this.Text = RuntimeData.String("F00");
             InitializeBackGroundWorker();
         }
 
@@ -129,6 +131,8 @@ namespace Dnf.Communication
         /// </summary>
         private void InitializeControl_TextMenu()
         {
+            TextMenu_Basic.Name = "TextMenu_Basic";
+            TextMenu_Basic_Unit.Name = "TextMenu_Basic_Unit";
             TextMenu_File.Name = "TextMenu_File";
             TextMenu_File_XmlSave.Name = "TextMenu_File_XmlSave";
             TextMenu_File_XmlLoad.Name = "TextMenu_File_XmlLoad";
@@ -138,8 +142,11 @@ namespace Dnf.Communication
             TextMenu_Comm_Close.Name = "TextMenu_Comm_Close";
 
             //TextMenu_File.DropDownItems.AddRange(new ToolStripItem[] { TextMenu_File_XmlSave, TextMenu_File_XmlLoad });
+            TextMenu_Basic.DropDownItems.AddRange(new ToolStripItem[] { TextMenu_Basic_Unit });
             TextMenu_Comm.DropDownItems.AddRange(new ToolStripItem[] { TextMenu_Comm_Cre, TextMenu_Comm_Open, TextMenu_Comm_Close });
-            TextMenu.Items.AddRange(new ToolStripItem[] { 
+            TextMenu.Items.AddRange(new ToolStripItem[] {
+                TextMenu_Basic,
+                new ToolStripSeparator(), 
                 TextMenu_File, 
                 new ToolStripSeparator(), 
                 TextMenu_Comm
@@ -147,6 +154,9 @@ namespace Dnf.Communication
 
         }
 
+        /// <summary>
+        /// Icon Menu 생성
+        /// </summary>
         private void InitializeControl_IconMenu()
         {
             IconMenu.ImageScalingSize = new Size(32, 32);
@@ -204,6 +214,9 @@ namespace Dnf.Communication
             //Tree.AfterSelect += (sender, e) => { InitItemInfo(Tree.SelectedNode); };
         }
 
+        /// <summary>
+        /// Tree에서 선택한 속성 DataGridView
+        /// </summary>
         private void Initialize_PropertyGrid()
         {
             pnlProperty.Dock = DockStyle.Bottom;
@@ -412,35 +425,37 @@ namespace Dnf.Communication
         private void SetText()
         {
             //TextMenu
-            TextMenu_File.Text = RuntimeData.String("F0600");
-            TextMenu_File_XmlSave.Text = RuntimeData.String("F0000");
-            TextMenu_File_XmlLoad.Text = RuntimeData.String("F0001");
-            TextMenu_Comm.Text = RuntimeData.String("F0601");
-            TextMenu_Comm_Cre.Text = RuntimeData.String("F0106");
-            TextMenu_Comm_Open.Text = RuntimeData.String("F0201");
-            TextMenu_Comm_Close.Text = RuntimeData.String("F0202");
+            TextMenu_Basic.Text        = RuntimeData.String("F000100");
+            TextMenu_Basic_Unit.Text   = RuntimeData.String("F00010000");
+            TextMenu_File.Text         = RuntimeData.String("F000101");
+            TextMenu_File_XmlSave.Text = RuntimeData.String("F00010100");
+            TextMenu_File_XmlLoad.Text = RuntimeData.String("F00010101");
+            TextMenu_Comm.Text         = RuntimeData.String("F000102");
+            TextMenu_Comm_Cre.Text     = RuntimeData.String("F00010200");
+            TextMenu_Comm_Open.Text    = RuntimeData.String("F00010201");
+            TextMenu_Comm_Close.Text   = RuntimeData.String("F00010202");
 
             //IconMenu
-            IconMenu_File_XmlSave.ToolTipText = RuntimeData.String("F0000");
-            IconMenu_File_XmlLoad.ToolTipText = RuntimeData.String("F0001");
-            IconMenu_Comm_CreatePort.ToolTipText = RuntimeData.String("F0204");
-            IconMenu_Comm_PortOpen.ToolTipText = RuntimeData.String("F0201");
-            IconMenu_Comm_PortClose.ToolTipText = RuntimeData.String("F0202");
+            IconMenu_File_XmlSave.ToolTipText    = RuntimeData.String("F000200");
+            IconMenu_File_XmlLoad.ToolTipText    = RuntimeData.String("F000201");
+            IconMenu_Comm_CreatePort.ToolTipText = RuntimeData.String("F000202");
+            IconMenu_Comm_PortOpen.ToolTipText   = RuntimeData.String("F000203");
+            IconMenu_Comm_PortClose.ToolTipText  = RuntimeData.String("F000204");
             IconMenu_Test.ToolTipText = "테스트";
 
             //TreeMenu
-            TreeMenu_CreatePort.Text = RuntimeData.String("F0106");
-            TreeMenu_EditPort.Text = RuntimeData.String("F0205");
-            TreeMenu_CreateUnit.Text = RuntimeData.String("F0304");
-            TreeMenu_EditUnit.Text = RuntimeData.String("F0308");
-            TreeMenu_PortOpen.Text = RuntimeData.String("F0201");
-            TreeMenu_PortClose.Text = RuntimeData.String("F0202");
+            TreeMenu_CreatePort.Text = RuntimeData.String("F000300");
+            TreeMenu_EditPort.Text   = RuntimeData.String("F000301");
+            TreeMenu_CreateUnit.Text = RuntimeData.String("F000302");
+            TreeMenu_EditUnit.Text   = RuntimeData.String("F000303");
+            TreeMenu_PortOpen.Text   = RuntimeData.String("F000304");
+            TreeMenu_PortClose.Text  = RuntimeData.String("F000305");
 
             //Property Grid
-            colPortPropertyName.HeaderText = RuntimeData.String("F0500");
-            colPortPropertyValue.HeaderText = RuntimeData.String("F0501");
-            colUnitPropertyName.HeaderText = RuntimeData.String("F0500");
-            colUnitPropertyValue.HeaderText = RuntimeData.String("F0501");
+            colPortPropertyName.HeaderText  = RuntimeData.String("F000400");
+            colPortPropertyValue.HeaderText = RuntimeData.String("F000401");
+            colUnitPropertyName.HeaderText  = RuntimeData.String("F000400");
+            colUnitPropertyValue.HeaderText = RuntimeData.String("F000401");
         }
 
         #region Event

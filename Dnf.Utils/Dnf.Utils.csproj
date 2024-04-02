@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\BlueCircleSetting_16x16.png" />
+    <None Include="Resources\Basic_32x32.png" />
     <Content Include="Resources\Close_16x16.png" />
     <None Include="Resources\Connect_32x32.png" />
     <None Include="Resources\empty_16x16.png" />
