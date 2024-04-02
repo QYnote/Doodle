@@ -57,8 +57,10 @@ namespace Dnf.Communication
         private Panel pnlProperty = new Panel();
         private DataGridView gvPort = new DataGridView();
         private DataGridView gvUnit = new DataGridView();
-        private DataGridViewColumn colPropertyName = new DataGridViewTextBoxColumn();
-        private DataGridViewColumn colPropertyValue = new DataGridViewTextBoxColumn();
+        private DataGridViewColumn colPortPropertyName = new DataGridViewTextBoxColumn();
+        private DataGridViewColumn colPortPropertyValue = new DataGridViewTextBoxColumn();
+        private DataGridViewColumn colUnitPropertyName = new DataGridViewTextBoxColumn();
+        private DataGridViewColumn colUnitPropertyValue = new DataGridViewTextBoxColumn();
 
         private BackgroundWorker bgWorker;
         #endregion Control 모음 End
@@ -226,35 +228,60 @@ namespace Dnf.Communication
             //초기 Visible값 숨기기
             gvPort.Visible = false;
             gvUnit.Visible = false;
+            //여러개 선택
+            gvPort.MultiSelect = false;
+            gvUnit.MultiSelect = false;
+            //Header Size 수정 막기
+            gvPort.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            gvUnit.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+
 
             //Column 조정
-            colPropertyName.Name = "P";
-            colPropertyValue.Name = "V";
+            colPortPropertyName.Name = "P";
+            colPortPropertyValue.Name = "V";
+            colUnitPropertyName.Name = "P";
+            colUnitPropertyValue.Name = "V";
             //너비
-            colPropertyName.Width = 90;
-            colPropertyValue.Width = pnlList.Width - colPropertyName.Width - 3;
+            colPortPropertyName.Width = 90;
+            colPortPropertyValue.Width = pnlList.Width - colPortPropertyName.Width - 3;
+            colUnitPropertyName.Width = 90;
+            colUnitPropertyValue.Width = pnlList.Width - colPortPropertyName.Width - 3;
             //DataTable 연동할 Column명
-            colPropertyName.DataPropertyName = "P";
-            colPropertyValue.DataPropertyName = "V";
+            colPortPropertyName.DataPropertyName = "P";
+            colPortPropertyValue.DataPropertyName = "V";
+            colUnitPropertyName.DataPropertyName = "P";
+            colUnitPropertyValue.DataPropertyName = "V";
             //Header Text정렬
-            colPropertyName.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colPropertyValue.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colPortPropertyName.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colPortPropertyValue.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colUnitPropertyName.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colUnitPropertyValue.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
             //Value Text 정렬
-            colPropertyName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colPropertyValue.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colPortPropertyName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colPortPropertyValue.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colUnitPropertyName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colUnitPropertyValue.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             //읽기만 가능
-            colPropertyName.ReadOnly = true;
-            colPropertyValue.ReadOnly = true;
+            colPortPropertyName.ReadOnly = true;
+            colPortPropertyValue.ReadOnly = true;
+            colUnitPropertyName.ReadOnly = true;
+            colUnitPropertyValue.ReadOnly = true;
             //정렬 불가능
-            colPropertyName.SortMode = DataGridViewColumnSortMode.NotSortable;
-            colPropertyValue.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colPortPropertyName.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colPortPropertyValue.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colUnitPropertyName.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colUnitPropertyValue.SortMode = DataGridViewColumnSortMode.NotSortable;
             //너비조절 불가능
-            colPropertyName.Resizable = DataGridViewTriState.False;
-            colPropertyValue.Resizable = DataGridViewTriState.False;
+            colPortPropertyName.Resizable = DataGridViewTriState.False;
+            colPortPropertyValue.Resizable = DataGridViewTriState.False;
+            colUnitPropertyName.Resizable = DataGridViewTriState.False;
+            colUnitPropertyValue.Resizable = DataGridViewTriState.False;
 
-            gvPort.Columns.AddRange(colPropertyName.Clone() as DataGridViewColumn, colPropertyValue.Clone() as DataGridViewColumn);
-            gvUnit.Columns.AddRange(colPropertyName.Clone() as DataGridViewColumn, colPropertyValue.Clone() as DataGridViewColumn);
+            gvPort.Columns.AddRange(colPortPropertyName, colPortPropertyValue);
+            gvUnit.Columns.AddRange(colUnitPropertyName, colUnitPropertyValue);
 
+            pnlProperty.Controls.Add(gvPort);
+            pnlProperty.Controls.Add(gvUnit);
             pnlList.Controls.Add(pnlProperty);
         }
 
@@ -283,7 +310,9 @@ namespace Dnf.Communication
             TreeMenu_EditUnit.Click   += (sender, e) => { EditUnit(); };
 
             Tree.NodeMouseClick += Tree_NodeMouseClick; ;
+            Tree.AfterSelect += Tree_AfterSelect;
         }
+
 
         /// <summary>
         /// Dock 순서 조정
@@ -408,8 +437,10 @@ namespace Dnf.Communication
             TreeMenu_PortClose.Text = RuntimeData.String("F0202");
 
             //Property Grid
-            colPropertyName.HeaderText = RuntimeData.String("F0500");
-            colPropertyValue.HeaderText = RuntimeData.String("F0501");
+            colPortPropertyName.HeaderText = RuntimeData.String("F0500");
+            colPortPropertyValue.HeaderText = RuntimeData.String("F0501");
+            colUnitPropertyName.HeaderText = RuntimeData.String("F0500");
+            colUnitPropertyValue.HeaderText = RuntimeData.String("F0501");
         }
 
         #region Event
@@ -488,6 +519,92 @@ namespace Dnf.Communication
             //Channel
             else if (nodeLvl == 3) { }
             else if (nodeLvl == 4) { }
+        }
+
+        /// <summary>
+        /// Tree선택시 Property 보이기
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Tree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            TreeNode node = e.Node;
+            string type = GetNodeTagType(node);
+            DataTable dt = null;
+
+            if (type == "Port")
+            {
+                if (e.Node.Tag.GetType().Name == "Custom_SerialPort")
+                {
+                    dt = SerialPortProperty(e.Node.Tag as Custom_SerialPort);
+                }
+                else if (e.Node.Tag.GetType().Name == "Custom_EthernetPort")
+                {
+                    dt = EthernetPortProperty(e.Node.Tag as Custom_EthernetPort);
+                }
+
+                if (dt != null)
+                {
+                    gvPort.DataSource = dt;
+
+                    gvPort.Visible = true;
+                    gvUnit.Visible = false;
+                }
+            }
+            else if (type == "Unit")
+            {
+                dt = UnitProperty(e.Node.Tag as Unit);
+
+                if (dt != null)
+                {
+                    gvUnit.DataSource = dt;
+
+                    gvPort.Visible = false;
+                    gvUnit.Visible = true;
+                }
+            }
+        }
+
+        private DataTable SerialPortProperty(Custom_SerialPort port)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("P", typeof(string));
+            dt.Columns.Add("V", typeof(string));
+
+            dt.Rows.Add("PortName", port.PortName);
+            dt.Rows.Add("ProtocolType", port.ProtocolType);
+            dt.Rows.Add("BaudRate", port.BaudRate);
+            dt.Rows.Add("DataBits", port.DataBits);
+            dt.Rows.Add("Parity", port.Parity);
+            dt.Rows.Add("StopBit", port.StopBIt);
+
+            return dt;
+        }
+
+        private DataTable EthernetPortProperty(Custom_EthernetPort port)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("P", typeof(string));
+            dt.Columns.Add("V", typeof(string));
+
+            dt.Rows.Add("PortNo", port.PortNo);
+            dt.Rows.Add("IP", port.IPAddr);
+
+            return dt;
+        }
+
+        private DataTable UnitProperty(Unit unit)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("P", typeof(string));
+            dt.Columns.Add("V", typeof(string));
+
+            dt.Rows.Add("Address", unit.SlaveAddr);
+            dt.Rows.Add("Type", unit.UnitType);
+            dt.Rows.Add("Model", unit.UnitModel);
+            dt.Rows.Add("Name(User)", unit.UnitName);
+
+            return dt;
         }
 
         private void BackgroundWorkder_DoWork(object sender, DoWorkEventArgs e)
@@ -649,7 +766,7 @@ namespace Dnf.Communication
         {
             string type = string.Empty;
 
-            if (node != null || node.Tag != null)
+            if (node != null && node.Tag != null)
             {
                 string typeName = node.Tag.GetType().Name;
                 if (typeName == "Custom_SerialPort"
