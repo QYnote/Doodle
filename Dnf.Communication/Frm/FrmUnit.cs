@@ -74,6 +74,7 @@ namespace Dnf.Communication.Frm
             this.FormBorderStyle = FormBorderStyle.FixedToolWindow;
             this.ShowInTaskbar = false;
             this.Size = new Size(280, 400);
+            this.Text = RuntimeData.String("F02");
 
             InitializeButton();
             InitializeControlBox();
@@ -92,10 +93,6 @@ namespace Dnf.Communication.Frm
         {
             pnlButton.Dock = DockStyle.Bottom;
             pnlButton.Size = new Size(pnlButton.Width, 30);
-
-            //Button 정의
-            BtnOK.Text = RuntimeData.String("F1001");
-            BtnCancel.Text = RuntimeData.String("F1003");
 
             BtnOK.Dock = DockStyle.Right;
             BtnCancel.Dock = DockStyle.Right;
@@ -314,17 +311,21 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void SetText()
         {
+            //Button 정의
+            BtnOK.Text     = RuntimeData.String("F020100");
+            BtnCancel.Text = RuntimeData.String("F020101");
+
             //Label 표기 Text
-            cboProtocolType.LblText = RuntimeData.String("F0101");
-            numUnitAddr.LblText = RuntimeData.String("F0300");
-            cboUnitType.LblText = RuntimeData.String("F0103");
-            cboUnitModel.LblText = RuntimeData.String("F0104");
-            txtUnitName.LblText = RuntimeData.String("F0303");
-            BtnNew.Text = RuntimeData.String("F1000");
+            cboProtocolType.LblText = RuntimeData.String("F010201");
+            numUnitAddr.LblText     = RuntimeData.String("F020200");
+            cboUnitType.LblText     = RuntimeData.String("F020201");
+            cboUnitModel.LblText    = RuntimeData.String("F020202");
+            txtUnitName.LblText     = RuntimeData.String("F020203");
+            BtnNew.Text             = RuntimeData.String("F020204");
 
             //Grid
-            colSlaveAddr.HeaderText = RuntimeData.String("F0300");
-            colUnitName.HeaderText = RuntimeData.String("F0303");
+            colSlaveAddr.HeaderText = RuntimeData.String("F020300");
+            colUnitName.HeaderText  = RuntimeData.String("F020301");
             colErase.HeaderText = "";
         }
 
@@ -420,7 +421,7 @@ namespace Dnf.Communication.Frm
                 Unit unit = dr["Unit"] as Unit;
                 if (unit == null)
                 {
-                    MessageBox.Show("Unit Create Error");
+                    MessageBox.Show(RuntimeData.String("F020000"));
                     return;
                 }
 
@@ -464,7 +465,7 @@ namespace Dnf.Communication.Frm
                         {
                             if (drComp["SlaveAddr"].ToInt32_Custom() == afAddr)
                             {
-                                MessageBox.Show(RuntimeData.String("A012"));
+                                MessageBox.Show(RuntimeData.String("F020001"));
                                 useAddr = false;
                                 return;
                             }

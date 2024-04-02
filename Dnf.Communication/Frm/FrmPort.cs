@@ -62,9 +62,6 @@ namespace Dnf.Communication.Frm
 
             InitializeComponent();
             InitialForm();
-
-            if(type == FrmEditType.New) { this.Text = "Create Port"; }
-            else if(type == FrmEditType.Edit) { this.Text = "Edit Port"; }
         }
 
         private void InitialForm()
@@ -73,6 +70,7 @@ namespace Dnf.Communication.Frm
             this.FormBorderStyle = FormBorderStyle.FixedToolWindow;
             this.ShowInTaskbar = false;
             this.Size = new Size(250, 200);
+            this.Text = RuntimeData.String("F01");
 
             InitializeButton();
             InitializeControlBox();
@@ -93,9 +91,6 @@ namespace Dnf.Communication.Frm
             pnlButton.Size = new Size(pnlButton.Width, 30);
 
             //Button 정의
-            BtnOK.Text = RuntimeData.String("F1001");
-            BtnCancel.Text = RuntimeData.String("F1003");
-
             BtnOK.Dock = DockStyle.Right;
             BtnCancel.Dock = DockStyle.Right;
 
@@ -275,16 +270,19 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void SetText()
         {
-            //Label 표기 Text
-            cboPortName.LblText = RuntimeData.String("F0100");
-            cboProtocolType.LblText = RuntimeData.String("F0101");
-            cboBaudRate.LblText = RuntimeData.String("F0102");
-            numDataBits.LblText = RuntimeData.String("F0103");
-            cboStopBit.LblText = RuntimeData.String("F0104");
-            cboParity.LblText = RuntimeData.String("F0105");
+            BtnOK.Text     = RuntimeData.String("F010100");
+            BtnCancel.Text = RuntimeData.String("F010101");
 
-            txtIPaddr.LblText = RuntimeData.String("F0306");
-            txtPortNo.LblText = RuntimeData.String("F0307");
+            //Label 표기 Text
+            cboPortName.LblText     = RuntimeData.String("F010200");
+            cboProtocolType.LblText = RuntimeData.String("F010201");
+            cboBaudRate.LblText     = RuntimeData.String("F010202");
+            numDataBits.LblText     = RuntimeData.String("F010203");
+            cboStopBit.LblText      = RuntimeData.String("F010204");
+            cboParity.LblText       = RuntimeData.String("F010205");
+
+            txtIPaddr.LblText = RuntimeData.String("F010300");
+            txtPortNo.LblText = RuntimeData.String("F010301");
         }
 
         #region Event
@@ -335,7 +333,7 @@ namespace Dnf.Communication.Frm
                     port = CreatePort();
                     if (port == null)
                     {
-                        MessageBox.Show("Port Create Error");
+                        MessageBox.Show(RuntimeData.String("F010001"));
                         return;
                     }
 
@@ -392,7 +390,7 @@ namespace Dnf.Communication.Frm
 
             if (RuntimeData.Ports.ContainsKey(portName))
             {
-                MessageBox.Show(RuntimeData.String("A004"));
+                MessageBox.Show(RuntimeData.String("F010000"));
                 return false;
             }
 
