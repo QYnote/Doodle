@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -59,6 +62,12 @@
     <Compile Include="Frm\FrmUnit.Designer.cs">
       <DependentUpon>FrmUnit.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm\Frm_UnitSetting.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Frm\Frm_UnitSetting.Designer.cs">
+      <DependentUpon>Frm_UnitSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -79,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\UnitData\ModelStruct.json" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
