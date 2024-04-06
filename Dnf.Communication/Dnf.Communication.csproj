@@ -47,7 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\Custom_EthernetPort.cs" />
-    <Compile Include="Controls\ExternalData.cs" />
     <Compile Include="Controls\EnumCustom.cs" />
     <Compile Include="Controls\Custom_SerialPort.cs" />
     <Compile Include="Frm\FrmPort.cs">

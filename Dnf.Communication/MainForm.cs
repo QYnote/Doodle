@@ -82,8 +82,8 @@ namespace Dnf.Communication
             InitializeControl_Base();
             InitializeControl_Info();
             Initialize_TreeMenu();
-
             InitializeDockIndex();
+
             SetImageList();
             SetText();
 
@@ -152,6 +152,8 @@ namespace Dnf.Communication
                 TextMenu_Comm
             });
 
+            TextMenu_Basic_Unit.Click += (sender, e) => { OpenTabPage(new Frm_UnitSetting()); };
+            TextMenu_Comm_Cre.Click += (sender, e) => { CreatePort(); };
         }
 
         /// <summary>
@@ -325,7 +327,6 @@ namespace Dnf.Communication
             Tree.NodeMouseClick += Tree_NodeMouseClick; ;
             Tree.AfterSelect += Tree_AfterSelect;
         }
-
 
         /// <summary>
         /// Dock 순서 조정
@@ -755,6 +756,25 @@ namespace Dnf.Communication
             node.SelectedImageKey = node.ImageKey;
         }
 
+        private void OpenTabPage(TabPage frm)
+        {
+            //이미 Form 열려있을 시
+            if (TabCtrl.TabPages.ContainsKey(frm.Name))
+            {
+                TabCtrl.TabPages[frm.Name].Focus();
+                return;
+            }
+
+            if (TabCtrl.TabPages.Count == 0)
+            {
+                BtnTabClose.Visible = true;
+            }
+
+            //열려있는 Form이 없을 시
+            TabCtrl.TabPages.Add(frm);
+            frm.Focus();
+        }
+
         /// <summary>
         /// TabPage 종료
         /// </summary>
@@ -763,13 +783,16 @@ namespace Dnf.Communication
         {
             if (TabCtrl.TabPages.Count == 1)
             {
-                TabCtrl.TabPages.RemoveByKey(pageName);
                 BtnTabClose.Visible = false;
             }
-            else
+
+            //종료이벤트
+            if(TabCtrl.TabPages[pageName].GetType() == typeof(Frm_UnitSetting))
             {
-                TabCtrl.TabPages.RemoveByKey(pageName);
+                (TabCtrl.TabPages[pageName] as Frm_UnitSetting).UnitInfoSave();
             }
+
+            TabCtrl.TabPages.RemoveByKey(pageName);
         }
 
         /// <summary>
