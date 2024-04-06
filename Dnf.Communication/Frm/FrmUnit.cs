@@ -130,8 +130,10 @@ namespace Dnf.Communication.Frm
 
             //Items
             (cboProtocolType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());;
-            (cboUnitType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<UnitType>());;
-            (cboUnitModel.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<UnitModel>());;
+            object[] UnitTypeArr = RuntimeData.dicUnitTypes.Keys.ToArray();
+            (cboUnitType.ctrl as ComboBox).Items.AddRange(UnitTypeArr);
+            object[] UnitModelArr = RuntimeData.dicUnitTypes[UnitTypeArr[0].ToString()].Keys.ToArray();    //Type 첫번째값으로 임시지정
+            (cboUnitModel.ctrl as ComboBox).Items.AddRange(UnitModelArr);
 
             (numUnitAddr.ctrl as NumericUpDown).Minimum = 1;
             (numUnitAddr.ctrl as NumericUpDown).Maximum = 255;
@@ -359,13 +361,13 @@ namespace Dnf.Communication.Frm
             DataTable dt = binding.DataSource as DataTable;
             DataRow dr = dt.NewRow();
 
-
             if(dt.Rows.Count == 0)
             {
                 dr["SlaveAddr"] = 1;
             }
             else
             {
+                //Address값 마지막값 + 1로
                 int maxAddr = 1;
                 foreach (DataRow row in dt.Rows)
                 {
@@ -376,7 +378,7 @@ namespace Dnf.Communication.Frm
                 dr["SlaveAddr"] = maxAddr;
             }
             dr["UnitName"] = "";
-            dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32_Custom(), UnitType.UnitType1, UnitModel.UnitModel1);
+            dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32_Custom(), "UnitType", "UnitModel");
 
             dt.Rows.Add(dr);
 
@@ -482,13 +484,26 @@ namespace Dnf.Communication.Frm
                 else if (CtrlName == "cboUnitType")
                 {
                     //UnitModel 리스트 변경
+                    object selItem = (cboUnitType.ctrl as ComboBox).SelectedItem;
+                    if (selItem == null) return;
+
+                    object[] UnitModelArr = RuntimeData.dicUnitTypes[selItem.ToString()].Keys.ToArray();
+                    ComboBox cboModel = (cboUnitModel.ctrl as ComboBox);
+                    cboModel.Items.Clear();
+                    cboModel.Items.AddRange(UnitModelArr);
+                    if(cboModel.Items.Count > 0)
+                    {
+                        cboModel.SelectedIndex = 0;
+                    }
+
+                    unit.UnitType = selItem.ToString();
                 }
                 else if (CtrlName == "cboUnitModel")
                 {
                     //Protocol 사용할 수 있는 Model인지 확인절차
 
                     //Model 적용
-                    unit.UnitModel = (UnitModel)(sender as ComboBox).SelectedItem;
+                    unit.UnitModel = (sender as ComboBox).SelectedItem.ToString();
                 }
                 else if (CtrlName == "txtUnitName")
                 {
@@ -525,8 +540,8 @@ namespace Dnf.Communication.Frm
             Unit unit = dr["Unit"] as Unit;
 
             int addr = unit.SlaveAddr;
-            UnitType unitType = unit.UnitType;
-            UnitModel unitModel = unit.UnitModel;
+            string unitType = unit.UnitType;
+            string unitModel = unit.UnitModel;
             string unitName = unit.UnitName;
 
             return new Unit(BasePort, addr, unitType, unitModel, unitName);

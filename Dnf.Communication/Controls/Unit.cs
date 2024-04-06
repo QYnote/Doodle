@@ -15,11 +15,11 @@ namespace Dnf.Communication.Controls
         public readonly Port ParentPort;  //등록된 Port
 
         public int SlaveAddr;       //Unit 주소
-        public UnitType UnitType;   //Unit 구분
-        public UnitModel UnitModel;   //Unit 구분
+        public string UnitType;   //Unit 구분
+        public string UnitModel;   //Unit 구분
         public string UnitName;    //Unit 모델명
 
-        public Unit(Port port, int addr, UnitType type, UnitModel model, string modelName = null)
+        public Unit(Port port, int addr, string type, string model, string modelName = null)
         { 
             ParentPort = port;
             SlaveAddr = addr;

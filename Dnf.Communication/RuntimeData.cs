@@ -6,6 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace Dnf.Communication
 {
@@ -15,11 +16,13 @@ namespace Dnf.Communication
         public readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
         public static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
         public static string LangType = "Ko";
+        public static Dictionary<string, Dictionary<string, int>> dicUnitTypes;    //Unit Type - Model등 정보
         private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 
         static RuntimeData()
         {
             CreateDtImsi();
+            UnitInfoLoad("UnitInfo");
         }
 
         /// <summary>
@@ -37,6 +40,40 @@ namespace Dnf.Communication
             return strCode;
         }
 
+
+        private static void UnitInfoLoad(string fileName)
+        {
+            string filePath = DataPath + fileName + ".xml";
+
+            if (System.IO.File.Exists(filePath))
+            {
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(filePath);
+
+                if (xdoc.ChildNodes.Count > 0)
+                {
+                    XmlNode unitList = xdoc.SelectSingleNode("UnitList");
+                    dicUnitTypes = new Dictionary<string, Dictionary<string, int>>();
+
+                    //가져온 Node Dictionary에 추가
+                    foreach (XmlNode TypeNode in unitList.ChildNodes)
+                    {
+                        //Dictionary에 추가
+                        string TypeName = TypeNode.Attributes["Name"].Value;
+                        dicUnitTypes.Add(TypeName, new Dictionary<string, int>());
+
+                        foreach (XmlNode unitModel in TypeNode.ChildNodes)
+                        {
+                            string modelName = unitModel.Attributes["Name"].Value;
+                            //Dictionary에 추가
+                            dicUnitTypes[TypeName].Add(modelName, 0);
+
+                        }
+                    }//End foreach TypeNode
+                }
+            }
+        }
+
         private static void CreateDtImsi()
         {
             //글로벌 DB 적용전 임시 Table
@@ -46,7 +83,7 @@ namespace Dnf.Communication
             dtimsi.Columns.Add("Code");
             dtimsi.Columns.Add("Ko");
 
-            //Form 순서(2), Group 순서(2), Control 순서(2), ...
+            //Form 순서(2), Type 순서(2), Control 순서(2), ...
             //메뉴
             dtimsi.Rows.Add("F00", "메인화면");
             dtimsi.Rows.Add("F0000", "Message Box");

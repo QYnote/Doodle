@@ -12,27 +12,6 @@ namespace Dnf.Communication.Data
         Edit    //수정
     }
 
-
-    /// <summary>
-    /// Unit Model Group(Type)
-    /// </summary>
-    public enum UnitType
-    {
-        UnitType1,
-        UnitType2,
-        UnitType3
-    }
-    /// <summary>
-    /// Unit 모델 종류
-    /// </summary>
-    public enum UnitModel
-    {
-        UnitModel1,
-        UnitModel2,
-        UnitModel3,
-        UnitModel4
-    }
-
     /// <summary>
     /// 통신방법 종류
     /// </summary>

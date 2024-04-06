@@ -22,13 +22,13 @@ namespace Dnf.Communication.Frm
         private int marginValue = 3;
 
         private Panel pnlUnitItem = new Panel();
-        private Panel pnlUnitGroup = new Panel();
-        private Label LblUnitGroup = new Label();
-        private Panel pnlUnitGroupAction = new Panel();
-        private TextBox TxtUnitGroup = new TextBox();
-        private Button btnUnitGroupAdd = new Button();
-        private Button btnUnitGroupDel = new Button();
-        private ListBox LbxUnitGroup = new ListBox();
+        private Panel pnlUnitType = new Panel();
+        private Label LblUnitType = new Label();
+        private Panel pnlUnitTypeAction = new Panel();
+        private TextBox TxtUnitType = new TextBox();
+        private Button btnUnitTypeAdd = new Button();
+        private Button btnUnitTypeDel = new Button();
+        private ListBox LbxUnitType = new ListBox();
         private Panel pnlUnitModel = new Panel();
         private Label LblUnitModel = new Label();
         private Panel pnlUnitModelAction = new Panel();
@@ -39,9 +39,8 @@ namespace Dnf.Communication.Frm
 
         #endregion Controls End
 
-        private string SelectedGroup = string.Empty;
+        private string SelectedType = string.Empty;
         private string SelectedModel = string.Empty;
-        private Dictionary<string, Dictionary<string, int>> dicUnitGroups;
 
         private string InfoFilePath = RuntimeData.DataPath + "UnitInfo.xml";
 
@@ -68,9 +67,9 @@ namespace Dnf.Communication.Frm
             pnlUnitItem.Dock = DockStyle.Left;
             pnlUnitItem.Size = new Size(150, 100);
 
-            InitializeUnitGroupModel();
+            InitializeUnitTypeModel();
             SetPositionSize();
-            //InitializeUnitGroup();
+            //InitializeUnitType();
             //InitializeUnitModel();
             //InitializeDockIndex();
             SetText();
@@ -79,22 +78,22 @@ namespace Dnf.Communication.Frm
         }
 
         /// <summary>
-        /// Unit Group Control 생성
+        /// Unit Type Control 생성
         /// </summary>
-        private void InitializeUnitGroupModel()
+        private void InitializeUnitTypeModel()
         {
-            LblUnitGroup.AutoSize = false;
-            LblUnitGroup.TextAlign = ContentAlignment.MiddleCenter;
-            LblUnitGroup.BorderStyle = BorderStyle.FixedSingle;
+            LblUnitType.AutoSize = false;
+            LblUnitType.TextAlign = ContentAlignment.MiddleCenter;
+            LblUnitType.BorderStyle = BorderStyle.FixedSingle;
 
-            TxtUnitGroup.AutoSize = false;
-            TxtUnitGroup.MaxLength = 10;
+            TxtUnitType.AutoSize = false;
+            TxtUnitType.MaxLength = 10;
 
-            btnUnitGroupAdd.Text = "+";
-            btnUnitGroupDel.Text = "-";
+            btnUnitTypeAdd.Text = "+";
+            btnUnitTypeDel.Text = "-";
 
-            LbxUnitGroup.AutoSize = false;
-            LbxUnitGroup.Sorted = true;
+            LbxUnitType.AutoSize = false;
+            LbxUnitType.Sorted = true;
 
             //Unit 모델
             LblUnitModel.AutoSize = false;
@@ -111,11 +110,11 @@ namespace Dnf.Communication.Frm
             LbxUnitModel.Sorted = true;
 
 
-            this.Controls.Add(TxtUnitGroup);
-            this.Controls.Add(LblUnitGroup);
-            this.Controls.Add(btnUnitGroupAdd);
-            this.Controls.Add(btnUnitGroupDel);
-            this.Controls.Add(LbxUnitGroup);
+            this.Controls.Add(TxtUnitType);
+            this.Controls.Add(LblUnitType);
+            this.Controls.Add(btnUnitTypeAdd);
+            this.Controls.Add(btnUnitTypeDel);
+            this.Controls.Add(LbxUnitType);
 
             this.Controls.Add(TxtUnitModel);
             this.Controls.Add(LblUnitModel);
@@ -124,9 +123,11 @@ namespace Dnf.Communication.Frm
             this.Controls.Add(LbxUnitModel);
 
 
-            btnUnitGroupAdd.Click += (sender, e) => { UnitGroupAdd(); };
+            btnUnitTypeAdd.Click += (sender, e) => { UnitTypeAdd(); };
+            btnUnitTypeDel.Click += (sender, e) => { UnitTypeRemove(); };
             btnUnitModelAdd.Click += (sender, e) => { UnitModelAdd(); };
-            LbxUnitGroup.SelectedIndexChanged += UnitGroupSelectedChanged;
+            btnUnitModelDel.Click += (sender, e) => { UnitModelRemove(); };
+            LbxUnitType.SelectedIndexChanged += UnitTypeSelectedChanged;
             LbxUnitModel.SelectedIndexChanged += UnitModelSelectedChanged;
         }
 
@@ -135,13 +136,13 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void InitializeDockIndex()
         {
-            pnlUnitGroup.BringToFront();
+            pnlUnitType.BringToFront();
             pnlUnitModel.BringToFront();
         }
 
         private void SetText()
         {
-            LblUnitGroup.Text = RuntimeData.String("F030100");
+            LblUnitType.Text = RuntimeData.String("F030100");
             LblUnitModel.Text = RuntimeData.String("F030101");
         }
 
@@ -153,48 +154,48 @@ namespace Dnf.Communication.Frm
              */
             int margin = 3;
 
-            LblUnitGroup.Location = new Point(margin, margin);
-            LblUnitGroup.Size = new Size(160 + (margin * 2), 30);
+            LblUnitType.Location = new Point(margin, margin);
+            LblUnitType.Size = new Size(160 + (margin * 2), 30);
 
-            TxtUnitGroup.Location = new Point(margin,
-                LblUnitGroup.Location.Y + LblUnitGroup.Height + margin);
-            TxtUnitGroup.Size = new Size(100, 27);
+            TxtUnitType.Location = new Point(margin,
+                LblUnitType.Location.Y + LblUnitType.Height + margin);
+            TxtUnitType.Size = new Size(100, 27);
 
-            btnUnitGroupAdd.Location = new Point(TxtUnitGroup.Location.X + TxtUnitGroup.Width + margin,
-                TxtUnitGroup.Location.Y - 2);
-            btnUnitGroupAdd.Size = new Size(30, 30);
+            btnUnitTypeAdd.Location = new Point(TxtUnitType.Location.X + TxtUnitType.Width + margin,
+                TxtUnitType.Location.Y - 2);
+            btnUnitTypeAdd.Size = new Size(30, 30);
 
-            btnUnitGroupDel.Location = new Point(btnUnitGroupAdd.Location.X + btnUnitGroupAdd.Width + margin,
-                btnUnitGroupAdd.Location.Y);
-            btnUnitGroupDel.Size = btnUnitGroupAdd.Size;
+            btnUnitTypeDel.Location = new Point(btnUnitTypeAdd.Location.X + btnUnitTypeAdd.Width + margin,
+                btnUnitTypeAdd.Location.Y);
+            btnUnitTypeDel.Size = btnUnitTypeAdd.Size;
 
-            LbxUnitGroup.Location = new Point(margin,
-                TxtUnitGroup.Location.Y +  TxtUnitGroup.Height + margin);
-            LbxUnitGroup.Size = new Size(LblUnitGroup.Width,
-                (this.Size.Height / 2) - (margin + LblUnitGroup.Height + margin + TxtUnitGroup.Height + margin));
-            // - (margin + LblUnitGroup.Height + margin + TxtUnitGroup.Height + margin)
+            LbxUnitType.Location = new Point(margin,
+                TxtUnitType.Location.Y +  TxtUnitType.Height + margin);
+            LbxUnitType.Size = new Size(LblUnitType.Width,
+                (this.Size.Height / 2) - (margin + LblUnitType.Height + margin + TxtUnitType.Height + margin));
+            // - (margin + LblUnitType.Height + margin + TxtUnitType.Height + margin)
 
             //Unit 모델
             LblUnitModel.Location = new Point(margin,
                 (this.Size.Height / 2) + (margin / 2));
-            LblUnitModel.Size = LblUnitGroup.Size;
+            LblUnitModel.Size = LblUnitType.Size;
 
             TxtUnitModel.Location = new Point(margin,
                 LblUnitModel.Location.Y + LblUnitModel.Height + margin);
-            TxtUnitModel.Size = TxtUnitGroup.Size;
+            TxtUnitModel.Size = TxtUnitType.Size;
 
-            btnUnitModelAdd.Location = new Point(btnUnitGroupAdd.Location.X,
+            btnUnitModelAdd.Location = new Point(btnUnitTypeAdd.Location.X,
                 TxtUnitModel.Location.Y);
-            btnUnitModelAdd.Size = btnUnitGroupAdd.Size;
+            btnUnitModelAdd.Size = btnUnitTypeAdd.Size;
 
-            btnUnitModelDel.Location = new Point(btnUnitGroupDel.Location.X,
+            btnUnitModelDel.Location = new Point(btnUnitTypeDel.Location.X,
                 TxtUnitModel.Location.Y);
-            btnUnitModelDel.Size = btnUnitGroupAdd.Size;
+            btnUnitModelDel.Size = btnUnitTypeAdd.Size;
 
             LbxUnitModel.Location = new Point(margin,
                 TxtUnitModel.Location.Y + TxtUnitModel.Height + margin);
-            LbxUnitModel.Size = new Size(LbxUnitGroup.Width,
-                LbxUnitGroup.Height);
+            LbxUnitModel.Size = new Size(LbxUnitType.Width,
+                LbxUnitType.Height);
         }
 
         #region Event
@@ -207,24 +208,26 @@ namespace Dnf.Communication.Frm
         private void FrmSizeChanged(object sender, EventArgs e)
         {
             SetPositionSize();
-            //this.pnlUnitGroup.Size = new Size(pnlUnitGroup.Width, this.Size.Height / 2);
+            //this.pnlUnitType.Size = new Size(pnlUnitType.Width, this.Size.Height / 2);
         }
 
         /// <summary>
-        /// Unit Group 선택Index 변경 이벤트
+        /// Unit Type 선택Index 변경 이벤트
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void UnitGroupSelectedChanged(object sender, EventArgs e)
+        private void UnitTypeSelectedChanged(object sender, EventArgs e)
         {
-            this.SelectedGroup = LbxUnitGroup.SelectedItem as string;
+            this.SelectedType = LbxUnitType.SelectedItem as string;
             LbxUnitModel.Items.Clear();
 
             //하위 모델이 있을경우 첫번째 Item 선택
-            if (dicUnitGroups[SelectedGroup].Count > 0)
+            if(this.SelectedType == null || this.SelectedType == string.Empty) { return; }
+
+            if (RuntimeData.dicUnitTypes[SelectedType].Count > 0)
             {
-                //해당Group의 Model리스트 조회
-                foreach (string model in dicUnitGroups[SelectedGroup].Keys)
+                //해당Type의 Model리스트 조회
+                foreach (string model in RuntimeData.dicUnitTypes[SelectedType].Keys)
                 {
                     LbxUnitModel.Items.Add(model);
                 }
@@ -243,34 +246,50 @@ namespace Dnf.Communication.Frm
             this.SelectedModel = LbxUnitModel.SelectedItem as string;
         }
 
-        #endregion Event End
-
         /// <summary>
-        /// Unit Group 생성
+        /// Unit Type 생성
         /// </summary>
-        private void UnitGroupAdd()
+        private void UnitTypeAdd()
         {
-            string unitGroupName = TxtUnitGroup.Text.Trim();
+            string unitTypeName = TxtUnitType.Text.Trim();
 
             //빈칸입력인지 검사
-            if (unitGroupName == "")
+            if (unitTypeName == "")
             {
                 MessageBox.Show(RuntimeData.String("F030000"));
                 return;
             }
-            //동일한 Group명 있는지 검사
-            if (dicUnitGroups.Keys.Contains(unitGroupName))
+            //동일한 Type명 있는지 검사
+            if (RuntimeData.dicUnitTypes.Keys.Contains(unitTypeName))
             {
                 MessageBox.Show(RuntimeData.String("F030001"));
                 return;
             }
 
-            LbxUnitGroup.Items.Add(unitGroupName);
+            LbxUnitType.Items.Add(unitTypeName);
+            RuntimeData.dicUnitTypes.Add(unitTypeName, new Dictionary<string, int>());
 
             //후처리
-            dicUnitGroups.Add(unitGroupName, new Dictionary<string, int>());
-            TxtUnitGroup.Text = "";
-            LbxUnitGroup.SelectedItem = unitGroupName;
+            TxtUnitType.Text = "";
+            LbxUnitType.SelectedItem = unitTypeName;
+        }
+
+        /// <summary>
+        /// Unit Type 삭제
+        /// </summary>
+        private void UnitTypeRemove()
+        {
+            if(SelectedType != string.Empty || SelectedType != "")
+            {
+                RuntimeData.dicUnitTypes.Remove(SelectedType);
+                LbxUnitType.Items.Remove(SelectedType);
+
+                SelectedType = string.Empty;
+                if(LbxUnitType.Items.Count > 0)
+                {
+                    LbxUnitType.SelectedIndex = 0;
+                }
+            }
         }
 
         /// <summary>
@@ -280,8 +299,8 @@ namespace Dnf.Communication.Frm
         {
             string unitModelName = TxtUnitModel.Text.Trim();
 
-            //Group이 선택된 상태인지 검사
-            if(SelectedGroup == null || SelectedGroup == string.Empty || SelectedGroup == "")
+            //Type이 선택된 상태인지 검사
+            if (SelectedType == null || SelectedType == string.Empty || SelectedType == "")
             {
                 MessageBox.Show(RuntimeData.String("F030002"));
                 return;
@@ -293,39 +312,65 @@ namespace Dnf.Communication.Frm
                 return;
             }
             //동일한 Model명 있는지 검사
-            if (dicUnitGroups[SelectedGroup].Keys.Contains(unitModelName))
+            if (RuntimeData.dicUnitTypes[SelectedType].Keys.Contains(unitModelName))
             {
                 MessageBox.Show(RuntimeData.String("F030001"));
                 return;
             }
 
             LbxUnitModel.Items.Add(unitModelName);
+            RuntimeData.dicUnitTypes[SelectedType].Add(unitModelName, 0);
 
             //후처리
-            dicUnitGroups[SelectedGroup].Add(unitModelName, 0);
             TxtUnitModel.Text = "";
             LbxUnitModel.SelectedItem = unitModelName;
         }
 
+        /// <summary>
+        /// Unit Model 삭제
+        /// </summary>
+        private void UnitModelRemove()
+        {
+            if (SelectedType != string.Empty || SelectedType != "")
+            {
+                if (SelectedModel != string.Empty || SelectedModel != "")
+                {
+                    RuntimeData.dicUnitTypes[SelectedType].Remove(SelectedModel);
+                    LbxUnitModel.Items.Remove(SelectedModel);
+
+                    SelectedModel = string.Empty;
+                    if (LbxUnitModel.Items.Count > 0)
+                    {
+                        LbxUnitModel.SelectedIndex = 0;
+                    }
+                }
+            }
+        }
+
+        #endregion Event End
+
+
+        /// <summary>
+        /// Unit정보 XML 저장
+        /// </summary>
         public void UnitInfoSave()
         {
             //xmlNode 추가인데..... 수정하면 한줄만 추가하는 방식으로는 못만드나?
             //불러온상태에서 추가할떄마다 그 정보만 Update한다던가
             //없는 unit정보일때 Add하는방식
             XmlDocument xdoc = new XmlDocument();
-            //xdoc.AppendChild(xdoc.CreateXmlDeclaration("1.0", "UTF-8", ""));
             XmlNode root = xdoc.CreateElement("UnitList");
             xdoc.AppendChild(root);
 
-            foreach (string unitGroup in dicUnitGroups.Keys)
+            foreach (string unitType in RuntimeData.dicUnitTypes.Keys)
             {
-                XmlNode xmlgroup = xdoc.CreateElement("UnitGroup");
+                XmlNode xmlType = xdoc.CreateElement("UnitType");
                 //그룹 이름 정의
-                XmlAttribute groupName = xdoc.CreateAttribute("Name");
-                groupName.Value = unitGroup;
-                xmlgroup.Attributes.Append(groupName);
+                XmlAttribute typeName = xdoc.CreateAttribute("Name");
+                typeName.Value = unitType;
+                xmlType.Attributes.Append(typeName);
 
-                foreach (string unitModel in dicUnitGroups[unitGroup].Keys)
+                foreach (string unitModel in RuntimeData.dicUnitTypes[unitType].Keys)
                 {
                     XmlNode xmlUnitModel = xdoc.CreateElement("Model");
                     //Model 이름 정의
@@ -334,54 +379,34 @@ namespace Dnf.Communication.Frm
                     xmlUnitModel.Attributes.Append(modelName);
 
                     //그룹 하위로 추가
-                    xmlgroup.AppendChild(xmlUnitModel);
+                    xmlType.AppendChild(xmlUnitModel);
                 }
 
-                root.AppendChild(xmlgroup);
+                root.AppendChild(xmlType);
             }
 
             //작성파일 저장
             xdoc.Save(InfoFilePath);
         }
 
+        /// <summary>
+        /// Unit정보 불러오기(RuntimeData에 가지고있음)
+        /// </summary>
         private void UnitInfoLoad()
         {
-            if (File.Exists(InfoFilePath))
+            foreach(string TypeName in RuntimeData.dicUnitTypes.Keys)
             {
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(InfoFilePath);
+                LbxUnitType.Items.Add(TypeName);
 
-                if (xdoc.ChildNodes.Count > 0)
+                foreach(string modelName in RuntimeData.dicUnitTypes[TypeName].Keys)
                 {
-                    XmlNode unitList = xdoc.SelectSingleNode("UnitList");
-                    dicUnitGroups = new Dictionary<string, Dictionary<string, int>>();
-
-                    //가져온 Node Dictionary에 추가
-                    foreach (XmlNode groupNode in unitList.ChildNodes)
-                    {
-                        //Dictionary에 추가
-                        string groupName = groupNode.Attributes["Name"].Value;
-                        dicUnitGroups.Add(groupName, new Dictionary<string, int>());
-                        //ListBox에 추가
-                        LbxUnitGroup.Items.Add(groupName);
-
-                        foreach (XmlNode unitModel in groupNode.ChildNodes)
-                        {
-                            string modelName = unitModel.Attributes["Name"].Value;
-                            //Dictionary에 추가
-                            dicUnitGroups[groupName].Add(modelName, 0);
-
-                            //ListBox에 추가
-                            LbxUnitModel.Items.Add(modelName);
-                        }
-                    }
-
-                    //그룹항목이 있을경우 첫번째 항목 선택
-                    if(LbxUnitGroup.Items.Count > 0)
-                    {
-                        LbxUnitGroup.SelectedIndex = 0;
-                    }
+                    LbxUnitModel.Items.Add(modelName);
                 }
+            }
+
+            if(LbxUnitType.Items.Count > 0)
+            {
+                LbxUnitType.SelectedIndex = 0;
             }
         }
     }
