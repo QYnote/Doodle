@@ -312,11 +312,21 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void SetEnable()
         {
-            cboProtocolType.Enabled = false;
-
-            if (OpenType == FrmEditType.Edit)
+            if (gv.Rows.Count < 1)
             {
-                
+                cboProtocolType.Enabled = false;
+                numUnitAddr.Enabled = false;
+                cboUnitType.Enabled = false;
+                cboUnitModel.Enabled = false;
+                txtUnitName.Enabled = false;
+            }
+            else
+            {
+                cboProtocolType.Enabled = true;
+                numUnitAddr.Enabled = true;
+                cboUnitType.Enabled = true;
+                cboUnitModel.Enabled = true;
+                txtUnitName.Enabled = true;
             }
         }
 
@@ -356,9 +366,12 @@ namespace Dnf.Communication.Frm
 
             if(e.ColumnIndex == colErase.Index)
             {
+                /*RemoveAt진행 시 SelectedIndex 이벤트가 진행되는것 방지*/
                 removeFlag = true;
                 gv.Rows.RemoveAt(e.RowIndex);
                 removeFlag = false;
+
+                SetEnable();
             }
         }
 
@@ -395,6 +408,7 @@ namespace Dnf.Communication.Frm
             dt.Rows.Add(dr);
 
             binding.ResetBindings(false);
+            SetEnable();
         }
 
         /// <summary>
