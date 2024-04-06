@@ -126,8 +126,6 @@ namespace Dnf.Communication
                 row => row.Field<string>(0),
                 row => row.Field<string>(1)
                 );
-
-            return dtimsi;
         }
 
     }
