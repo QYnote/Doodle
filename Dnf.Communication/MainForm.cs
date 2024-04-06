@@ -343,7 +343,7 @@ namespace Dnf.Communication
         /// <summary>
         /// Main Form Tree 재지정
         /// </summary>
-        public void InitTreeItem()
+        internal void InitTreeItem()
         {
             Tree.Nodes[0].Nodes.Clear();    //Program Computer Node 하위항목 삭제
 
@@ -779,7 +779,7 @@ namespace Dnf.Communication
         /// TabPage 종료
         /// </summary>
         /// <param name="pageName"></param>
-        public void RemoveTabPage(string pageName)
+        internal void RemoveTabPage(string pageName)
         {
             if (TabCtrl.TabPages.Count == 1)
             {

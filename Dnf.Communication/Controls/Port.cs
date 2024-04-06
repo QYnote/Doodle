@@ -14,24 +14,24 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication.Controls
 {
-    public abstract class Port
+    internal abstract class Port
     {
         /// <summary>
         /// 포트 연결 상태
         /// </summary>
-        public ConnectionState State;
+        internal ConnectionState State;
         /// <summary>
         /// 통신 방법
         /// </summary>
-        public uProtocolType ProtocolType;
+        internal uProtocolType ProtocolType;
         /// <summary>
         /// Port명, RunTimeData의 Port Dictionary 이름 구분용으로 사용
         /// </summary>
-        public string PortName;
+        internal string PortName;
         /// <summary>
         /// Port에 연결된 하위 Unit들(ex. PLC, 센서 등), <slaveAddr, Unit>
         /// </summary>
-        public Dictionary<int, Unit> Units;
+        internal Dictionary<int, Unit> Units;
 
         internal string DebugStr = "";
 
@@ -39,16 +39,16 @@ namespace Dnf.Communication.Controls
         /// 연결된 Port 열기
         /// </summary>
         /// <returns>true : Success / false : Fail</returns>
-        public abstract bool Open();
+        internal abstract bool Open();
         /// <summary>
         /// 연결된 Port 닫기
         /// </summary>
         /// <returns>true : Success / false : Fail</returns>
-        public abstract bool Close();
+        internal abstract bool Close();
         /// <summary>
         /// Port Data 전송
         /// </summary>
         /// <returns>true : Success / false : Fail</returns>
-        public abstract bool Send();
+        internal abstract bool Send();
     }
 }

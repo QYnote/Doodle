@@ -17,7 +17,7 @@ using System.Windows.Forms;
 
 namespace Dnf.Communication.Frm
 {
-    public partial class FrmPort : Form
+    internal partial class FrmPort : Form
     {
         /// <summary>
         /// Form Open 형태, New : 신규생성, Edit : 수정
@@ -55,7 +55,7 @@ namespace Dnf.Communication.Frm
         /// <param name="frm">상위 Form</param>
         /// <param name="type">Form 열리는 Type / New, Edit</param>
         /// <param name="port">Edit일 때 수정할 Port</param>
-        public FrmPort(FrmEditType type, Port port = null)
+        internal FrmPort(FrmEditType type, Port port = null)
         {
             OpenType = type;
             frmPort = port;

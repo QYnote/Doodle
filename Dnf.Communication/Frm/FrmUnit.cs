@@ -15,7 +15,7 @@ using System.Windows.Forms;
 
 namespace Dnf.Communication.Frm
 {
-    public partial class FrmUnit : Form
+    internal partial class FrmUnit : Form
     {
         /// <summary>
         /// Form Open 형태, New : 신규생성, Edit : 수정
@@ -58,7 +58,7 @@ namespace Dnf.Communication.Frm
         /// </summary>
         bool EditFlag = false;
 
-        public FrmUnit(FrmEditType type, Port port, Unit unit = null)
+        internal FrmUnit(FrmEditType type, Port port, Unit unit = null)
         {
             OpenType = type;
             BasePort = port;
@@ -132,7 +132,11 @@ namespace Dnf.Communication.Frm
             (cboProtocolType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());;
             object[] UnitTypeArr = RuntimeData.dicUnitTypes.Keys.ToArray();
             (cboUnitType.ctrl as ComboBox).Items.AddRange(UnitTypeArr);
-            object[] UnitModelArr = RuntimeData.dicUnitTypes[UnitTypeArr[0].ToString()].Keys.ToArray();    //Type 첫번째값으로 임시지정
+            object[] UnitModelArr = new object[] { };
+            if (UnitTypeArr.Length > 0)
+            {
+                UnitModelArr = RuntimeData.dicUnitTypes[UnitTypeArr[0].ToString()].Keys.ToArray();    //Type 첫번째값으로 임시지정
+            }
             (cboUnitModel.ctrl as ComboBox).Items.AddRange(UnitModelArr);
 
             (numUnitAddr.ctrl as NumericUpDown).Minimum = 1;
@@ -280,8 +284,16 @@ namespace Dnf.Communication.Frm
             if (OpenType == FrmEditType.New)
             {
                 (numUnitAddr.ctrl as NumericUpDown).Value = 1;
-                (cboUnitType.ctrl as ComboBox).SelectedIndex = 0;
-                (cboUnitModel.ctrl as ComboBox).SelectedIndex = 0;
+                ComboBox unitType = (cboUnitType.ctrl as ComboBox);
+                if (unitType.Items.Count > 0)
+                {
+                    unitType.SelectedIndex = 0;
+                }
+                ComboBox unitModel = (cboUnitModel.ctrl as ComboBox);
+                if (unitModel.Items.Count > 0)
+                {
+                    unitModel.SelectedIndex = 0;
+                }
                 (txtUnitName.ctrl as TextBox).Text = "";
             }
             else if (OpenType == FrmEditType.Edit && SelectedUnit != null)

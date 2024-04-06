@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Dnf.Communication.Data;
+using Dnf.Utils.Controls;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,28 +17,27 @@ using System.Xml;
 
 namespace Dnf.Communication.Frm
 {
-    public partial class Frm_UnitSetting : TabPage
+    internal partial class Frm_UnitSetting : TabPage
     {
-        public event EventHandler Evnet_PageClosed;
         #region Controls
         private int marginValue = 3;
-
-        private Panel pnlUnitItem = new Panel();
-        private Panel pnlUnitType = new Panel();
+        
+        //Unit Type
         private Label LblUnitType = new Label();
-        private Panel pnlUnitTypeAction = new Panel();
         private TextBox TxtUnitType = new TextBox();
         private Button btnUnitTypeAdd = new Button();
         private Button btnUnitTypeDel = new Button();
         private ListBox LbxUnitType = new ListBox();
-        private Panel pnlUnitModel = new Panel();
+        //Unit 모델
         private Label LblUnitModel = new Label();
-        private Panel pnlUnitModelAction = new Panel();
         private TextBox TxtUnitModel = new TextBox();
         private Button btnUnitModelAdd = new Button();
         private Button btnUnitModelDel = new Button();
         private ListBox LbxUnitModel = new ListBox();
 
+        //지원 Protocol
+        private Label LblSupportProtocol = new Label();
+        private CheckedListBox CLbxSupportProtocol = new CheckedListBox();
         #endregion Controls End
 
         private string SelectedType = string.Empty;
@@ -45,7 +46,7 @@ namespace Dnf.Communication.Frm
         private string InfoFilePath = RuntimeData.DataPath + "UnitInfo.xml";
 
 
-        public Frm_UnitSetting()
+        internal Frm_UnitSetting()
         {
             InitializeComponent();
 
@@ -64,17 +65,12 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void InitializeForm()
         {
-            pnlUnitItem.Dock = DockStyle.Left;
-            pnlUnitItem.Size = new Size(150, 100);
-
             InitializeUnitTypeModel();
             SetPositionSize();
             //InitializeUnitType();
             //InitializeUnitModel();
             //InitializeDockIndex();
             SetText();
-
-            this.Controls.Add(pnlUnitItem);
         }
 
         /// <summary>
@@ -109,6 +105,14 @@ namespace Dnf.Communication.Frm
             LbxUnitModel.AutoSize = false;
             LbxUnitModel.Sorted = true;
 
+            //지원 Protocl
+            LblSupportProtocol.AutoSize = false;
+            LblSupportProtocol.TextAlign = ContentAlignment.MiddleCenter;
+            LblSupportProtocol.BorderStyle = BorderStyle.FixedSingle;
+
+            CLbxSupportProtocol.AutoSize = false;
+            CLbxSupportProtocol.Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());
+            CLbxSupportProtocol.CheckOnClick = true;    //항목 선택 시 Check 바로 변경
 
             this.Controls.Add(TxtUnitType);
             this.Controls.Add(LblUnitType);
@@ -122,6 +126,8 @@ namespace Dnf.Communication.Frm
             this.Controls.Add(btnUnitModelDel);
             this.Controls.Add(LbxUnitModel);
 
+            this.Controls.Add(LblSupportProtocol);
+            this.Controls.Add(CLbxSupportProtocol);
 
             btnUnitTypeAdd.Click += (sender, e) => { UnitTypeAdd(); };
             btnUnitTypeDel.Click += (sender, e) => { UnitTypeRemove(); };
@@ -129,21 +135,15 @@ namespace Dnf.Communication.Frm
             btnUnitModelDel.Click += (sender, e) => { UnitModelRemove(); };
             LbxUnitType.SelectedIndexChanged += UnitTypeSelectedChanged;
             LbxUnitModel.SelectedIndexChanged += UnitModelSelectedChanged;
+            CLbxSupportProtocol.SelectedValueChanged += (sender, e) => { ProtocolFlagChanged(); };
         }
 
-        /// <summary>
-        /// Dock 순서 조정
-        /// </summary>
-        private void InitializeDockIndex()
-        {
-            pnlUnitType.BringToFront();
-            pnlUnitModel.BringToFront();
-        }
 
         private void SetText()
         {
             LblUnitType.Text = RuntimeData.String("F030100");
             LblUnitModel.Text = RuntimeData.String("F030101");
+            LblSupportProtocol.Text = RuntimeData.String("F030102");
         }
 
         private void SetPositionSize()
@@ -152,7 +152,7 @@ namespace Dnf.Communication.Frm
              * TabPage 쓰면 Form Closed가 없고
              * 미쳐버리겠네 진짜
              */
-            int margin = 3;
+            int margin = marginValue;
 
             LblUnitType.Location = new Point(margin, margin);
             LblUnitType.Size = new Size(160 + (margin * 2), 30);
@@ -196,6 +196,16 @@ namespace Dnf.Communication.Frm
                 TxtUnitModel.Location.Y + TxtUnitModel.Height + margin);
             LbxUnitModel.Size = new Size(LbxUnitType.Width,
                 LbxUnitType.Height);
+
+            //지원 Protocol
+            LblSupportProtocol.Location = new Point(LblUnitType.Location.X + LblUnitType.Width + margin,
+                margin);
+            LblSupportProtocol.Size = LblUnitType.Size;
+
+            CLbxSupportProtocol.Location = new Point(LblSupportProtocol.Location.X,
+                LblSupportProtocol.Location.Y + LblSupportProtocol.Height + margin);
+            CLbxSupportProtocol.Size = new Size(LblSupportProtocol.Width,
+                100);
         }
 
         #region Event
@@ -244,6 +254,17 @@ namespace Dnf.Communication.Frm
         private void UnitModelSelectedChanged(object sender, EventArgs e)
         {
             this.SelectedModel = LbxUnitModel.SelectedItem as string;
+
+            UnitModel model = RuntimeData.dicUnitTypes[SelectedType][SelectedModel];
+            //지원하는 Protocol
+            foreach (uProtocolType protocol in model.SupportProtocol.Keys)
+            {
+                int idx = CLbxSupportProtocol.Items.IndexOf(protocol);
+                bool flag = model.SupportProtocol[protocol];
+
+                CLbxSupportProtocol.SetItemChecked(idx, flag);
+            }
+
         }
 
         /// <summary>
@@ -267,7 +288,7 @@ namespace Dnf.Communication.Frm
             }
 
             LbxUnitType.Items.Add(unitTypeName);
-            RuntimeData.dicUnitTypes.Add(unitTypeName, new Dictionary<string, int>());
+            RuntimeData.dicUnitTypes.Add(unitTypeName, new Dictionary<string, UnitModel>());
 
             //후처리
             TxtUnitType.Text = "";
@@ -319,7 +340,7 @@ namespace Dnf.Communication.Frm
             }
 
             LbxUnitModel.Items.Add(unitModelName);
-            RuntimeData.dicUnitTypes[SelectedType].Add(unitModelName, 0);
+            RuntimeData.dicUnitTypes[SelectedType].Add(unitModelName, new UnitModel() { ModelName = unitModelName});
 
             //후처리
             TxtUnitModel.Text = "";
@@ -347,13 +368,27 @@ namespace Dnf.Communication.Frm
             }
         }
 
+        /// <summary>
+        /// 통신 Protocol 사용여부 변경 Event
+        /// </summary>
+        private void ProtocolFlagChanged()
+        {
+            if(SelectedType != string.Empty || SelectedModel != string.Empty)
+            {
+                uProtocolType protocol = (uProtocolType)CLbxSupportProtocol.SelectedItem;
+
+                UnitModel model = RuntimeData.dicUnitTypes[SelectedType][SelectedModel];
+                model.SupportProtocol[protocol] = CLbxSupportProtocol.GetItemChecked(CLbxSupportProtocol.SelectedIndex);
+            }
+        }
+
         #endregion Event End
 
 
         /// <summary>
         /// Unit정보 XML 저장
         /// </summary>
-        public void UnitInfoSave()
+        internal void UnitInfoSave()
         {
             //xmlNode 추가인데..... 수정하면 한줄만 추가하는 방식으로는 못만드나?
             //불러온상태에서 추가할떄마다 그 정보만 Update한다던가
@@ -370,13 +405,27 @@ namespace Dnf.Communication.Frm
                 typeName.Value = unitType;
                 xmlType.Attributes.Append(typeName);
 
-                foreach (string unitModel in RuntimeData.dicUnitTypes[unitType].Keys)
+                foreach (UnitModel model in RuntimeData.dicUnitTypes[unitType].Values)
                 {
                     XmlNode xmlUnitModel = xdoc.CreateElement("Model");
                     //Model 이름 정의
-                    XmlAttribute modelName = xdoc.CreateAttribute("Name");
-                    modelName.Value = unitModel;
-                    xmlUnitModel.Attributes.Append(modelName);
+                    XmlAttribute attrModelName = xdoc.CreateAttribute("Name");
+                    attrModelName.Value = model.ModelName;
+                    xmlUnitModel.Attributes.Append(attrModelName);
+
+                    //지원하는 통신 Protocol
+                    /* 지원하는 형식이 추가, 삭제, 순서변경 등을 고려하여
+                     * ListNode를 만들고 하위로 Item들을 두어 1,0으로 판단하도록 개발*/
+                    XmlNode xmlProtocolTypeList = xdoc.CreateElement("SupportProtocol");
+                    foreach (uProtocolType protocol in UtilCustom.EnumToItems<uProtocolType>())
+                    {
+                        XmlNode xmlProtocolType = xdoc.CreateElement(protocol.ToString());
+                        //지원하면 1 안하면 0
+                        xmlProtocolType.InnerText = (model.SupportProtocol[protocol] == true ? 1 : 0).ToString();
+
+                        xmlProtocolTypeList.AppendChild(xmlProtocolType);
+                    }
+                    xmlUnitModel.AppendChild(xmlProtocolTypeList);
 
                     //그룹 하위로 추가
                     xmlType.AppendChild(xmlUnitModel);

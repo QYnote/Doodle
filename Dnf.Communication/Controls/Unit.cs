@@ -9,17 +9,17 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication.Controls
 {
-    public class Unit
+    internal class Unit
     {
-        public ConnectionState State;
-        public readonly Port ParentPort;  //등록된 Port
+        internal ConnectionState State;
+        internal readonly Port ParentPort;  //등록된 Port
 
-        public int SlaveAddr;       //Unit 주소
-        public string UnitType;   //Unit 구분
-        public string UnitModel;   //Unit 구분
-        public string UnitName;    //Unit 모델명
+        internal int SlaveAddr;       //Unit 주소
+        internal string UnitType;   //Unit 구분
+        internal string UnitModel;   //Unit 구분
+        internal string UnitName;    //Unit 모델명
 
-        public Unit(Port port, int addr, string type, string model, string modelName = null)
+        internal Unit(Port port, int addr, string type, string model, string modelName = null)
         { 
             ParentPort = port;
             SlaveAddr = addr;

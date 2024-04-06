@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication.Controls
 {
-    public class Custom_EthernetPort : Port
+    internal class Custom_EthernetPort : Port
     {
         /// <summary>
         /// Port IP번호
         /// </summary>
-        public IPAddress IPAddr;
+        internal IPAddress IPAddr;
         /// <summary>
         /// Port번호
         /// </summary>
-        public ushort PortNo;
+        internal ushort PortNo;
 
-        public Custom_EthernetPort(uProtocolType type, IPAddress addr, ushort portNo)
+        internal Custom_EthernetPort(uProtocolType type, IPAddress addr, ushort portNo)
         {
             IPAddr = addr;
             PortNo = portNo;
@@ -31,17 +31,17 @@ namespace Dnf.Communication.Controls
             base.State = ConnectionState.Closed;
         }
 
-        public override bool Open()
+        internal override bool Open()
         {
             return true;
         }
 
-        public override bool Close()
+        internal override bool Close()
         {
             return true;
         }
 
-        public override bool Send()
+        internal override bool Send()
         {
             return true;
         }

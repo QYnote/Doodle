@@ -18,8 +18,8 @@ namespace Dnf.Communication.Controls.Protocols
          * 30001 ~ 39999        0000 ~ 270E  R     아날로그 입력 레지스터
          * 40001 ~ 49999        0000 ~ 270E  R/W   아날로그 출력 홀딩 레지스터
          */
-        public byte[] Frame;
-        public Queue<byte[]> ReqFrameData = new Queue<byte[]>();
+        internal byte[] Frame;
+        internal Queue<byte[]> ReqFrameData = new Queue<byte[]>();
 
         /// <summary>
         /// 전송할 Data 구조 기초공사

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication.Data
 {
-    public enum FrmEditType
+    internal enum FrmEditType
     {
         New,    //신규
         Edit    //수정
@@ -15,14 +15,14 @@ namespace Dnf.Communication.Data
     /// <summary>
     /// 통신방법 종류
     /// </summary>
-    public enum uProtocolType
+    internal enum uProtocolType
     {
         ModBusRTU,
         ModBusAscii,
         ModBusTcpIp
     }
 
-    public enum BaudRate
+    internal enum BaudRate
     {
         _9600,
         _14400
@@ -31,7 +31,7 @@ namespace Dnf.Communication.Data
     /// <summary>
     /// Channel Value 종류
     /// </summary>
-    public enum ChValueType
+    internal enum ChValueType
     {
         CV, //현재값
         LV, //하한값

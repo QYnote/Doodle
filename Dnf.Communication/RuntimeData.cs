@@ -1,5 +1,6 @@
 ﻿using Dnf.Communication.Controls;
 using Dnf.Communication.Data;
+using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,12 +12,12 @@ using System.Xml;
 namespace Dnf.Communication
 {
     //프로그램 실행동안 가질 데이터
-    public static class RuntimeData
+    internal static class RuntimeData
     {
-        public readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
-        public static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
-        public static string LangType = "Ko";
-        public static Dictionary<string, Dictionary<string, int>> dicUnitTypes;    //Unit Type - Model등 정보
+        internal readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
+        internal static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
+        internal static string LangType = "Ko";
+        internal static Dictionary<string, Dictionary<string, UnitModel>> dicUnitTypes;    //Unit Type - Model등 정보
         private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 
         static RuntimeData()
@@ -30,7 +31,7 @@ namespace Dnf.Communication
         /// </summary>
         /// <param name="strCode">호출할 코드</param>
         /// <returns>언어별 코드 Value</returns>
-        public static string String(string strCode)
+        internal static string String(string strCode)
         {
             if (dicTextList.ContainsKey(strCode))
             {
@@ -40,7 +41,10 @@ namespace Dnf.Communication
             return strCode;
         }
 
-
+        /// <summary>
+        /// 초기 Unit 정보들 호출
+        /// </summary>
+        /// <param name="fileName"></param>
         private static void UnitInfoLoad(string fileName)
         {
             string filePath = DataPath + fileName + ".xml";
@@ -53,24 +57,42 @@ namespace Dnf.Communication
                 if (xdoc.ChildNodes.Count > 0)
                 {
                     XmlNode unitList = xdoc.SelectSingleNode("UnitList");
-                    dicUnitTypes = new Dictionary<string, Dictionary<string, int>>();
+                    dicUnitTypes = new Dictionary<string, Dictionary<string, UnitModel>>();
 
                     //가져온 Node Dictionary에 추가
                     foreach (XmlNode TypeNode in unitList.ChildNodes)
                     {
                         //Dictionary에 추가
-                        string TypeName = TypeNode.Attributes["Name"].Value;
-                        dicUnitTypes.Add(TypeName, new Dictionary<string, int>());
+                        /*Type이름*/string TypeName = TypeNode.Attributes["Name"].Value;
+                        dicUnitTypes.Add(TypeName, new Dictionary<string, UnitModel>());
 
                         foreach (XmlNode unitModel in TypeNode.ChildNodes)
                         {
                             string modelName = unitModel.Attributes["Name"].Value;
+
+                            UnitModel model = new UnitModel();
+                            /*Model이름*/model.ModelName = modelName;
+
+                            /*지원 통신Protocol*/
+                            foreach (XmlNode nodeProtocol in unitModel.SelectSingleNode("SupportProtocol").ChildNodes)
+                            {
+                                uProtocolType protocolType = UtilCustom.StringToEnum<uProtocolType>(nodeProtocol.Name);
+                                bool bValue = nodeProtocol.InnerText == 1.ToString() ? true : false;
+
+                                model.SupportProtocol[protocolType] = bValue;
+                            }
+
                             //Dictionary에 추가
-                            dicUnitTypes[TypeName].Add(modelName, 0);
+                            dicUnitTypes[TypeName].Add(modelName, model);
 
                         }
                     }//End foreach TypeNode
                 }
+            }
+            else
+            {
+                //없으면 빈 Dictionary 생성
+                dicUnitTypes = new Dictionary<string, Dictionary<string, UnitModel>>();
             }
         }
 
@@ -155,9 +177,10 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F030000", "Unit 구분명이 입력되지 않았습니다.");
             dtimsi.Rows.Add("F030001", "이미 존재하는 구분명입니다.");
             dtimsi.Rows.Add("F030002", "선택된 구분이 없습니다.");
-            dtimsi.Rows.Add("F0301", "Unit 종류");
+            dtimsi.Rows.Add("F0301", "Unit 속성");
             dtimsi.Rows.Add("F030100", "Unit 구분");
             dtimsi.Rows.Add("F030101", "Unit 모델");
+            dtimsi.Rows.Add("F030102", "지원 통신Protocol");
 
             dicTextList = dtimsi.AsEnumerable().ToDictionary(
                 row => row.Field<string>(0),

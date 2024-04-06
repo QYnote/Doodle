@@ -10,16 +10,16 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication.Controls
 {
-    public class Custom_SerialPort : Port
+    internal class Custom_SerialPort : Port
     {
         //Serial포트 정보
         SerialPort port;
-        public BaudRate BaudRate;   //Baud Rate
-        public int DataBits;        //DataBits
-        public Parity Parity;       //Parity Bit
-        public StopBits StopBIt;    //Stop Bit
+        internal BaudRate BaudRate;   //Baud Rate
+        internal int DataBits;        //DataBits
+        internal Parity Parity;       //Parity Bit
+        internal StopBits StopBIt;    //Stop Bit
 
-        public Custom_SerialPort(string portName, uProtocolType type, BaudRate baud, int databits, StopBits stopBits, Parity parity)
+        internal Custom_SerialPort(string portName, uProtocolType type, BaudRate baud, int databits, StopBits stopBits, Parity parity)
         {
             port = new SerialPort();
 
@@ -40,7 +40,7 @@ namespace Dnf.Communication.Controls
         /// SerialPort Open
         /// </summary>
         /// <returns>true : Success / false : Fail</returns>
-        public override bool Open()
+        internal override bool Open()
         {
             SerialPort serial = port;
 
@@ -75,7 +75,7 @@ namespace Dnf.Communication.Controls
         /// SerialPort Close
         /// </summary>
         /// <returns>true : Success / false : Fail</returns>
-        public override bool Close()
+        internal override bool Close()
         {
             SerialPort serial = port;
 
@@ -103,7 +103,7 @@ namespace Dnf.Communication.Controls
         /// SerialPort 데이터 전송
         /// </summary>
         /// <returns></returns>
-        public override bool Send()
+        internal override bool Send()
         {
             try
             {
