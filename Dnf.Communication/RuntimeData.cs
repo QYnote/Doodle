@@ -12,13 +12,32 @@ namespace Dnf.Communication
     //프로그램 실행동안 가질 데이터
     public static class RuntimeData
     {
-        public readonly static string DataPath = string.Format("{0}Data", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
+        public readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
         public static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
         public static string LangType = "Ko";
+        private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 
-        private static DataTable dt = CreateDtImsi();    //DB Code-나라별언어 Table
+        static RuntimeData()
+        {
+            CreateDtImsi();
+        }
 
-        private static DataTable CreateDtImsi()
+        /// <summary>
+        /// 코드에따른 Database 언어 가져오기
+        /// </summary>
+        /// <param name="strCode">호출할 코드</param>
+        /// <returns>언어별 코드 Value</returns>
+        public static string String(string strCode)
+        {
+            if (dicTextList.ContainsKey(strCode))
+            {
+                return dicTextList[strCode];
+            }
+
+            return strCode;
+        }
+
+        private static void CreateDtImsi()
         {
             //글로벌 DB 적용전 임시 Table
             DataTable dtimsi = new DataTable();
@@ -93,17 +112,23 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F020300", "번호");
             dtimsi.Rows.Add("F020301", "이름");
 
+
+            dtimsi.Rows.Add("F03", "Unit 설정");
+            dtimsi.Rows.Add("F0300", "Message Box");
+            dtimsi.Rows.Add("F030000", "Unit 구분명이 입력되지 않았습니다.");
+            dtimsi.Rows.Add("F030001", "이미 존재하는 구분명입니다.");
+            dtimsi.Rows.Add("F030002", "선택된 구분이 없습니다.");
+            dtimsi.Rows.Add("F0301", "Unit 종류");
+            dtimsi.Rows.Add("F030100", "Unit 구분");
+            dtimsi.Rows.Add("F030101", "Unit 모델");
+
+            dicTextList = dtimsi.AsEnumerable().ToDictionary(
+                row => row.Field<string>(0),
+                row => row.Field<string>(1)
+                );
+
             return dtimsi;
         }
 
-        /// <summary>
-        /// 코드에따른 Database 언어 가져오기
-        /// </summary>
-        /// <param name="strCode">호출할 코드</param>
-        /// <returns>언어별 코드 Value</returns>
-        public static string String(string strCode)
-        {
-            return Convert.ToString(dt.Select($"Code = '{strCode}'")[0][LangType]);
-        }
     }
 }
