@@ -746,8 +746,6 @@ namespace Dnf.Communication
 
         #endregion Menu Function End
 
-
-
         private void SetNodeImage(TreeNode node, ConnectionState state)
         {
             if (state == ConnectionState.Closed) { node.ImageKey = "DisConnect"; }      //미연결

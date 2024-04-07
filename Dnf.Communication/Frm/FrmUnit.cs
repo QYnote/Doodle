@@ -403,7 +403,10 @@ namespace Dnf.Communication.Frm
                 dr["SlaveAddr"] = maxAddr;
             }
             dr["UnitName"] = "";
-            dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32_Custom(), "UnitType", "UnitModel");
+            string unitType = (cboUnitType.ctrl as ComboBox).SelectedItem.ToString();
+            string unitModel = (cboUnitModel.ctrl as ComboBox).SelectedItem.ToString();
+
+            dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32_Custom(), unitType, unitModel);
 
             dt.Rows.Add(dr);
 

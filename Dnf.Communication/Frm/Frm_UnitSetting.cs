@@ -50,7 +50,6 @@ namespace Dnf.Communication.Frm
         {
             InitializeComponent();
 
-            InitializeComponent();
             InitializeForm();
 
             this.Name = RuntimeData.String("F03");
@@ -67,9 +66,6 @@ namespace Dnf.Communication.Frm
         {
             InitializeUnitTypeModel();
             SetPositionSize();
-            //InitializeUnitType();
-            //InitializeUnitModel();
-            //InitializeDockIndex();
             SetText();
         }
 
