@@ -225,6 +225,8 @@ namespace Dnf.Communication.Frm
             }
             else if(OpenType == FrmEditType.Edit && frmPort != null)
             {
+                (cboProtocolType.ctrl as ComboBox).SelectedItem = frmPort.ProtocolType;
+
                 //Serial Port일경우
                 if (frmPort.ProtocolType == uProtocolType.ModBusRTU || frmPort.ProtocolType == uProtocolType.ModBusAscii)
                 {
