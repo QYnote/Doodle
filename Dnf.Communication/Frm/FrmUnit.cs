@@ -479,7 +479,7 @@ namespace Dnf.Communication.Frm
                 if (dr == null) return;
                 Unit unit = dr["Unit"] as Unit;
 
-
+                //CtrlName별로 동작 구분
                 if (CtrlName == "numUnitAddr")
                 {
                     //Slave Address 변경
@@ -527,6 +527,20 @@ namespace Dnf.Communication.Frm
                 else if (CtrlName == "cboUnitModel")
                 {
                     //Protocol 사용할 수 있는 Model인지 확인절차
+                    object type = (cboUnitType.ctrl as ComboBox).SelectedItem;
+                    object model = (sender as ComboBox).SelectedItem;
+                    object protocol = (cboProtocolType.ctrl as ComboBox).SelectedItem;
+
+                    /*모델정보 Dictionary -> Type검색 -> Model 검색 -> 지원 Protocol 검색 -> 지원여부값 추출*/
+                    bool chkSupport = RuntimeData.dicUnitTypes[type.ToString()][model.ToString()].SupportProtocol[(uProtocolType)protocol];
+                    if (!chkSupport)
+                    {
+                        EditFlag = false;
+                        (sender as ComboBox).SelectedIndex = 0;
+                        MessageBox.Show(RuntimeData.String("F020002"));
+                        EditFlag = true;
+                        return;
+                    }
 
                     //Model 적용
                     unit.UnitModel = (sender as ComboBox).SelectedItem.ToString();

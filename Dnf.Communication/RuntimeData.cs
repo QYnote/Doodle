@@ -158,6 +158,7 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F0200", "Message Box");
             dtimsi.Rows.Add("F020000", "Unit 생성에 실패하였습니다.");
             dtimsi.Rows.Add("F020001", "사용중인 번호입니다.");
+            dtimsi.Rows.Add("F020002", "통신Protocol을 지원하지 않는 Model입니다.");
             dtimsi.Rows.Add("F0201", "버튼리스트");
             dtimsi.Rows.Add("F020100", "저장");
             dtimsi.Rows.Add("F020101", "취소");
