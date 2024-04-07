@@ -1,7 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ModelList>
-	<UnitModel Name="UnitModel1" MaxChannelCount="5" SupportedValueType="CV, LV, HV"/>
-	<UnitModel Name="UnitModel2" MaxChannelCount="5" SupportedValueType="CV"/>
-	<UnitModel Name="UnitModel3" MaxChannelCount="1" SupportedValueType="CV, LV, HV"/>
-	<UnitModel Name="UnitModel4" MaxChannelCount="1" SupportedValueType="CV"/>
-</ModelList>

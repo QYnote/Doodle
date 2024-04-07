@@ -1,0 +1,41 @@
+<UnitList>
+  <UnitType Name="UnitType1">
+    <Model Name="Model1">
+      <SupportProtocol>
+        <ModBusRTU>1</ModBusRTU>
+        <ModBusAscii>1</ModBusAscii>
+        <ModBusTcpIp>0</ModBusTcpIp>
+      </SupportProtocol>
+    </Model>
+    <Model Name="Model2">
+      <SupportProtocol>
+        <ModBusRTU>1</ModBusRTU>
+        <ModBusAscii>1</ModBusAscii>
+        <ModBusTcpIp>0</ModBusTcpIp>
+      </SupportProtocol>
+    </Model>
+    <Model Name="TCPModel">
+      <SupportProtocol>
+        <ModBusRTU>0</ModBusRTU>
+        <ModBusAscii>0</ModBusAscii>
+        <ModBusTcpIp>1</ModBusTcpIp>
+      </SupportProtocol>
+    </Model>
+  </UnitType>
+  <UnitType Name="UnitType2">
+    <Model Name="Model3">
+      <SupportProtocol>
+        <ModBusRTU>0</ModBusRTU>
+        <ModBusAscii>0</ModBusAscii>
+        <ModBusTcpIp>0</ModBusTcpIp>
+      </SupportProtocol>
+    </Model>
+    <Model Name="Model4">
+      <SupportProtocol>
+        <ModBusRTU>0</ModBusRTU>
+        <ModBusAscii>0</ModBusAscii>
+        <ModBusTcpIp>0</ModBusTcpIp>
+      </SupportProtocol>
+    </Model>
+  </UnitType>
+</UnitList>

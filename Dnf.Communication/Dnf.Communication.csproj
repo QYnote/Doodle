@@ -93,7 +93,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\UnitData\ModelStruct.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -101,10 +100,6 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Data\PortInfo.xml" />
-    <Content Include="Data\UnitData\ModelStruct.xml" />
   </ItemGroup>
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
