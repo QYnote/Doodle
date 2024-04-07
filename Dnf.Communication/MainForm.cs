@@ -63,9 +63,9 @@ namespace Dnf.Communication
         private DataGridViewColumn colPortPropertyValue = new DataGridViewTextBoxColumn();
         private DataGridViewColumn colUnitPropertyName = new DataGridViewTextBoxColumn();
         private DataGridViewColumn colUnitPropertyValue = new DataGridViewTextBoxColumn();
+        #endregion Control 모음 End
 
         private BackgroundWorker bgWorker;
-        #endregion Control 모음 End
 
         public MainForm()
         {

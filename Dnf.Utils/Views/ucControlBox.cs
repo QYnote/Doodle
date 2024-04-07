@@ -27,18 +27,26 @@ namespace Dnf.Utils.Views
         public Control ctrl;            //Control Type
         public Label lbl = new Label(); //Control 명
         
-
+        /// <summary>
+        /// Text Label Text
+        /// </summary>
         public string LblText
         {
             get => lbl.Text;
             set => lbl.Text = value;
         }
+        /// <summary>
+        /// Text Label 너비
+        /// </summary>
         public int LblWidth
         {
             get => lbl.Width;
             set => lbl.Width = value;
         }
 
+        /// <summary>
+        /// Control별 입력값
+        /// </summary>
         public object Value
         {
             get
@@ -60,6 +68,10 @@ namespace Dnf.Utils.Views
             }
         } 
 
+        /// <summary>
+        /// Label + Control 세트
+        /// </summary>
+        /// <param name="type"></param>
         public ucControlBox(CtrlType type)
         {
             InitializeComponent();
@@ -88,7 +100,7 @@ namespace Dnf.Utils.Views
 
             lbl.Dock = DockStyle.Left;
             lbl.Width = (int)(this.Width * 0.3);
-            lbl.Text = "None";
+            lbl.Text = "Empty Text";
             lbl.TextAlign = ContentAlignment.MiddleCenter;
 
             ctrl.Dock = DockStyle.Fill;
