@@ -298,10 +298,10 @@ namespace Dnf.Communication.Frm
             }
             else if (OpenType == FrmEditType.Edit && SelectedUnit != null)
             {
-                (numUnitAddr.ctrl as NumericUpDown).Value = SelectedUnit.SlaveAddr;
-                (cboUnitType.ctrl as ComboBox).SelectedItem = SelectedUnit.UnitType;
-                (cboUnitModel.ctrl as ComboBox).SelectedItem = SelectedUnit.UnitModel;
-                (txtUnitName.ctrl as TextBox).Text = SelectedUnit.UnitName;
+                numUnitAddr.Value = SelectedUnit.SlaveAddr;
+                cboUnitType.Value = SelectedUnit.UnitType;
+                cboUnitModel.Value = SelectedUnit.UnitModel;
+                txtUnitName.Value = SelectedUnit.UnitName;
             }
 
             EditFlag = true;
@@ -403,8 +403,8 @@ namespace Dnf.Communication.Frm
                 dr["SlaveAddr"] = maxAddr;
             }
             dr["UnitName"] = "";
-            string unitType = (cboUnitType.ctrl as ComboBox).SelectedItem.ToString();
-            string unitModel = (cboUnitModel.ctrl as ComboBox).SelectedItem.ToString();
+            string unitType = cboUnitType.Value.ToString();
+            string unitModel = cboUnitModel.Value.ToString();
 
             dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32_Custom(), unitType, unitModel);
 
@@ -429,10 +429,10 @@ namespace Dnf.Communication.Frm
             Unit unit = dr["Unit"] as Unit;
             EditFlag = false;
 
-            (numUnitAddr.ctrl as NumericUpDown).Value = unit.SlaveAddr;
-            (cboUnitType.ctrl as ComboBox).SelectedItem = unit.UnitType;
-            (cboUnitModel.ctrl as ComboBox).SelectedItem = unit.UnitModel;
-            (txtUnitName.ctrl as TextBox).Text = unit.UnitName;
+            numUnitAddr.Value = unit.SlaveAddr;
+            cboUnitType.Value = unit.UnitType;
+            cboUnitModel.Value = unit.UnitModel;
+            txtUnitName.Value = unit.UnitName;
 
             EditFlag = true;
         }
@@ -513,7 +513,7 @@ namespace Dnf.Communication.Frm
                 else if (CtrlName == "cboUnitType")
                 {
                     //UnitModel 리스트 변경
-                    object selItem = (cboUnitType.ctrl as ComboBox).SelectedItem;
+                    object selItem = cboUnitType.Value;
                     if (selItem == null) return;
 
                     object[] UnitModelArr = RuntimeData.dicUnitTypes[selItem.ToString()].Keys.ToArray();
@@ -530,9 +530,9 @@ namespace Dnf.Communication.Frm
                 else if (CtrlName == "cboUnitModel")
                 {
                     //Protocol 사용할 수 있는 Model인지 확인절차
-                    object type = (cboUnitType.ctrl as ComboBox).SelectedItem;
+                    object type = cboUnitType.Value;
                     object model = (sender as ComboBox).SelectedItem;
-                    object protocol = (cboProtocolType.ctrl as ComboBox).SelectedItem;
+                    object protocol = cboProtocolType.Value;
 
                     /*모델정보 Dictionary -> Type검색 -> Model 검색 -> 지원 Protocol 검색 -> 지원여부값 추출*/
                     bool chkSupport = RuntimeData.dicUnitTypes[type.ToString()][model.ToString()].SupportProtocol[(uProtocolType)protocol];

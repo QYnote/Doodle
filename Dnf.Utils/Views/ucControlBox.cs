@@ -26,6 +26,7 @@ namespace Dnf.Utils.Views
     {
         public Control ctrl;            //Control Type
         public Label lbl = new Label(); //Control 명
+        
 
         public string LblText
         {
@@ -37,7 +38,28 @@ namespace Dnf.Utils.Views
             get => lbl.Width;
             set => lbl.Width = value;
         }
-        
+
+        public object Value
+        {
+            get
+            {
+                     if (ctrl.GetType() == typeof(TextBox))       { return (ctrl as TextBox).Text; }
+                else if (ctrl.GetType() == typeof(MaskedTextBox)) { return (ctrl as MaskedTextBox).Text; }
+                else if (ctrl.GetType() == typeof(NumericUpDown)) { return (ctrl as NumericUpDown).Value; }
+                else if (ctrl.GetType() == typeof(ComboBox))      { return (ctrl as ComboBox).SelectedItem; }
+                else if (ctrl.GetType() == typeof(CheckBox))      { return (ctrl as CheckBox).Checked; }
+                else { return null; }
+            }
+            set
+            {
+                     if (ctrl.GetType() == typeof(TextBox))       { (ctrl as TextBox).Text = value.ToString(); }
+                else if (ctrl.GetType() == typeof(MaskedTextBox)) { (ctrl as MaskedTextBox).Text = value.ToString(); }
+                else if (ctrl.GetType() == typeof(NumericUpDown)) { (ctrl as NumericUpDown).Value = Convert.ToInt32(value); }
+                else if (ctrl.GetType() == typeof(ComboBox))      { (ctrl as ComboBox).SelectedItem = value; }
+                else if (ctrl.GetType() == typeof(CheckBox))      { (ctrl as CheckBox).Checked = bool.Parse(value.ToString()); }
+            }
+        } 
+
         public ucControlBox(CtrlType type)
         {
             InitializeComponent();

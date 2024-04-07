@@ -225,7 +225,7 @@ namespace Dnf.Communication.Frm
             }
             else if(OpenType == FrmEditType.Edit && frmPort != null)
             {
-                (cboProtocolType.ctrl as ComboBox).SelectedItem = frmPort.ProtocolType;
+                cboProtocolType.Value = frmPort.ProtocolType;
 
                 //Serial Port일경우
                 if (frmPort.ProtocolType == uProtocolType.ModBusRTU || frmPort.ProtocolType == uProtocolType.ModBusAscii)
@@ -233,10 +233,10 @@ namespace Dnf.Communication.Frm
                     Custom_SerialPort port = frmPort as Custom_SerialPort;
 
                     (cboPortName.ctrl as ComboBox).Text = port.PortName;
-                    (cboProtocolType.ctrl as ComboBox).SelectedItem = port.ProtocolType;
-                    (cboBaudRate.ctrl as ComboBox).SelectedItem = port.BaudRate;
-                    (cboStopBit.ctrl as ComboBox).SelectedItem = port.StopBIt;
-                    (cboParity.ctrl as ComboBox).SelectedItem = port.Parity;
+                    cboProtocolType.Value = port.ProtocolType;
+                    cboBaudRate.Value = port.BaudRate;
+                    cboStopBit.Value = port.StopBIt;
+                    cboParity.Value = port.Parity;
                     (numDataBits.ctrl as NumericUpDown).Value = port.DataBits;
                 }
                 //Ethernet Port인경우
@@ -292,7 +292,7 @@ namespace Dnf.Communication.Frm
         private void SetVisible()
         {
             //Protocol Type에 따라서 Visible 처리
-            uProtocolType type = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
+            uProtocolType type = (uProtocolType)cboProtocolType.Value;
 
             if (type == uProtocolType.ModBusTcpIp)
             {
@@ -374,7 +374,7 @@ namespace Dnf.Communication.Frm
         {
             //사전 검사
             //Port명 중복 검사
-            uProtocolType type = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
+            uProtocolType type = (uProtocolType)cboProtocolType.Value;
             string portName = "";
 
             if(type == uProtocolType.ModBusTcpIp)
@@ -385,7 +385,7 @@ namespace Dnf.Communication.Frm
             }
             else
             {
-                portName = (cboPortName.ctrl as ComboBox).SelectedItem.ToString();
+                portName = cboPortName.Value.ToString();
             }
 
             if (portName == "") return false;
@@ -409,16 +409,16 @@ namespace Dnf.Communication.Frm
             //Port 생성
             Port port = null;
 
-            uProtocolType protocolType = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
+            uProtocolType protocolType = (uProtocolType)cboProtocolType.Value;
 
             if (protocolType == uProtocolType.ModBusRTU || protocolType == uProtocolType.ModBusAscii)
             {
                 //Serial Port일경우
-                string portName = (cboPortName.ctrl as ComboBox).SelectedItem.ToString();
-                BaudRate baudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
-                int dataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value);
-                StopBits stopBits = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem;
-                Parity parity = (Parity)(cboParity.ctrl as ComboBox).SelectedItem;
+                string portName = cboPortName.Value.ToString();
+                BaudRate baudRate = (BaudRate)cboBaudRate.Value;
+                int dataBits = Convert.ToInt32(numDataBits.Value);
+                StopBits stopBits = (StopBits)cboStopBit.Value;
+                Parity parity = (Parity)cboParity.Value;
 
                 port = new Custom_SerialPort(portName, protocolType, baudRate, dataBits, stopBits, parity);
             }
@@ -439,7 +439,7 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void EditPort()
         {
-            uProtocolType protocolType = (uProtocolType)(cboProtocolType.ctrl as ComboBox).SelectedItem;
+            uProtocolType protocolType = (uProtocolType)cboProtocolType.Value;
             //변경할 Protocol과 이전 Protocol이 같을경우
             if (protocolType == frmPort.ProtocolType)
             {
@@ -448,10 +448,10 @@ namespace Dnf.Communication.Frm
                     //Serial Port
                     Custom_SerialPort port = frmPort as Custom_SerialPort;
 
-                    port.BaudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
-                    port.DataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value);
-                    port.StopBIt = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem;
-                    port.Parity = (Parity)(cboParity.ctrl as ComboBox).SelectedItem;
+                    port.BaudRate = (BaudRate)cboBaudRate.Value;
+                    port.DataBits = Convert.ToInt32(numDataBits.Value);
+                    port.StopBIt = (StopBits)cboStopBit.Value;
+                    port.Parity = (Parity)cboParity.Value;
                 }
                 else if (frmPort.ProtocolType == uProtocolType.ModBusTcpIp)
                 {
@@ -473,10 +473,10 @@ namespace Dnf.Communication.Frm
                 if (protocolType == uProtocolType.ModBusRTU || protocolType == uProtocolType.ModBusAscii)
                 {
                     //Serial Port
-                    BaudRate baudRate = (BaudRate)(cboBaudRate.ctrl as ComboBox).SelectedItem;
-                    int DataBits = Convert.ToInt32((numDataBits.ctrl as NumericUpDown).Value);
-                    StopBits stopBIt = (StopBits)(cboStopBit.ctrl as ComboBox).SelectedItem;
-                    Parity parity = (Parity)(cboParity.ctrl as ComboBox).SelectedItem;
+                    BaudRate baudRate = (BaudRate)cboBaudRate.Value;
+                    int DataBits = Convert.ToInt32(numDataBits.Value);
+                    StopBits stopBIt = (StopBits)cboStopBit.Value;
+                    Parity parity = (Parity)cboParity.Value;
 
                     Port port = new Custom_SerialPort(frmPort.PortName, protocolType, baudRate, DataBits, stopBIt, parity);
                     RuntimeData.Ports[frmPort.PortName] = port;
