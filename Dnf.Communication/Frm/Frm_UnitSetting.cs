@@ -278,7 +278,7 @@ namespace Dnf.Communication.Frm
             {
                 //Registry Address 중복 검사
                 object changedValue = e.FormattedValue;
-                if (changedValue == null || changedValue == "") return;
+                if (changedValue == null || changedValue.ToString() == "") return;
                 bool bCancle = false;
 
                 foreach(DataGridViewRow dr in gvRegistry.Rows)
