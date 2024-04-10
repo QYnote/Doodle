@@ -285,15 +285,15 @@ namespace Dnf.Communication.Frm
                 {
                     if (dr.Index == e.RowIndex) continue;
                     if (dr.Index == gvRegistry.NewRowIndex) continue;
+                    if (dr.Cells[colAddrHex.Index].Value == null) continue;
 
                     if (e.ColumnIndex == colAddrDecimal.Index)
                     {
                         //Decimal
-                        int value = Convert.ToInt32(changedValue);
                         /*작업내역
                          * ==쓰면 true 안떠서 Equals 사용
                          */
-                        if (dr.Cells[colAddrDecimal.Index].Value.Equals(value))
+                        if (dr.Cells[colAddrDecimal.Index].Value.Equals(changedValue))
                         {
                             bCancle = true;
                             break;

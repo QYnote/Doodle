@@ -170,12 +170,12 @@ namespace Dnf.Utils.Controls
         static private void SlaveAddr_KeyPress_Hex(object sender, KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar)
-                && !(e.KeyChar == 'a'
-                    || e.KeyChar == 'b'
-                    || e.KeyChar == 'c'
-                    || e.KeyChar == 'd'
-                    || e.KeyChar == 'e'
-                    || e.KeyChar == 'f'))
+                && !(e.KeyChar == 'a' || e.KeyChar == 'A'
+                    || e.KeyChar == 'b' || e.KeyChar == 'B'
+                    || e.KeyChar == 'c' || e.KeyChar == 'C'
+                    || e.KeyChar == 'd' || e.KeyChar == 'D'
+                    || e.KeyChar == 'e' || e.KeyChar == 'E'
+                    || e.KeyChar == 'f' || e.KeyChar == 'F'))
             {
                 e.Handled = true;
             }
