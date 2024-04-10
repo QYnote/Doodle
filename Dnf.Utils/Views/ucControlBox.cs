@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -66,7 +67,7 @@ namespace Dnf.Utils.Views
                 else if (ctrl.GetType() == typeof(ComboBox))      { (ctrl as ComboBox).SelectedItem = value; }
                 else if (ctrl.GetType() == typeof(CheckBox))      { (ctrl as CheckBox).Checked = bool.Parse(value.ToString()); }
             }
-        } 
+        }
 
         /// <summary>
         /// Label + Control 세트
@@ -95,8 +96,8 @@ namespace Dnf.Utils.Views
 
         private void CreateUc()
         {
-            //Text칸 높이가 더 크면 높이를 Control 높이로 맞추기
-            this.Height = lbl.Height > ctrl.Height ? ctrl.Height : lbl.Height;
+            //기본 Height
+            this.Height = 23;
 
             lbl.Dock = DockStyle.Left;
             lbl.Width = (int)(this.Width * 0.3);
@@ -108,14 +109,66 @@ namespace Dnf.Utils.Views
             this.Controls.Add(ctrl);
             this.Controls.Add(lbl);
 
+            //디버기용ㅇ
+            //this.BorderStyle = BorderStyle.FixedSingle;
+            //lbl.BorderStyle = BorderStyle.FixedSingle;
         }
+
+        #region ComboBox
 
         private void SetComboBox()
         {
             ctrl = new ComboBox();
             ComboBox cbo = ctrl as ComboBox;
             cbo.DropDownStyle = ComboBoxStyle.DropDownList; //Combobox Text 수정 못하게 막기
+
+            //ComboBox Height 조절
+            cbo.SizeChanged += (sender, e) => { SetComboBoxHeight(cbo.Handle, this.Height - 8); };
+            //ComboBox Text Align
+            cbo.DrawMode = DrawMode.OwnerDrawVariable;
+            cbo.DrawItem += SetCboTextAlign;
         }
+
+        /// <summary>
+        /// ComboBox Size에서 Height 변경 안되서 강제적용
+        /// </summary>
+        /// <!-- https://stackoverflow.com/questions/3158004/how-do-i-set-the-height-of-a-combobox -->
+        /// <returns></returns>
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr hWnf, UInt32 Msg, Int32 wParam, Int32 lParam);
+        private const Int32 CB_SETITEMHEIGHT = 0x153;   //user32.dll ComboBox 높이 셋팅 번호
+        private void SetComboBoxHeight(IntPtr cboHandle, Int32 setHight)
+        {
+            SendMessage(cboHandle, CB_SETITEMHEIGHT, -1, setHight);
+        }
+
+        /// <summary>
+        /// ComboBox Text Align / 
+        /// </summary>
+        /// <!-- https://stackoverflow.com/questions/11817062/align-text-in-combobox -->
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SetCboTextAlign(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            ComboBox cbo = sender as ComboBox;
+
+            e.DrawBackground();
+
+            StringFormat sf = new StringFormat();
+            sf.LineAlignment = StringAlignment.Center;
+            sf.Alignment = StringAlignment.Near;
+
+            Brush brush = new SolidBrush(cbo.ForeColor);
+            if((e.State & DrawItemState.Selected) == DrawItemState.Selected)
+            {
+                brush = SystemBrushes.HighlightText;
+            }
+
+            e.Graphics.DrawString(cbo.Items[e.Index].ToString(), cbo.Font, brush, e.Bounds, sf);
+        }
+
+        #endregion ComboBox End
 
         private void SetCheckBox()
         {

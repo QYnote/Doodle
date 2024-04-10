@@ -69,7 +69,7 @@ namespace Dnf.Communication.Frm
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedToolWindow;
             this.ShowInTaskbar = false;
-            this.Size = new Size(250, 200);
+            this.Size = new Size(250, 213);
             this.Text = RuntimeData.String("F01");
 
             InitializeButton();
@@ -385,7 +385,7 @@ namespace Dnf.Communication.Frm
             }
             else
             {
-                portName = cboPortName.Value.ToString();
+                portName = cboPortName.Value == null ? "" : cboPortName.Value.ToString();
             }
 
             if (portName == "") return false;

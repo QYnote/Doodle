@@ -119,7 +119,7 @@ namespace Dnf.Communication.Frm
         private void InitializeControlBox()
         {
             pnlControlBox.Dock = DockStyle.Top;
-            pnlControlBox.MinimumSize = new Size(pnlControlBox.Width, 135);
+            pnlControlBox.MinimumSize = new Size(pnlControlBox.Width, 145);
 
             //Control 명(Control Type - Item구분 - 담당Property)
             cboProtocolType.Name = "cboProtocolType";
