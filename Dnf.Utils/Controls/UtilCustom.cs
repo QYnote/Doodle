@@ -112,32 +112,86 @@ namespace Dnf.Utils.Controls
         /// </summary>
         /// <param name="gv">해당기능을 넣은 DataGridView</param>
         /// <param name="colName">해당기능을 적용할 Column Name</param>
-        static public void ColumnOnlyNumeric(DataGridView gv, string colName)
+        /// <param name="type">정수(Decimal): 기본값, 16진수(Hex)</param>
+        static public void ColumnOnlyNumeric(DataGridView gv, string colName, string type = "Decimal")
         {
             gv.EditingControlShowing += (sender, e) =>
             {
-                e.Control.KeyPress -= new KeyPressEventHandler(SlaveAddr_KeyPress);
-                if (gv.CurrentCell.ColumnIndex == gv.Columns[colName].Index)
+                if (type == "Decimal")
                 {
-                    TextBox txt = e.Control as TextBox;
-                    if (txt != null)
+                    e.Control.KeyPress -= new KeyPressEventHandler(SlaveAddr_KeyPress_Decimal);
+                    if (gv.CurrentCell.ColumnIndex == gv.Columns[colName].Index)
                     {
-                        txt.KeyPress += new KeyPressEventHandler(SlaveAddr_KeyPress);
+                        TextBox txt = e.Control as TextBox;
+                        if (txt != null)
+                        {
+                            txt.KeyPress += new KeyPressEventHandler(SlaveAddr_KeyPress_Decimal);
+                        }
+                    }
+                }
+                else if(type == "Hex")
+                {
+                    e.Control.KeyPress -= new KeyPressEventHandler(SlaveAddr_KeyPress_Hex);
+                    if (gv.CurrentCell.ColumnIndex == gv.Columns[colName].Index)
+                    {
+                        TextBox txt = e.Control as TextBox;
+                        if (txt != null)
+                        {
+                            txt.KeyPress += new KeyPressEventHandler(SlaveAddr_KeyPress_Hex);
+                        }
                     }
                 }
             };
         }
 
         /// <summary>
-        /// ColumnOnlyNumeric의 Key검사용
+        /// ColumnOnlyNumeric의 Key검사용 10진수
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        static private void SlaveAddr_KeyPress(object sender, KeyPressEventArgs e)
+        static private void SlaveAddr_KeyPress_Decimal(object sender, KeyPressEventArgs e)
         {
+            /*작업내역
+             * IsControl : Ender, Backsapce같은 명령어 확인(이런건 먹어야하니까)
+             * IsDigit : 10진수 검사
+             * e.Handled : true - 막기, false - 가능
+             */
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
             {
                 e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// ColumnOnlyNumeric의 Key검사용 16진수
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        static private void SlaveAddr_KeyPress_Hex(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar)
+                && !(e.KeyChar == 'a'
+                    || e.KeyChar == 'b'
+                    || e.KeyChar == 'c'
+                    || e.KeyChar == 'd'
+                    || e.KeyChar == 'e'
+                    || e.KeyChar == 'f'))
+            {
+                e.Handled = true;
+            }
+            else if(e.KeyChar == 'a'
+                    || e.KeyChar == 'b'
+                    || e.KeyChar == 'c'
+                    || e.KeyChar == 'd'
+                    || e.KeyChar == 'e'
+                    || e.KeyChar == 'f')
+            {
+                if(e.KeyChar == 'a') { e.KeyChar = 'A'; }
+                else if(e.KeyChar == 'b') { e.KeyChar = 'B'; }
+                else if(e.KeyChar == 'c') { e.KeyChar = 'C'; }
+                else if(e.KeyChar == 'd') { e.KeyChar = 'D'; }
+                else if(e.KeyChar == 'e') { e.KeyChar = 'E'; }
+                else if(e.KeyChar == 'f') { e.KeyChar = 'F'; }
             }
         }
 

@@ -1,15 +1,13 @@
 ﻿using Dnf.Communication.Data;
 using Dnf.Utils.Controls;
-using Newtonsoft.Json.Linq;
+using Dnf.Utils.Views;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.Design.Serialization;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -38,10 +36,24 @@ namespace Dnf.Communication.Frm
         //지원 Protocol
         private Label LblSupportProtocol = new Label();
         private CheckedListBox CLbxSupportProtocol = new CheckedListBox();
+
+        //Registry
+        private ucControlBox CboProtocol = new ucControlBox(CtrlType.ComboBox);                 //Registry 통신타입
+        private Button btnRegSave = new Button();                                               //Registry 저장버튼
+        private Button btnRegExcelUpload = new Button();                                        //Registry 엑셀 저장
+        private Button btnRegExcelDownload = new Button();                                      //Registry 엑셀 불러오기
+        private DataGridView gvRegistry = new DataGridView();                                   //Registry 정보 GridView
+        private DataGridViewTextBoxColumn colAddrDecimal = new DataGridViewTextBoxColumn();     //주소(10진법)
+        private DataGridViewTextBoxColumn colAddrHex = new DataGridViewTextBoxColumn();     //주소(16진법)
+        private DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();            //이름
+        private DataGridViewComboBoxColumn colEditor = new DataGridViewComboBoxColumn();        //값 속성
+        private DataGridViewTextBoxColumn colDefaultValue = new DataGridViewTextBoxColumn();    //기본 값(Default Value)
+        private DataGridViewComboBoxColumn colRW = new DataGridViewComboBoxColumn();            //Read/Write 모드
         #endregion Controls End
 
         private string SelectedType = string.Empty;
         private string SelectedModel = string.Empty;
+        private string SelectedProtocol = string.Empty;
 
         private string InfoFilePath = RuntimeData.DataPath + "UnitInfo.xml";
 
@@ -64,7 +76,8 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void InitializeForm()
         {
-            InitializeUnitTypeModel();
+            InitializeUnitInfo();
+            InitializeRegistry();
             SetPositionSize();
             SetText();
         }
@@ -72,20 +85,22 @@ namespace Dnf.Communication.Frm
         /// <summary>
         /// Unit Type Control 생성
         /// </summary>
-        private void InitializeUnitTypeModel()
+        private void InitializeUnitInfo()
         {
             LblUnitType.AutoSize = false;
             LblUnitType.TextAlign = ContentAlignment.MiddleCenter;
             LblUnitType.BorderStyle = BorderStyle.FixedSingle;
 
             TxtUnitType.AutoSize = false;
-            TxtUnitType.MaxLength = 10;
+            TxtUnitType.MaxLength = 20;
 
             btnUnitTypeAdd.Text = "+";
             btnUnitTypeDel.Text = "-";
 
             LbxUnitType.AutoSize = false;
             LbxUnitType.Sorted = true;
+            LbxUnitType.IntegralHeight = false; //Size 조절 시 Item Hight 영향 false
+            LbxUnitType.MinimumSize = new Size(160 + (marginValue * 2), 50);
 
             //Unit 모델
             LblUnitModel.AutoSize = false;
@@ -93,13 +108,15 @@ namespace Dnf.Communication.Frm
             LblUnitModel.BorderStyle = BorderStyle.FixedSingle;
 
             TxtUnitModel.AutoSize = false;
-            TxtUnitModel.MaxLength = 10;
+            TxtUnitModel.MaxLength = 20;
 
             btnUnitModelAdd.Text = "+";
             btnUnitModelDel.Text = "-";
 
             LbxUnitModel.AutoSize = false;
             LbxUnitModel.Sorted = true;
+            LbxUnitModel.IntegralHeight = false;    //Size 조절 시 Item Hight 영향 false
+            LbxUnitModel.MinimumSize = new Size(160 + (marginValue * 2), 100);
 
             //지원 Protocl
             LblSupportProtocol.AutoSize = false;
@@ -107,8 +124,10 @@ namespace Dnf.Communication.Frm
             LblSupportProtocol.BorderStyle = BorderStyle.FixedSingle;
 
             CLbxSupportProtocol.AutoSize = false;
-            CLbxSupportProtocol.Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());
             CLbxSupportProtocol.CheckOnClick = true;    //항목 선택 시 Check 바로 변경
+            CLbxSupportProtocol.IntegralHeight = false; //Size 조절 시 Item Hight 영향 false
+            CLbxSupportProtocol.MinimumSize = new Size(160 + (marginValue * 2), 50);
+            CLbxSupportProtocol.Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());
 
             this.Controls.Add(TxtUnitType);
             this.Controls.Add(LblUnitType);
@@ -134,12 +153,225 @@ namespace Dnf.Communication.Frm
             CLbxSupportProtocol.SelectedValueChanged += (sender, e) => { ProtocolFlagChanged(); };
         }
 
+        private void InitializeRegistry()
+        {
+            CboProtocol.AutoSize = false;
+            CboProtocol.LblWidth = 80;
+            CboProtocol.Height = 30;
+            CboProtocol.Width = 200;
+
+            btnRegSave.AutoSize = false;
+            btnRegExcelUpload.AutoSize = false;
+            btnRegExcelDownload.AutoSize = false;
+
+            gvRegistry.AllowUserToResizeRows = false;   //Row 사이즈 조절
+            gvRegistry.AutoGenerateColumns = false;     //DataSoure 자동추가
+            gvRegistry.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;  //Column Header 높이
+            gvRegistry.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; //Column Header Text 정렬
+            gvRegistry.MultiSelect = false; //다중선택
+            gvRegistry.EditMode = DataGridViewEditMode.EditOnEnter;
+
+            colAddrDecimal.Width = 70;
+            colAddrHex.Width = 60;
+            colName.Width = 100;
+            colEditor.Width = 80;
+            colDefaultValue.Width = 60;
+            colRW.Width = 100;
+
+            colAddrDecimal.DisplayIndex = 0;
+            colAddrHex.DisplayIndex = 1;
+            colName.DisplayIndex = 2;
+            colEditor.DisplayIndex = 4;
+            colDefaultValue.DisplayIndex = 5;
+            colRW.DisplayIndex = 6;
+
+            colAddrDecimal.Name = "colAddrDecimal";
+            colAddrHex.Name = "colAddrHex";
+            colName.Name = "colName";
+            colEditor.Name = "colEditor";
+            colDefaultValue.Name = "colDefaultValue";
+            colRW.Name = "colRW";
+
+            colEditor.Items.AddRange("Numeric", "Combo", "Text", "Bool");
+            colRW.Items.AddRange("Read Only", "Read/Write");
+
+            colAddrDecimal.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colAddrHex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colEditor.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colDefaultValue.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colRW.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            colAddrDecimal.SortMode = DataGridViewColumnSortMode.Programmatic;
+            colAddrHex.SortMode = DataGridViewColumnSortMode.Programmatic;
+            colName.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colEditor.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colDefaultValue.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colRW.SortMode = DataGridViewColumnSortMode.NotSortable;
+
+            //숫자만 입력하게 하기
+            UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrDecimal.Name);
+            UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrHex.Name, "Hex");
+
+            gvRegistry.Columns.AddRange(colAddrDecimal, colAddrHex, colName, colEditor, colDefaultValue, colRW);
+
+            gvRegistry.ColumnHeaderMouseClick += Gv_SortAddr;
+            gvRegistry.SortCompare += Gv_SortCompare;
+            gvRegistry.CellValidating += Gv_CellValidating_AddrDecimalDuplicateConfirm;
+            gvRegistry.CellValueChanged += Gv_CellValueChanged_DecimalToHex;
+            gvRegistry.CellValueChanged += Gv_CellValueChanged_HexToDecimal;
+
+            this.Controls.Add(CboProtocol);
+            this.Controls.Add(gvRegistry);
+        }
+
+
+
+        /// <summary>
+        /// GridView Address기준 정렬
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_SortAddr(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            /*작업이력
+             * 2024-04-10
+             * CellEndEdit에 자동정렬 넣으니 중복실행 생겨서 따로 정렬시키는 방식으로 재작업
+             */
+
+            if (e.ColumnIndex == colAddrDecimal.Index)
+            {
+                gvRegistry.Sort(colAddrDecimal, ListSortDirection.Ascending);
+            }
+        }
+
+        /// <summary>
+        /// Address 정렬 보조, int값 자리수 다르면 더 크게 체크시키기
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            if (e.Column == colAddrDecimal)
+            {
+                //빈값이랑 비교하는 것 넘기기
+                if (e.CellValue1 == null || e.CellValue2 == null) return;
+
+                int a = int.Parse(e.CellValue1.ToString());
+                int b = int.Parse(e.CellValue2.ToString());
+
+                e.SortResult = a.CompareTo(b);
+
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Registry Address 중복검사
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_CellValidating_AddrDecimalDuplicateConfirm(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if(e.ColumnIndex == colAddrDecimal.Index ||
+                e.ColumnIndex == colAddrHex.Index)
+            {
+                //Registry Address 중복 검사
+                object changedValue = e.FormattedValue;
+                if (changedValue == null || changedValue == "") return;
+                bool bCancle = false;
+
+                foreach(DataGridViewRow dr in gvRegistry.Rows)
+                {
+                    if (dr.Index == e.RowIndex) continue;
+                    if (dr.Index == gvRegistry.NewRowIndex) continue;
+
+                    if (e.ColumnIndex == colAddrDecimal.Index)
+                    {
+                        //Decimal
+                        int value = Convert.ToInt32(changedValue);
+                        /*작업내역
+                         * ==쓰면 true 안떠서 Equals 사용
+                         */
+                        if (dr.Cells[colAddrDecimal.Index].Value.Equals(value))
+                        {
+                            bCancle = true;
+                            break;
+                        }
+                    }
+                    else if(e.ColumnIndex == colAddrHex.Index)
+                    {
+                        //Hex
+                        if (dr.Cells[colAddrHex.Index].Value.Equals(changedValue))
+                        {
+                            bCancle = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (bCancle)
+                {
+                    e.Cancel = true;
+                    MessageBox.Show(RuntimeData.String("F030003"));
+                }
+            }
+        }
+
+        private bool CellValueChangedFlag = true;   //CellValueChagned시 다른값 변경시킬때 방지용
+        private void Gv_CellValueChanged_DecimalToHex(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (e.ColumnIndex == colAddrDecimal.Index)
+            {
+                if (CellValueChangedFlag)
+                {
+                    CellValueChangedFlag = false;
+
+                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value;
+                    int value = Convert.ToInt32(changedValue);
+
+                    gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value = value.ToString("X");
+
+                    CellValueChangedFlag = true;
+                }
+            }
+        }
+
+        private void Gv_CellValueChanged_HexToDecimal(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (e.ColumnIndex == colAddrHex.Index)
+            {
+                if (CellValueChangedFlag)
+                {
+                    CellValueChangedFlag = false;
+
+                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value;
+                    string value = Convert.ToString(changedValue);
+
+                    gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value = Convert.ToInt32(value, 16);
+
+                    CellValueChangedFlag = true;
+                }
+            }
+        }
 
         private void SetText()
         {
             LblUnitType.Text = RuntimeData.String("F030100");
             LblUnitModel.Text = RuntimeData.String("F030101");
             LblSupportProtocol.Text = RuntimeData.String("F030102");
+
+            CboProtocol.LblText = RuntimeData.String("F030103");
+            colAddrDecimal.HeaderText = RuntimeData.String("F03010400");
+            colAddrHex.HeaderText = RuntimeData.String("F03010401");
+            colName.HeaderText = RuntimeData.String("F03010402");
+            colEditor.HeaderText = RuntimeData.String("F03010403");
+            colDefaultValue.HeaderText = RuntimeData.String("F03010404");
+            colRW.HeaderText = RuntimeData.String("F03010405");
         }
 
         private void SetPositionSize()
@@ -168,12 +400,12 @@ namespace Dnf.Communication.Frm
             LbxUnitType.Location = new Point(margin,
                 TxtUnitType.Location.Y +  TxtUnitType.Height + margin);
             LbxUnitType.Size = new Size(LblUnitType.Width,
-                (this.Size.Height / 2) - (margin + LblUnitType.Height + margin + TxtUnitType.Height + margin));
+                ((this.Height / 4) * 1) - (margin + LblUnitType.Height + margin + TxtUnitType.Height + margin));
             // - (margin + LblUnitType.Height + margin + TxtUnitType.Height + margin)
 
             //Unit 모델
             LblUnitModel.Location = new Point(margin,
-                (this.Size.Height / 2) + (margin / 2));
+                LbxUnitType.Location.Y + LbxUnitType.Size.Height + margin);
             LblUnitModel.Size = LblUnitType.Size;
 
             TxtUnitModel.Location = new Point(margin,
@@ -181,7 +413,7 @@ namespace Dnf.Communication.Frm
             TxtUnitModel.Size = TxtUnitType.Size;
 
             btnUnitModelAdd.Location = new Point(btnUnitTypeAdd.Location.X,
-                TxtUnitModel.Location.Y);
+                TxtUnitModel.Location.Y - 2);
             btnUnitModelAdd.Size = btnUnitTypeAdd.Size;
 
             btnUnitModelDel.Location = new Point(btnUnitTypeDel.Location.X,
@@ -191,17 +423,26 @@ namespace Dnf.Communication.Frm
             LbxUnitModel.Location = new Point(margin,
                 TxtUnitModel.Location.Y + TxtUnitModel.Height + margin);
             LbxUnitModel.Size = new Size(LbxUnitType.Width,
-                LbxUnitType.Height);
+                ((this.Height / 4) * 2) - (margin + LblUnitType.Height + margin + TxtUnitType.Height));
 
             //지원 Protocol
-            LblSupportProtocol.Location = new Point(LblUnitType.Location.X + LblUnitType.Width + margin,
-                margin);
+            LblSupportProtocol.Location = new Point(LbxUnitModel.Location.X,
+                LbxUnitModel.Location.Y + LbxUnitModel.Height + margin);
             LblSupportProtocol.Size = LblUnitType.Size;
 
             CLbxSupportProtocol.Location = new Point(LblSupportProtocol.Location.X,
                 LblSupportProtocol.Location.Y + LblSupportProtocol.Height + margin);
             CLbxSupportProtocol.Size = new Size(LblSupportProtocol.Width,
-                100);
+                this.Height - (CLbxSupportProtocol.Location.Y + margin));
+
+            //Repository
+            CboProtocol.Location = new Point(LblUnitType.Location.X + LblUnitType.Width + margin,
+                LblUnitType.Location.Y);
+
+            gvRegistry.Location = new Point(CboProtocol.Location.X,
+                CboProtocol.Location.Y + CboProtocol.Height + margin);
+            gvRegistry.Size = new Size(this.Width - (gvRegistry.Location.X + margin),
+                this.Height - (gvRegistry.Location.Y + margin));
         }
 
         #region Event
@@ -253,12 +494,22 @@ namespace Dnf.Communication.Frm
 
             UnitModel model = RuntimeData.dicUnitTypes[SelectedType][SelectedModel];
             //지원하는 Protocol
+            (CboProtocol.ctrl as ComboBox).Items.Clear();
             foreach (uProtocolType protocol in model.SupportProtocol.Keys)
             {
                 int idx = CLbxSupportProtocol.Items.IndexOf(protocol);
                 bool flag = model.SupportProtocol[protocol];
 
+                //지원 Protocol CheckBox Item 수정
                 CLbxSupportProtocol.SetItemChecked(idx, flag);
+
+                //Registry Protocol ComboBox Item 수정
+                if (flag) { (CboProtocol.ctrl as ComboBox).Items.Add(protocol); }
+            }
+
+            if((CboProtocol.ctrl as ComboBox).Items.Count > 0)
+            {
+                (CboProtocol.ctrl as ComboBox).SelectedIndex = 0;
             }
 
         }
@@ -379,7 +630,6 @@ namespace Dnf.Communication.Frm
         }
 
         #endregion Event End
-
 
         /// <summary>
         /// Unit정보 XML 저장

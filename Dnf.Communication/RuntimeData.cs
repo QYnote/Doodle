@@ -178,10 +178,19 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F030000", "Unit 구분명이 입력되지 않았습니다.");
             dtimsi.Rows.Add("F030001", "이미 존재하는 구분명입니다.");
             dtimsi.Rows.Add("F030002", "선택된 구분이 없습니다.");
+            dtimsi.Rows.Add("F030003", "중복되는 Address가 있습니다.");
             dtimsi.Rows.Add("F0301", "Unit 속성");
             dtimsi.Rows.Add("F030100", "Unit 구분");
             dtimsi.Rows.Add("F030101", "Unit 모델");
             dtimsi.Rows.Add("F030102", "지원 통신Protocol");
+            dtimsi.Rows.Add("F030103", "Registry 통신");
+            dtimsi.Rows.Add("F030104", "Registry GridView");
+            dtimsi.Rows.Add("F03010400", "Address\n[Decimal]");
+            dtimsi.Rows.Add("F03010401", "Address\n[Hex]");
+            dtimsi.Rows.Add("F03010402", "이름");
+            dtimsi.Rows.Add("F03010403", "값 속성");
+            dtimsi.Rows.Add("F03010404", "기본값");
+            dtimsi.Rows.Add("F03010405", "RW 모드");
 
             dicTextList = dtimsi.AsEnumerable().ToDictionary(
                 row => row.Field<string>(0),
