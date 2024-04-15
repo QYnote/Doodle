@@ -37,7 +37,7 @@ namespace Dnf.Communication.Frm
 
         Panel pnlControlBox = new Panel();
         ucControlBox cboProtocolType = new ucControlBox(CtrlType.ComboBox);
-        ucControlBox numUnitAddr = new ucControlBox(CtrlType.NumbericUpDown);
+        ucControlBox numUnitAddr = new ucControlBox(CtrlType.Numberic);
         ucControlBox cboUnitType = new ucControlBox(CtrlType.ComboBox);
         ucControlBox cboUnitModel = new ucControlBox(CtrlType.ComboBox);
         ucControlBox txtUnitName = new ucControlBox(CtrlType.TextBox);
@@ -139,8 +139,8 @@ namespace Dnf.Communication.Frm
             }
             (cboUnitModel.ctrl as ComboBox).Items.AddRange(UnitModelArr);
 
-            (numUnitAddr.ctrl as NumericUpDown).Minimum = 1;
-            (numUnitAddr.ctrl as NumericUpDown).Maximum = 255;
+            (numUnitAddr.ctrl as ucNumeric).MinValue = 1;
+            (numUnitAddr.ctrl as ucNumeric).MaxValue = 255;
 
             //Dock
             cboProtocolType.Dock = DockStyle.Top;
@@ -178,7 +178,7 @@ namespace Dnf.Communication.Frm
             BtnNew.BringToFront();
 
             BtnNew.Click += Click_NewRow;
-            (numUnitAddr.ctrl as NumericUpDown).ValueChanged += Changed_UnitProperty;
+            (numUnitAddr.ctrl as ucNumeric).ValueChanged += Changed_UnitProperty;
             (cboUnitModel.ctrl as ComboBox).SelectedIndexChanged += Changed_UnitProperty;
             (cboUnitType.ctrl as ComboBox).SelectedIndexChanged += Changed_UnitProperty;
             (txtUnitName.ctrl as TextBox).TextChanged += Changed_UnitProperty;
@@ -283,7 +283,7 @@ namespace Dnf.Communication.Frm
 
             if (OpenType == FrmEditType.New)
             {
-                (numUnitAddr.ctrl as NumericUpDown).Value = 1;
+                (numUnitAddr.ctrl as ucNumeric).Value = 1;
                 ComboBox unitType = (cboUnitType.ctrl as ComboBox);
                 if (unitType.Items.Count > 0)
                 {
@@ -486,7 +486,7 @@ namespace Dnf.Communication.Frm
                 if (CtrlName == "numUnitAddr")
                 {
                     //Slave Address 변경
-                    int afAddr = (int)(sender as NumericUpDown).Value;
+                    int afAddr = (int)(sender as ucNumeric).Value;
                     bool useAddr = true;
 
                     //변경될 값이 DataTble에 있는지 확인

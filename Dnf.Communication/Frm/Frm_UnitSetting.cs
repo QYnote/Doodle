@@ -48,7 +48,21 @@ namespace Dnf.Communication.Frm
         private DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();            //이름
         private DataGridViewComboBoxColumn colEditor = new DataGridViewComboBoxColumn();        //값 속성
         private DataGridViewTextBoxColumn colDefaultValue = new DataGridViewTextBoxColumn();    //기본 값(Default Value)
-        private DataGridViewComboBoxColumn colRW = new DataGridViewComboBoxColumn();            //Read/Write 모드
+        private DataGridViewCheckBoxColumn colRW = new DataGridViewCheckBoxColumn();            //Read/Write 모드
+
+        //Registry SubItem
+        private Label lblSubItem = new Label();
+        //Numeric
+        private ucControlBox NumDotPosition = new ucControlBox(CtrlType.Numberic);
+        private ucControlBox NumMaxValue = new ucControlBox(CtrlType.Numberic);
+        private ucControlBox NumMinValue = new ucControlBox(CtrlType.Numberic);
+        //Text
+        private ucControlBox NumMaxLength = new ucControlBox(CtrlType.Numberic);
+        //Combo
+        private TextBox TxtCboItems = new TextBox();
+        private Button btnCboItemsAdd = new Button();
+        private Button btnCboItemsDel = new Button();
+        private CheckedListBox LbxCboItems = new CheckedListBox();
         #endregion Controls End
 
         private string SelectedType = string.Empty;
@@ -57,11 +71,9 @@ namespace Dnf.Communication.Frm
 
         private string InfoFilePath = RuntimeData.DataPath + "UnitInfo.xml";
 
-
         internal Frm_UnitSetting()
         {
             InitializeComponent();
-
             InitializeForm();
 
             this.Name = RuntimeData.String("F03");
@@ -78,6 +90,7 @@ namespace Dnf.Communication.Frm
         {
             InitializeUnitInfo();
             InitializeRegistry();
+            InitializeRegistrySubItem();
             SetPositionSize();
             SetText();
         }
@@ -153,6 +166,9 @@ namespace Dnf.Communication.Frm
             CLbxSupportProtocol.SelectedValueChanged += (sender, e) => { ProtocolFlagChanged(); };
         }
 
+        /// <summary>
+        /// Unit - Protocol - Registry Control 생성
+        /// </summary>
         private void InitializeRegistry()
         {
             CboProtocol.AutoSize = false;
@@ -176,7 +192,7 @@ namespace Dnf.Communication.Frm
             colName.Width = 100;
             colEditor.Width = 80;
             colDefaultValue.Width = 60;
-            colRW.Width = 100;
+            colRW.Width = 40;
 
             colAddrDecimal.DisplayIndex = 0;
             colAddrHex.DisplayIndex = 1;
@@ -193,7 +209,6 @@ namespace Dnf.Communication.Frm
             colRW.Name = "colRW";
 
             colEditor.Items.AddRange("Numeric", "Combo", "Text", "Bool");
-            colRW.Items.AddRange("Read Only", "Read/Write");
 
             colAddrDecimal.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colAddrHex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -215,156 +230,71 @@ namespace Dnf.Communication.Frm
 
             gvRegistry.Columns.AddRange(colAddrDecimal, colAddrHex, colName, colEditor, colDefaultValue, colRW);
 
+            (CboProtocol.ctrl as ComboBox).SelectedIndexChanged += CboProtocol_SelectedIndexChanged_SetFormSelectedProtocol;
             gvRegistry.ColumnHeaderMouseClick += Gv_SortAddr;
             gvRegistry.SortCompare += Gv_SortCompare;
             gvRegistry.CellValidating += Gv_CellValidating_AddrDecimalDuplicateConfirm;
             gvRegistry.CellValueChanged += Gv_CellValueChanged_DecimalToHex;
             gvRegistry.CellValueChanged += Gv_CellValueChanged_HexToDecimal;
+            gvRegistry.CellValueChanged += Gv_CellValueChanged_VisibleSubItem;
+            gvRegistry.CellMouseClick += Gv_CellClick_RWChange;
+            gvRegistry.EditingControlShowing += Gv_EditingControlShowing_SetCboSelectedEvent;
 
             this.Controls.Add(CboProtocol);
             this.Controls.Add(gvRegistry);
         }
 
-
-
-        /// <summary>
-        /// GridView Address기준 정렬
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Gv_SortAddr(object sender, DataGridViewCellMouseEventArgs e)
+        private void InitializeRegistrySubItem()
         {
-            /*작업이력
-             * 2024-04-10
-             * CellEndEdit에 자동정렬 넣으니 중복실행 생겨서 따로 정렬시키는 방식으로 재작업
-             */
+            lblSubItem.AutoSize = false;
+            lblSubItem.TextAlign = ContentAlignment.MiddleCenter;
+            lblSubItem.BorderStyle = BorderStyle.FixedSingle;
 
-            if (e.ColumnIndex == colAddrDecimal.Index)
-            {
-                gvRegistry.Sort(colAddrDecimal, ListSortDirection.Ascending);
-            }
-        }
+            NumDotPosition.LblWidth = 80;
+            (NumDotPosition.ctrl as ucNumeric).Value = 0;   //Default Value
+            NumMaxValue.LblWidth = 80;
+            (NumMaxValue.ctrl as ucNumeric).Value = 0;  //Default Value
+            NumMinValue.LblWidth = 80;
+            (NumMinValue.ctrl as ucNumeric).MinValue = int.MinValue;
+            (NumMinValue.ctrl as ucNumeric).Value = -1; //Default Value
+            NumDotPosition.Visible = false;
+            NumMaxValue.Visible = false;
+            NumMinValue.Visible = false;
 
-        /// <summary>
-        /// Address 정렬 보조, int값 자리수 다르면 더 크게 체크시키기
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Gv_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
-        {
-            if (e.Column == colAddrDecimal)
-            {
-                //빈값이랑 비교하는 것 넘기기
-                if (e.CellValue1 == null || e.CellValue2 == null) return;
+            NumMaxLength.LblWidth = 80;
+            (NumMaxLength.ctrl as ucNumeric).MinValue = 1;
+            NumMaxLength.Visible = false;
 
-                int a = int.Parse(e.CellValue1.ToString());
-                int b = int.Parse(e.CellValue2.ToString());
+            TxtCboItems.AutoSize = false;
 
-                e.SortResult = a.CompareTo(b);
+            btnCboItemsAdd.Text = "+";
+            btnCboItemsAdd.Size = new Size(30, 30);
+            btnCboItemsDel.Text = "-";
+            btnCboItemsDel.Size = new Size(30, 30);
 
-                e.Handled = true;
-            }
-        }
+            LbxCboItems.AutoSize = false;
+            LbxCboItems.Sorted = true;
+            LbxCboItems.IntegralHeight = false;    //Size 조절 시 Item Hight 영향 false
 
-        /// <summary>
-        /// Registry Address 중복검사
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Gv_CellValidating_AddrDecimalDuplicateConfirm(object sender, DataGridViewCellValidatingEventArgs e)
-        {
-            if(e.ColumnIndex == colAddrDecimal.Index ||
-                e.ColumnIndex == colAddrHex.Index)
-            {
-                //Registry Address 중복 검사
-                object changedValue = e.FormattedValue;
-                if (changedValue == null || changedValue.ToString() == "") return;
-                bool bCancle = false;
-
-                foreach(DataGridViewRow dr in gvRegistry.Rows)
-                {
-                    if (dr.Index == e.RowIndex) continue;
-                    if (dr.Index == gvRegistry.NewRowIndex) continue;
-                    if (dr.Cells[colAddrHex.Index].Value == null) continue;
-
-                    if (e.ColumnIndex == colAddrDecimal.Index)
-                    {
-                        //Decimal
-                        /*작업내역
-                         * ==쓰면 true 안떠서 Equals 사용
-                         */
-                        if (dr.Cells[colAddrDecimal.Index].Value.Equals(changedValue))
-                        {
-                            bCancle = true;
-                            break;
-                        }
-                    }
-                    else if(e.ColumnIndex == colAddrHex.Index)
-                    {
-                        //Hex
-                        if (dr.Cells[colAddrHex.Index].Value.Equals(changedValue))
-                        {
-                            bCancle = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (bCancle)
-                {
-                    e.Cancel = true;
-                    MessageBox.Show(RuntimeData.String("F030003"));
-                }
-            }
-        }
-
-        private bool CellValueChangedFlag = true;   //CellValueChagned시 다른값 변경시킬때 방지용
-        private void Gv_CellValueChanged_DecimalToHex(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0) return;
-
-            if (e.ColumnIndex == colAddrDecimal.Index)
-            {
-                if (CellValueChangedFlag)
-                {
-                    CellValueChangedFlag = false;
-
-                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value;
-                    int value = Convert.ToInt32(changedValue);
-
-                    gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value = value.ToString("X");
-
-                    CellValueChangedFlag = true;
-                }
-            }
-        }
-
-        private void Gv_CellValueChanged_HexToDecimal(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0) return;
-
-            if (e.ColumnIndex == colAddrHex.Index)
-            {
-                if (CellValueChangedFlag)
-                {
-                    CellValueChangedFlag = false;
-
-                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value;
-                    string value = Convert.ToString(changedValue);
-
-                    gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value = Convert.ToInt32(value, 16);
-
-                    CellValueChangedFlag = true;
-                }
-            }
+            this.Controls.Add(lblSubItem);
+            this.Controls.Add(NumDotPosition);
+            this.Controls.Add(NumMaxValue);
+            this.Controls.Add(NumMinValue);
+            this.Controls.Add(NumMaxLength);
+            this.Controls.Add(TxtCboItems);
+            this.Controls.Add(btnCboItemsAdd);
+            this.Controls.Add(btnCboItemsDel);
+            this.Controls.Add(LbxCboItems);
         }
 
         private void SetText()
         {
+            //Unit
             LblUnitType.Text = RuntimeData.String("F030100");
             LblUnitModel.Text = RuntimeData.String("F030101");
             LblSupportProtocol.Text = RuntimeData.String("F030102");
 
+            //Registry
             CboProtocol.LblText = RuntimeData.String("F030103");
             colAddrDecimal.HeaderText = RuntimeData.String("F03010400");
             colAddrHex.HeaderText = RuntimeData.String("F03010401");
@@ -372,6 +302,13 @@ namespace Dnf.Communication.Frm
             colEditor.HeaderText = RuntimeData.String("F03010403");
             colDefaultValue.HeaderText = RuntimeData.String("F03010404");
             colRW.HeaderText = RuntimeData.String("F03010405");
+
+            //Registry SubItem
+            lblSubItem.Text = RuntimeData.String("F030105");
+            NumDotPosition.LblText = RuntimeData.String("F03010500");
+            NumMaxValue.LblText = RuntimeData.String("F03010501");
+            NumMinValue.LblText = RuntimeData.String("F03010502");
+            NumMaxLength.LblText = RuntimeData.String("F03010503");
         }
 
         private void SetPositionSize()
@@ -417,7 +354,7 @@ namespace Dnf.Communication.Frm
             btnUnitModelAdd.Size = btnUnitTypeAdd.Size;
 
             btnUnitModelDel.Location = new Point(btnUnitTypeDel.Location.X,
-                TxtUnitModel.Location.Y);
+                btnUnitModelAdd.Location.Y);
             btnUnitModelDel.Size = btnUnitTypeAdd.Size;
 
             LbxUnitModel.Location = new Point(margin,
@@ -441,8 +378,43 @@ namespace Dnf.Communication.Frm
 
             gvRegistry.Location = new Point(CboProtocol.Location.X,
                 CboProtocol.Location.Y + CboProtocol.Height + margin);
-            gvRegistry.Size = new Size(this.Width - (gvRegistry.Location.X + margin),
+            gvRegistry.Size = new Size(this.Width - (gvRegistry.Location.X + margin + LblUnitModel.Width + margin),
                 this.Height - (gvRegistry.Location.Y + margin));
+
+            //Repository SubItem
+            lblSubItem.Location = new Point(gvRegistry.Location.X + gvRegistry.Width + margin,
+                gvRegistry.Location.Y);
+            lblSubItem.Size = new Size(LblUnitModel.Width, LblUnitModel.Height);
+
+            //Numeric
+            NumDotPosition.Location = new Point(lblSubItem.Location.X,
+                lblSubItem.Location.Y + lblSubItem.Height + margin);
+            NumDotPosition.Size = new Size(lblSubItem.Width, lblSubItem.Height);
+
+            NumMaxValue.Location = new Point(NumDotPosition.Location.X,
+                NumDotPosition.Location.Y + NumDotPosition.Height + margin);
+            NumMaxValue.Size = NumDotPosition.Size;
+
+            NumMinValue.Location = new Point(NumMaxValue.Location.X,
+                NumMaxValue.Location.Y + NumMaxValue.Height + margin);
+            NumMinValue.Size = NumMaxValue.Size;
+
+            //Text
+            NumMaxLength.Location = NumDotPosition.Location;
+            NumMaxLength.Size = NumDotPosition.Size;
+
+            //Combo
+            TxtCboItems.Location = NumDotPosition.Location;
+            TxtCboItems.Size = new Size(lblSubItem.Width - (margin + btnCboItemsAdd.Width + margin + btnCboItemsDel.Width), TxtUnitType.Height);
+
+            btnCboItemsAdd.Location = new Point(TxtCboItems.Location.X + TxtCboItems.Width + margin,
+                TxtCboItems.Location.Y - 2);
+            btnCboItemsDel.Location = new Point(btnCboItemsAdd.Location.X + btnCboItemsAdd.Width + margin,
+                TxtCboItems.Location.Y - 2);
+
+            LbxCboItems.Location = new Point(TxtCboItems.Location.X,
+                TxtCboItems.Location.Y + TxtCboItems.Height + margin);
+            LbxCboItems.Size = new Size(lblSubItem.Width, LbxCboItems.Height);
         }
 
         #region Event
@@ -599,18 +571,16 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void UnitModelRemove()
         {
-            if (SelectedType != string.Empty || SelectedType != "")
+            if ((SelectedType != string.Empty || SelectedType != "")
+                && (SelectedModel != string.Empty || SelectedModel != ""))
             {
-                if (SelectedModel != string.Empty || SelectedModel != "")
-                {
-                    RuntimeData.dicUnitTypes[SelectedType].Remove(SelectedModel);
-                    LbxUnitModel.Items.Remove(SelectedModel);
+                RuntimeData.dicUnitTypes[SelectedType].Remove(SelectedModel);
+                LbxUnitModel.Items.Remove(SelectedModel);
 
-                    SelectedModel = string.Empty;
-                    if (LbxUnitModel.Items.Count > 0)
-                    {
-                        LbxUnitModel.SelectedIndex = 0;
-                    }
+                SelectedModel = string.Empty;
+                if (LbxUnitModel.Items.Count > 0)
+                {
+                    LbxUnitModel.SelectedIndex = 0;
                 }
             }
         }
@@ -627,6 +597,299 @@ namespace Dnf.Communication.Frm
                 UnitModel model = RuntimeData.dicUnitTypes[SelectedType][SelectedModel];
                 model.SupportProtocol[protocol] = CLbxSupportProtocol.GetItemChecked(CLbxSupportProtocol.SelectedIndex);
             }
+        }
+
+        /// <summary>
+        /// GridView Address기준 정렬
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_SortAddr(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            /*작업이력
+             * 2024-04-10
+             * CellEndEdit에 자동정렬 넣으니 중복실행 생겨서 따로 정렬시키는 방식으로 재작업
+             */
+
+            if (e.ColumnIndex == colAddrDecimal.Index)
+            {
+                gvRegistry.Sort(colAddrDecimal, ListSortDirection.Ascending);
+            }
+        }
+
+        /// <summary>
+        /// Address 정렬 보조, int값 자리수 다르면 더 크게 체크시키기
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            if (e.Column == colAddrDecimal)
+            {
+                //빈값이랑 비교하는 것 넘기기
+                if (e.CellValue1 == null || e.CellValue2 == null) return;
+
+                int a = int.Parse(e.CellValue1.ToString());
+                int b = int.Parse(e.CellValue2.ToString());
+
+                e.SortResult = a.CompareTo(b);
+
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Registry Address 중복검사
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_CellValidating_AddrDecimalDuplicateConfirm(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if (e.ColumnIndex == colAddrDecimal.Index ||
+                e.ColumnIndex == colAddrHex.Index)
+            {
+                //Registry Address 중복 검사
+                object changedValue = e.FormattedValue;
+                if (changedValue == null || changedValue.ToString() == "") return;
+                bool bCancle = false;
+
+                foreach (DataGridViewRow dr in gvRegistry.Rows)
+                {
+                    if (dr.Index == e.RowIndex) continue;
+                    if (dr.Index == gvRegistry.NewRowIndex) continue;
+                    if (dr.Cells[colAddrHex.Index].Value == null) continue;
+
+                    if (e.ColumnIndex == colAddrDecimal.Index)
+                    {
+                        //Decimal
+                        /*작업내역
+                         * ==쓰면 true 안떠서 Equals 사용
+                         */
+                        if (dr.Cells[colAddrDecimal.Index].Value.Equals(changedValue))
+                        {
+                            bCancle = true;
+                            break;
+                        }
+                    }
+                    else if (e.ColumnIndex == colAddrHex.Index)
+                    {
+                        //Hex
+                        if (dr.Cells[colAddrHex.Index].Value.Equals(changedValue))
+                        {
+                            bCancle = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (bCancle)
+                {
+                    e.Cancel = true;
+                    MessageBox.Show(RuntimeData.String("F030003"));
+                }
+            }
+        }
+
+        private bool CellValueChangedFlag = true;   //CellValueChagned시 다른값 변경시킬때 방지용
+        private void Gv_CellValueChanged_DecimalToHex(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (e.ColumnIndex == colAddrDecimal.Index)
+            {
+                if (CellValueChangedFlag)
+                {
+                    CellValueChangedFlag = false;
+
+                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value;
+                    int value = Convert.ToInt32(changedValue);
+
+                    gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value = value.ToString("X");
+                    gvRegistry.RefreshEdit();  //변경값 적용시키기
+
+                    CellValueChangedFlag = true;
+                }
+            }
+        }
+
+        private void Gv_CellValueChanged_HexToDecimal(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (e.ColumnIndex == colAddrHex.Index)
+            {
+                if (CellValueChangedFlag)
+                {
+                    CellValueChangedFlag = false;
+
+                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value;
+                    string value = Convert.ToString(changedValue);
+
+                    gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value = Convert.ToInt32(value, 16);
+                    gvRegistry.RefreshEdit();  //변경값 적용시키기
+
+                    CellValueChangedFlag = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// ReadOnly Column 셀만 클릭해도 바뀌도록하는 이벤트
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_CellClick_RWChange(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.ColumnIndex == colRW.Index)
+            {
+                if (CellValueChangedFlag)
+                {
+                    CellValueChangedFlag = false;
+
+                    DataGridViewCell cell = gvRegistry.Rows[e.RowIndex].Cells[colRW.Index];
+
+                    if (Convert.ToBoolean(cell.Value) == true)
+                    {
+                        cell.Value = false;
+                    }
+                    else
+                    {
+                        cell.Value = true;
+                    }
+
+                    gvRegistry.RefreshEdit();  //변경값 적용시키기
+
+                    CellValueChangedFlag = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cell에서 ComboBox 선택 시 바로 적용되도록 하는 Event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Gv_EditingControlShowing_SetCboSelectedEvent(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (e.Control is ComboBox)
+            {
+                ComboBox cbo = e.Control as ComboBox;
+
+                cbo.SelectedIndexChanged -= Cbo_SelectedIndexChanged_VisibleSubItem;
+                cbo.SelectedIndexChanged += Cbo_SelectedIndexChanged_VisibleSubItem;
+
+                //왠지 모르겠는데 이거 안하면 배경 검정으로 변함
+                e.CellStyle.BackColor = this.gvRegistry.DefaultCellStyle.BackColor;
+            }
+        }
+
+        /// <summary>
+        /// 선택한 ComboBox에서 선택한 Item 바로 Cell에 적용
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Cbo_SelectedIndexChanged_VisibleSubItem(object sender, EventArgs e)
+        {
+            DataGridViewComboBoxCell cell = gvRegistry.CurrentCell as DataGridViewComboBoxCell;
+
+            if(cell != null)
+            {
+                cell.Value = cell.EditedFormattedValue;
+            }
+        }
+
+        /// <summary>
+        /// 값 속성 변경 시 SubItem Visible 변경
+        /// </summary>
+        /// <param name="sendder"></param>
+        /// <param name="e"></param>
+        private void Gv_CellValueChanged_VisibleSubItem(object sendder, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if (e.ColumnIndex == colEditor.Index)
+            {
+                object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colEditor.Index].Value;
+                string value = Convert.ToString(changedValue);
+
+                //"Numeric", "Combo", "Text", "Bool"
+                if (value == "Numeric")
+                {
+                    //Numeric
+                    NumDotPosition.Visible = true;
+                    NumMaxValue.Visible = true;
+                    NumMinValue.Visible = true;
+                    //Text
+                    NumMaxLength.Visible = false;
+                    //Combo
+                    TxtCboItems.Visible = false;
+                    btnCboItemsAdd.Visible = false;
+                    btnCboItemsDel.Visible = false;
+                    LbxCboItems.Visible = false;
+                }
+                else if (value == "Text")
+                {
+                    //Numeric
+                    NumDotPosition.Visible = false;
+                    NumMaxValue.Visible = false;
+                    NumMinValue.Visible = false;
+                    //Text
+                    NumMaxLength.Visible = true;
+                    //Combo
+                    TxtCboItems.Visible = false;
+                    btnCboItemsAdd.Visible = false;
+                    btnCboItemsDel.Visible = false;
+                    LbxCboItems.Visible = false;
+                }
+                else if (value == "Combo")
+                {
+                    //Numeric
+                    NumDotPosition.Visible = false;
+                    NumMaxValue.Visible = false;
+                    NumMinValue.Visible = false;
+                    //Text
+                    NumMaxLength.Visible = false;
+                    //Combo
+                    TxtCboItems.Visible = true;
+                    btnCboItemsAdd.Visible = true;
+                    btnCboItemsDel.Visible = true;
+                    LbxCboItems.Visible = true;
+                }
+                else
+                {
+                    //Numeric
+                    NumDotPosition.Visible = false;
+                    NumMaxValue.Visible = false;
+                    NumMinValue.Visible = false;
+                    //Text
+                    NumMaxLength.Visible = false;
+                    //Combo
+                    TxtCboItems.Visible = false;
+                    btnCboItemsAdd.Visible = false;
+                    btnCboItemsDel.Visible = false;
+                    LbxCboItems.Visible = false;
+                }
+
+                //Default값 적용
+                //NumDotPosition.Value = 0;
+                //NumMaxValue.Value = 0;
+                //NumMinValue.Value = -1;
+                //NumMaxLength.Value = 0;
+                //TxtCboItems.Text = "";
+                //LbxCboItems.Items.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Registry Protocol 선택된 Protocol Form의 선택된 Protocol로 지정하기
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CboProtocol_SelectedIndexChanged_SetFormSelectedProtocol(object sender, EventArgs e)
+        {
+            object value = CboProtocol.Value;
+
+            this.SelectedProtocol = value.ToString();
         }
 
         #endregion Event End

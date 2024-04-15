@@ -40,7 +40,7 @@ namespace Dnf.Communication.Frm
         ucControlBox cboPortName = new ucControlBox(CtrlType.ComboBox);      //연결된 포트
         ucControlBox cboProtocolType = new ucControlBox(CtrlType.ComboBox);  //통신방법 구분
         ucControlBox cboBaudRate = new ucControlBox(CtrlType.ComboBox);      //BaudRate
-        ucControlBox numDataBits = new ucControlBox(CtrlType.NumbericUpDown);//Data Bits
+        ucControlBox numDataBits = new ucControlBox(CtrlType.Numberic);     //Data Bits
         ucControlBox cboStopBit = new ucControlBox(CtrlType.ComboBox);       //StopBit
         ucControlBox cboParity = new ucControlBox(CtrlType.ComboBox);        //ParityBit
 
@@ -136,8 +136,8 @@ namespace Dnf.Communication.Frm
             (cboStopBit.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<StopBits>());
             (cboParity.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<Parity>());
 
-            (numDataBits.ctrl as NumericUpDown).Maximum = 8;
-            (numDataBits.ctrl as NumericUpDown).Minimum = 7;
+            (numDataBits.ctrl as ucNumeric).MaxValue = 8;
+            (numDataBits.ctrl as ucNumeric).MinValue = 7;
 
             (txtPortNo.ctrl as MaskedTextBox).ValidatingType = typeof(short);
             (txtPortNo.ctrl as MaskedTextBox).Mask = "####";
@@ -217,7 +217,7 @@ namespace Dnf.Communication.Frm
                 (cboBaudRate.ctrl as ComboBox).SelectedIndex = 0;
                 (cboStopBit.ctrl as ComboBox).SelectedIndex = 0;
                 (cboParity.ctrl as ComboBox).SelectedIndex = 0;
-                (numDataBits.ctrl as NumericUpDown).Value = (numDataBits.ctrl as NumericUpDown).Maximum;
+                (numDataBits.ctrl as ucNumeric).Value = (numDataBits.ctrl as ucNumeric).MaxValue;
 
                 //Ethernet 정보
                 (txtPortNo.ctrl as MaskedTextBox).Text = "0502";
@@ -237,7 +237,7 @@ namespace Dnf.Communication.Frm
                     cboBaudRate.Value = port.BaudRate;
                     cboStopBit.Value = port.StopBIt;
                     cboParity.Value = port.Parity;
-                    (numDataBits.ctrl as NumericUpDown).Value = port.DataBits;
+                    (numDataBits.ctrl as ucNumeric).Value = port.DataBits;
                 }
                 //Ethernet Port인경우
                 else if(frmPort.ProtocolType == uProtocolType.ModBusTcpIp)

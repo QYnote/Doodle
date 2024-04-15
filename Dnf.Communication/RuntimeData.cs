@@ -190,7 +190,12 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F03010402", "이름");
             dtimsi.Rows.Add("F03010403", "값 속성");
             dtimsi.Rows.Add("F03010404", "기본값");
-            dtimsi.Rows.Add("F03010405", "RW 모드");
+            dtimsi.Rows.Add("F03010405", "Read Only");
+            dtimsi.Rows.Add("F030105", "Registry SubItem");
+            dtimsi.Rows.Add("F03010500", "소수점 위치");
+            dtimsi.Rows.Add("F03010501", "최대값");
+            dtimsi.Rows.Add("F03010502", "최소값");
+            dtimsi.Rows.Add("F03010503", "최대 글자수");
 
             dicTextList = dtimsi.AsEnumerable().ToDictionary(
                 row => row.Field<string>(0),

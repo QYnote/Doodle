@@ -16,8 +16,9 @@ namespace Dnf.Communication.Controls
 
         internal int SlaveAddr;       //Unit 주소
         internal string UnitType;   //Unit 구분
-        internal string UnitModel;   //Unit 구분
-        internal string UnitName;    //Unit 모델명
+        internal string UnitModel;   //Unit 이름
+        internal string UnitName;    //Unit 사용자 지정명
+        internal Dictionary<int, object> UnitRegistry;    //Unit Registry정보<주소[Decimal], 정보List>
 
         internal Unit(Port port, int addr, string type, string model, string modelName = null)
         { 
@@ -27,6 +28,7 @@ namespace Dnf.Communication.Controls
             UnitModel = model;
             UnitName = modelName == null || modelName == "" ? model.ToString() : modelName;
             State = ConnectionState.Closed;
+            UnitRegistry = new Dictionary<int, object>();
         }
     }
 }

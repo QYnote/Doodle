@@ -16,7 +16,7 @@ namespace Dnf.Utils.Views
         ComboBox,
         TextBox,
         MaskedTextBox,
-        NumbericUpDown,
+        Numberic,
         CheckBox
     }
 
@@ -25,9 +25,12 @@ namespace Dnf.Utils.Views
     /// </summary>
     public partial class ucControlBox : UserControl
     {
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr hWnf, UInt32 Msg, Int32 wParam, Int32 lParam);
+        private const Int32 CB_SETITEMHEIGHT = 0x153;   //user32.dll ComboBox 높이 셋팅 번호
         public Control ctrl;            //Control Type
         public Label lbl = new Label(); //Control 명
-        
+
         /// <summary>
         /// Text Label Text
         /// </summary>
@@ -54,7 +57,7 @@ namespace Dnf.Utils.Views
             {
                      if (ctrl.GetType() == typeof(TextBox))       { return (ctrl as TextBox).Text; }
                 else if (ctrl.GetType() == typeof(MaskedTextBox)) { return (ctrl as MaskedTextBox).Text; }
-                else if (ctrl.GetType() == typeof(NumericUpDown)) { return (ctrl as NumericUpDown).Value; }
+                else if (ctrl.GetType() == typeof(ucNumeric)) { return (ctrl as ucNumeric).Value; }
                 else if (ctrl.GetType() == typeof(ComboBox))      { return (ctrl as ComboBox).SelectedItem; }
                 else if (ctrl.GetType() == typeof(CheckBox))      { return (ctrl as CheckBox).Checked; }
                 else { return null; }
@@ -63,7 +66,7 @@ namespace Dnf.Utils.Views
             {
                      if (ctrl.GetType() == typeof(TextBox))       { (ctrl as TextBox).Text = value.ToString(); }
                 else if (ctrl.GetType() == typeof(MaskedTextBox)) { (ctrl as MaskedTextBox).Text = value.ToString(); }
-                else if (ctrl.GetType() == typeof(NumericUpDown)) { (ctrl as NumericUpDown).Value = Convert.ToInt32(value); }
+                else if (ctrl.GetType() == typeof(ucNumeric)) { (ctrl as ucNumeric).Value = Convert.ToInt32(value); }
                 else if (ctrl.GetType() == typeof(ComboBox))      { (ctrl as ComboBox).SelectedItem = value; }
                 else if (ctrl.GetType() == typeof(CheckBox))      { (ctrl as CheckBox).Checked = bool.Parse(value.ToString()); }
             }
@@ -84,7 +87,7 @@ namespace Dnf.Utils.Views
                     break;
                 case CtrlType.TextBox: ctrl = new TextBox(); break;
                 case CtrlType.MaskedTextBox: ctrl = new MaskedTextBox(); break;
-                case CtrlType.NumbericUpDown: ctrl = new NumericUpDown(); break;
+                case CtrlType.Numberic: ctrl = new ucNumeric(); break;
                 case CtrlType.CheckBox:
                     SetCheckBox();
                     break;
@@ -134,16 +137,13 @@ namespace Dnf.Utils.Views
         /// </summary>
         /// <!-- https://stackoverflow.com/questions/3158004/how-do-i-set-the-height-of-a-combobox -->
         /// <returns></returns>
-        [DllImport("user32.dll")]
-        static extern IntPtr SendMessage(IntPtr hWnf, UInt32 Msg, Int32 wParam, Int32 lParam);
-        private const Int32 CB_SETITEMHEIGHT = 0x153;   //user32.dll ComboBox 높이 셋팅 번호
         private void SetComboBoxHeight(IntPtr cboHandle, Int32 setHight)
         {
             SendMessage(cboHandle, CB_SETITEMHEIGHT, -1, setHight);
         }
 
         /// <summary>
-        /// ComboBox Text Align / 
+        /// ComboBox Text Align
         /// </summary>
         /// <!-- https://stackoverflow.com/questions/11817062/align-text-in-combobox -->
         /// <param name="sender"></param>
