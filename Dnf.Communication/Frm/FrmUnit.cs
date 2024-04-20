@@ -130,12 +130,12 @@ namespace Dnf.Communication.Frm
 
             //Items
             (cboProtocolType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());;
-            object[] UnitTypeArr = RuntimeData.dicUnitTypes.Keys.ToArray();
+            object[] UnitTypeArr = ucXML.GetUnitTypeList();
             (cboUnitType.ctrl as ComboBox).Items.AddRange(UnitTypeArr);
-            object[] UnitModelArr = new object[] { };
+            object[] UnitModelArr = null;
             if (UnitTypeArr.Length > 0)
             {
-                UnitModelArr = RuntimeData.dicUnitTypes[UnitTypeArr[0].ToString()].Keys.ToArray();    //Type 첫번째값으로 임시지정
+                UnitModelArr = ucXML.GetUnitModelList(UnitTypeArr[0].ToString());    //Type 첫번째값으로 임시지정
             }
             (cboUnitModel.ctrl as ComboBox).Items.AddRange(UnitModelArr);
 
@@ -516,7 +516,7 @@ namespace Dnf.Communication.Frm
                     object selItem = cboUnitType.Value;
                     if (selItem == null) return;
 
-                    object[] UnitModelArr = RuntimeData.dicUnitTypes[selItem.ToString()].Keys.ToArray();
+                    object[] UnitModelArr = ucXML.GetUnitModelList(selItem.ToString());
                     ComboBox cboModel = (cboUnitModel.ctrl as ComboBox);
                     cboModel.Items.Clear();
                     cboModel.Items.AddRange(UnitModelArr);
@@ -533,9 +533,10 @@ namespace Dnf.Communication.Frm
                     object type = cboUnitType.Value;
                     object model = (sender as ComboBox).SelectedItem;
                     object protocol = cboProtocolType.Value;
+                    uProtocolType[] supportProtocolList = ucXML.GetSupportProtocolList(type.ToString(), model.ToString());
 
                     /*모델정보 Dictionary -> Type검색 -> Model 검색 -> 지원 Protocol 검색 -> 지원여부값 추출*/
-                    bool chkSupport = RuntimeData.dicUnitTypes[type.ToString()][model.ToString()].SupportProtocol[(uProtocolType)protocol];
+                    bool chkSupport = supportProtocolList.Contains(protocol.ToString().StringToEnum<uProtocolType>());
                     if (!chkSupport)
                     {
                         EditFlag = false;

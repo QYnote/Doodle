@@ -1,6 +1,4 @@
 ﻿using Dnf.Communication.Controls;
-using Dnf.Communication.Data;
-using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -17,13 +15,11 @@ namespace Dnf.Communication
         internal readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
         internal static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
         internal static string LangType = "Ko";
-        internal static Dictionary<string, Dictionary<string, UnitModel>> dicUnitTypes;    //Unit Type - Model등 정보
         private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 
         static RuntimeData()
         {
             CreateDtImsi();
-            UnitInfoLoad("UnitInfo");
         }
 
         /// <summary>
@@ -39,61 +35,6 @@ namespace Dnf.Communication
             }
 
             return strCode;
-        }
-
-        /// <summary>
-        /// 초기 Unit 정보들 호출
-        /// </summary>
-        /// <param name="fileName"></param>
-        private static void UnitInfoLoad(string fileName)
-        {
-            string filePath = DataPath + fileName + ".xml";
-
-            if (System.IO.File.Exists(filePath))
-            {
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(filePath);
-
-                if (xdoc.ChildNodes.Count > 0)
-                {
-                    XmlNode unitList = xdoc.SelectSingleNode("UnitList");
-                    dicUnitTypes = new Dictionary<string, Dictionary<string, UnitModel>>();
-
-                    //가져온 Node Dictionary에 추가
-                    foreach (XmlNode TypeNode in unitList.ChildNodes)
-                    {
-                        //Dictionary에 추가
-                        /*Type이름*/string TypeName = TypeNode.Attributes["Name"].Value;
-                        dicUnitTypes.Add(TypeName, new Dictionary<string, UnitModel>());
-
-                        foreach (XmlNode unitModel in TypeNode.ChildNodes)
-                        {
-                            string modelName = unitModel.Attributes["Name"].Value;
-
-                            UnitModel model = new UnitModel();
-                            /*Model이름*/model.ModelName = modelName;
-
-                            /*지원 통신Protocol*/
-                            foreach (XmlNode nodeProtocol in unitModel.SelectSingleNode("SupportProtocol").ChildNodes)
-                            {
-                                uProtocolType protocolType = UtilCustom.StringToEnum<uProtocolType>(nodeProtocol.Name);
-                                bool bValue = nodeProtocol.InnerText == 1.ToString() ? true : false;
-
-                                model.SupportProtocol[protocolType] = bValue;
-                            }
-
-                            //Dictionary에 추가
-                            dicUnitTypes[TypeName].Add(modelName, model);
-
-                        }
-                    }//End foreach TypeNode
-                }
-            }
-            else
-            {
-                //없으면 빈 Dictionary 생성
-                dicUnitTypes = new Dictionary<string, Dictionary<string, UnitModel>>();
-            }
         }
 
         private static void CreateDtImsi()

@@ -29,6 +29,17 @@ namespace Dnf.Utils.Controls
         }
 
         /// <summary>
+        /// int값 string형태의 Hex값으로 변환
+        /// </summary>
+        /// <param name="value">변환할 int값</param>
+        /// <param name="format">format 값</param>
+        /// <returns></returns>
+        static public string ToHexString(this int value, int format = 0)
+        {
+            return value.ToString(string.Format("X{0}", format));
+        }
+
+        /// <summary>
         /// int -> 2byte로 변환
         /// </summary>
         /// <param name="value">변환할 int Value(Max 65535)</param>
@@ -113,11 +124,11 @@ namespace Dnf.Utils.Controls
         /// <param name="gv">해당기능을 넣은 DataGridView</param>
         /// <param name="colName">해당기능을 적용할 Column Name</param>
         /// <param name="type">정수(Decimal): 기본값, 16진수(Hex)</param>
-        static public void ColumnOnlyNumeric(DataGridView gv, string colName, string type = "Decimal")
+        static public void ColumnOnlyNumeric(DataGridView gv, string colName, string type = "Dec")
         {
             gv.EditingControlShowing += (sender, e) =>
             {
-                if (type == "Decimal")
+                if (type == "Dec")
                 {
                     e.Control.KeyPress -= new KeyPressEventHandler(SlaveAddr_KeyPress_Decimal);
                     if (gv.CurrentCell.ColumnIndex == gv.Columns[colName].Index)

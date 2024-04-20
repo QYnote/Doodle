@@ -1,13 +1,20 @@
 ﻿using Dnf.Communication.Data;
 using Dnf.Utils.Controls;
 using Dnf.Utils.Views;
+using Microsoft.Win32;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,6 +24,98 @@ namespace Dnf.Communication.Frm
 {
     internal partial class Frm_UnitSetting : TabPage
     {
+
+        #region UnitSetting 구조
+
+        protected class UnitType
+        {
+            internal UnitType(string name) { Name = name; }
+
+            internal string Name { get; set; }
+            /// <summary>유형에 해당하는 Model</summary>
+            internal Dictionary<string, UnitModel> Models = new Dictionary<string, UnitModel>();
+        }
+
+        protected class UnitModel
+        {
+            /// <summary>모델명</summary>
+            internal string ModelName { get; set; }
+            /// <summary>지원하는 Protocol 여부</summary>
+            internal Dictionary<uProtocolType, bool> SupportProtocol { get; set; }
+            /// <summary>Registry Map</summary>
+            internal Dictionary<int, UnitRegistry> RegistryMap = new Dictionary<int, UnitRegistry>();
+
+            internal UnitModel()
+            {
+                SupportProtocol = new Dictionary<uProtocolType, bool>();
+
+                //지원 Protocol 기본틀
+                foreach (uProtocolType protocol in UtilCustom.EnumToItems<uProtocolType>())
+                {
+                    SupportProtocol.Add(protocol, false);
+                }
+
+            }
+        }
+
+        protected class UnitRegistry
+        {
+            /// <summary>Registry 주소값[Dec]</summary>
+            internal int AddressDec { get; set; }
+            /// <summary>Registry 이름</summary>
+            internal string RegName { get; set; }
+
+            private string valueType;
+            /// <summary>Value 속성</summary>
+            internal string ValueType
+            {
+                get
+                {
+                    return valueType;
+                }
+                set
+                {
+                    valueType = value;
+                    //ValueType 지정 후 SubItem 생성
+                    if (value == "Numeric"
+                        || value == "Combo"
+                        || value == "Text")
+                    {
+                        if (RegSubItem == null)
+                        {
+                            RegSubItem = new RegistrySubItem();
+                        }
+                    }
+                }
+            }
+            
+
+            /// <summary>기본값</summary>
+            internal string DefaultValue { get; set; }
+            /// <summary>읽기전용 bool</summary>
+            internal bool ReadOnly { get; set; }
+            /// <summary>Registry SubItem</summary>
+            internal RegistrySubItem RegSubItem { get; set; }
+        }
+
+        protected class RegistrySubItem
+        {
+            //Combo
+            /// <summary>ComboBox Item</summary>
+            internal ArrayList ComboItems = new ArrayList();
+            //Numeric
+            /// <summary>Numeric 소수점 위치</summary>
+            internal int DotPosition { get; set; }
+            /// <summary>Numeric 최대값</summary>
+            internal int MaxValue { get; set; }
+            /// <summary>Numeric 최소값</summary>
+            internal int MinValue { get; set; }
+            //Text
+            /// <summary>Text 최대 길이</summary>
+            internal int MaxLength { get; set; }
+        }
+
+        #endregion Unit Setting 구조
         #region Controls
         private int marginValue = 3;
         
@@ -38,17 +137,18 @@ namespace Dnf.Communication.Frm
         private CheckedListBox CLbxSupportProtocol = new CheckedListBox();
 
         //Registry
-        private ucControlBox CboProtocol = new ucControlBox(CtrlType.ComboBox);                 //Registry 통신타입
-        private Button btnRegSave = new Button();                                               //Registry 저장버튼
-        private Button btnRegExcelUpload = new Button();                                        //Registry 엑셀 저장
-        private Button btnRegExcelDownload = new Button();                                      //Registry 엑셀 불러오기
-        private DataGridView gvRegistry = new DataGridView();                                   //Registry 정보 GridView
-        private DataGridViewTextBoxColumn colAddrDecimal = new DataGridViewTextBoxColumn();     //주소(10진법)
+        private ucControlBox CboProtocol = new ucControlBox(CtrlType.ComboBox);             //Registry 통신타입
+        private Button btnRegSave = new Button();                                           //Registry 저장버튼
+        private Button btnRegExcelUpload = new Button();                                    //Registry 엑셀 저장
+        private Button btnRegExcelDownload = new Button();                                  //Registry 엑셀 불러오기
+        private DataGridView gvRegistry = new DataGridView();                               //Registry 정보 GridView
+        private DataGridViewTextBoxColumn colAddrDec = new DataGridViewTextBoxColumn();     //주소(10진법)
         private DataGridViewTextBoxColumn colAddrHex = new DataGridViewTextBoxColumn();     //주소(16진법)
-        private DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();            //이름
-        private DataGridViewComboBoxColumn colEditor = new DataGridViewComboBoxColumn();        //값 속성
-        private DataGridViewTextBoxColumn colDefaultValue = new DataGridViewTextBoxColumn();    //기본 값(Default Value)
-        private DataGridViewCheckBoxColumn colRW = new DataGridViewCheckBoxColumn();            //Read/Write 모드
+        private DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();        //이름
+        private DataGridViewComboBoxColumn colEditor = new DataGridViewComboBoxColumn();    //값 속성
+        private DataGridViewTextBoxColumn colDefaultValue = new DataGridViewTextBoxColumn();//기본 값(Default Value)
+        private DataGridViewCheckBoxColumn colRW = new DataGridViewCheckBoxColumn();        //Read/Write 모드
+        private DataGridViewImageColumn colErase = new DataGridViewImageColumn();           //삭제
 
         //Registry SubItem
         private Label lblSubItem = new Label();
@@ -65,11 +165,14 @@ namespace Dnf.Communication.Frm
         private CheckedListBox LbxCboItems = new CheckedListBox();
         #endregion Controls End
 
-        private string SelectedType = string.Empty;
-        private string SelectedModel = string.Empty;
-        private string SelectedProtocol = string.Empty;
+        private Dictionary<string, UnitType> dicUnitTypes;
+        private UnitType SelectedType = null;
+        private UnitModel SelectedModel = null;
+        private uProtocolType SelectedProtocol = uProtocolType.ModBusRTU;   //기본값 RTU
+        private bool CellValueChangedFlag = true;   //CellValueChagned시 다른값 변경시킬때 방지용
 
         private string InfoFilePath = RuntimeData.DataPath + "UnitInfo.xml";
+        private string debugStr = "";
 
         internal Frm_UnitSetting()
         {
@@ -80,7 +183,6 @@ namespace Dnf.Communication.Frm
             this.Text = this.Name;
             this.SizeChanged += FrmSizeChanged;
 
-            UnitInfoLoad(); ;
         }
 
         /// <summary>
@@ -91,8 +193,11 @@ namespace Dnf.Communication.Frm
             InitializeUnitInfo();
             InitializeRegistry();
             InitializeRegistrySubItem();
+
             SetPositionSize();
             SetText();
+
+            Load_UnitInfo();
         }
 
         /// <summary>
@@ -164,6 +269,7 @@ namespace Dnf.Communication.Frm
             LbxUnitType.SelectedIndexChanged += UnitTypeSelectedChanged;
             LbxUnitModel.SelectedIndexChanged += UnitModelSelectedChanged;
             CLbxSupportProtocol.SelectedValueChanged += (sender, e) => { ProtocolFlagChanged(); };
+            (CboProtocol.ctrl as ComboBox).SelectedIndexChanged += (sender, e) => { SelectedProtocol_SetGridRow(); };
         }
 
         /// <summary>
@@ -187,37 +293,42 @@ namespace Dnf.Communication.Frm
             gvRegistry.MultiSelect = false; //다중선택
             gvRegistry.EditMode = DataGridViewEditMode.EditOnEnter;
 
-            colAddrDecimal.Width = 70;
+            colAddrDec.Width = 70;
             colAddrHex.Width = 60;
             colName.Width = 100;
             colEditor.Width = 80;
             colDefaultValue.Width = 60;
             colRW.Width = 40;
+            colErase.Width = 20;
 
-            colAddrDecimal.DisplayIndex = 0;
+            colAddrDec.DisplayIndex = 0;
             colAddrHex.DisplayIndex = 1;
             colName.DisplayIndex = 2;
             colEditor.DisplayIndex = 4;
             colDefaultValue.DisplayIndex = 5;
             colRW.DisplayIndex = 6;
+            colErase.DisplayIndex = 7;
 
-            colAddrDecimal.Name = "colAddrDecimal";
+            colAddrDec.Name = "colAddrDec";
             colAddrHex.Name = "colAddrHex";
             colName.Name = "colName";
             colEditor.Name = "colEditor";
             colDefaultValue.Name = "colDefaultValue";
             colRW.Name = "colRW";
+            colErase.Name = "colErase";
 
             colEditor.Items.AddRange("Numeric", "Combo", "Text", "Bool");
 
-            colAddrDecimal.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colErase.Image = Dnf.Utils.Properties.Resources.Erase_16x16;
+
+            colAddrDec.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colAddrHex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colEditor.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colDefaultValue.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colRW.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-            colAddrDecimal.SortMode = DataGridViewColumnSortMode.Programmatic;
+            colAddrDec.SortMode = DataGridViewColumnSortMode.Programmatic;
             colAddrHex.SortMode = DataGridViewColumnSortMode.Programmatic;
             colName.SortMode = DataGridViewColumnSortMode.NotSortable;
             colEditor.SortMode = DataGridViewColumnSortMode.NotSortable;
@@ -225,20 +336,23 @@ namespace Dnf.Communication.Frm
             colRW.SortMode = DataGridViewColumnSortMode.NotSortable;
 
             //숫자만 입력하게 하기
-            UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrDecimal.Name);
+            UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrDec.Name);
             UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrHex.Name, "Hex");
 
-            gvRegistry.Columns.AddRange(colAddrDecimal, colAddrHex, colName, colEditor, colDefaultValue, colRW);
+            gvRegistry.Columns.AddRange(colAddrDec, colAddrHex, colName, colEditor, colDefaultValue, colRW, colErase);
 
             (CboProtocol.ctrl as ComboBox).SelectedIndexChanged += CboProtocol_SelectedIndexChanged_SetFormSelectedProtocol;
-            gvRegistry.ColumnHeaderMouseClick += Gv_SortAddr;
-            gvRegistry.SortCompare += Gv_SortCompare;
-            gvRegistry.CellValidating += Gv_CellValidating_AddrDecimalDuplicateConfirm;
-            gvRegistry.CellValueChanged += Gv_CellValueChanged_DecimalToHex;
-            gvRegistry.CellValueChanged += Gv_CellValueChanged_HexToDecimal;
-            gvRegistry.CellValueChanged += Gv_CellValueChanged_VisibleSubItem;
-            gvRegistry.CellMouseClick += Gv_CellClick_RWChange;
-            gvRegistry.EditingControlShowing += Gv_EditingControlShowing_SetCboSelectedEvent;
+            gvRegistry.ColumnHeaderMouseClick += Gv_SortAddr;                                   //Address 정렬
+            gvRegistry.SortCompare += Gv_SortCompare;                                           //Address 정렬 비교
+            gvRegistry.CellValidating += Gv_CellValidating_AddrDecimalDuplicateConfirm;         //Address 중복검사
+            gvRegistry.CellValueChanged += Gv_CellValueChanged_DecimalToHex;                    //Address Dec -> Hex 자동입력
+            gvRegistry.CellValueChanged += Gv_CellValueChanged_HexToDecimal;                    //Address Hex -> Dec 자동입력
+            gvRegistry.CellValueChanged += Gv_CellValueChanged_VisibleSubItem;                  //ValueType SubItem Visible 처리
+            gvRegistry.CellValueChanged += GvRegistry_CellValueChanged_SaveRegistry; ;          //Cell값 입력 시 Registry 저장
+            gvRegistry.EditingControlShowing += Gv_EditingControlShowing_SetCboSelectedEvent;   //ValueType ComboBox Item 선택하면 바로 GridCell에 적용
+            gvRegistry.CellMouseClick += Gv_CellClick_RWChange;                                 //RW 체크박스 클릭 안해도 체크 변경
+            gvRegistry.CellContentClick += EraseColumnClick;                                    //Row삭제이미지 클릭 이벤트
+            gvRegistry.CellFormatting += GvRegistry_CellFormatting_NewRowImageSet;
 
             this.Controls.Add(CboProtocol);
             this.Controls.Add(gvRegistry);
@@ -296,12 +410,13 @@ namespace Dnf.Communication.Frm
 
             //Registry
             CboProtocol.LblText = RuntimeData.String("F030103");
-            colAddrDecimal.HeaderText = RuntimeData.String("F03010400");
+            colAddrDec.HeaderText = RuntimeData.String("F03010400");
             colAddrHex.HeaderText = RuntimeData.String("F03010401");
             colName.HeaderText = RuntimeData.String("F03010402");
             colEditor.HeaderText = RuntimeData.String("F03010403");
             colDefaultValue.HeaderText = RuntimeData.String("F03010404");
             colRW.HeaderText = RuntimeData.String("F03010405");
+            colErase.HeaderText = "";
 
             //Registry SubItem
             lblSubItem.Text = RuntimeData.String("F030105");
@@ -427,8 +542,9 @@ namespace Dnf.Communication.Frm
         private void FrmSizeChanged(object sender, EventArgs e)
         {
             SetPositionSize();
-            //this.pnlUnitType.Size = new Size(pnlUnitType.Width, this.Size.Height / 2);
         }
+
+        #region UnitType Evnet
 
         /// <summary>
         /// Unit Type 선택Index 변경 이벤트
@@ -437,16 +553,19 @@ namespace Dnf.Communication.Frm
         /// <param name="e"></param>
         private void UnitTypeSelectedChanged(object sender, EventArgs e)
         {
-            this.SelectedType = LbxUnitType.SelectedItem as string;
+            if (LbxUnitType.SelectedItem == null) return;
+
+            this.SelectedType = dicUnitTypes[LbxUnitType.SelectedItem as string];
             LbxUnitModel.Items.Clear();
 
-            //하위 모델이 있을경우 첫번째 Item 선택
-            if(this.SelectedType == null || this.SelectedType == string.Empty) { return; }
+            if(this.SelectedType == null) { return; }
 
-            if (RuntimeData.dicUnitTypes[SelectedType].Count > 0)
+            gvRegistry.Rows.Clear();
+            //하위 모델이 있을경우 첫번째 Item 선택
+            if (SelectedType.Models.Count > 0)
             {
                 //해당Type의 Model리스트 조회
-                foreach (string model in RuntimeData.dicUnitTypes[SelectedType].Keys)
+                foreach (string model in SelectedType.Models.Keys)
                 {
                     LbxUnitModel.Items.Add(model);
                 }
@@ -456,15 +575,66 @@ namespace Dnf.Communication.Frm
         }
 
         /// <summary>
+        /// Unit Type 생성
+        /// </summary>
+        private void UnitTypeAdd()
+        {
+            string unitTypeName = TxtUnitType.Text.Trim();
+
+            //빈칸입력인지 검사
+            if (unitTypeName == "")
+            {
+                MessageBox.Show(RuntimeData.String("F030000"));
+                return;
+            }
+            //동일한 Type명 있는지 검사
+            if (dicUnitTypes.Keys.Contains(unitTypeName))
+            {
+                MessageBox.Show(RuntimeData.String("F030001"));
+                return;
+            }
+
+            LbxUnitType.Items.Add(unitTypeName);
+            dicUnitTypes.Add(unitTypeName, new UnitType(unitTypeName));
+
+            //후처리
+            TxtUnitType.Text = "";
+            LbxUnitType.SelectedItem = unitTypeName;
+        }
+
+        /// <summary>
+        /// Unit Type 삭제
+        /// </summary>
+        private void UnitTypeRemove()
+        {
+            string selectedType = LbxUnitType.SelectedItem as string;
+
+            if (selectedType != string.Empty || selectedType != "")
+            {
+                dicUnitTypes.Remove(selectedType);
+                LbxUnitType.Items.Remove(selectedType);
+
+                SelectedType = null;
+                if (LbxUnitType.Items.Count > 0)
+                {
+                    LbxUnitType.SelectedIndex = 0;
+                }
+            }
+        }
+
+        #endregion UnitType Evnet End
+        #region UnitModel Event
+
+        /// <summary>
         /// Unit Model 선택Index 변경 이벤트
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void UnitModelSelectedChanged(object sender, EventArgs e)
         {
-            this.SelectedModel = LbxUnitModel.SelectedItem as string;
+            this.SelectedModel = SelectedType.Models[LbxUnitModel.SelectedItem as string];
 
-            UnitModel model = RuntimeData.dicUnitTypes[SelectedType][SelectedModel];
+            UnitModel model = this.SelectedModel;
             //지원하는 Protocol
             (CboProtocol.ctrl as ComboBox).Items.Clear();
             foreach (uProtocolType protocol in model.SupportProtocol.Keys)
@@ -487,52 +657,6 @@ namespace Dnf.Communication.Frm
         }
 
         /// <summary>
-        /// Unit Type 생성
-        /// </summary>
-        private void UnitTypeAdd()
-        {
-            string unitTypeName = TxtUnitType.Text.Trim();
-
-            //빈칸입력인지 검사
-            if (unitTypeName == "")
-            {
-                MessageBox.Show(RuntimeData.String("F030000"));
-                return;
-            }
-            //동일한 Type명 있는지 검사
-            if (RuntimeData.dicUnitTypes.Keys.Contains(unitTypeName))
-            {
-                MessageBox.Show(RuntimeData.String("F030001"));
-                return;
-            }
-
-            LbxUnitType.Items.Add(unitTypeName);
-            RuntimeData.dicUnitTypes.Add(unitTypeName, new Dictionary<string, UnitModel>());
-
-            //후처리
-            TxtUnitType.Text = "";
-            LbxUnitType.SelectedItem = unitTypeName;
-        }
-
-        /// <summary>
-        /// Unit Type 삭제
-        /// </summary>
-        private void UnitTypeRemove()
-        {
-            if(SelectedType != string.Empty || SelectedType != "")
-            {
-                RuntimeData.dicUnitTypes.Remove(SelectedType);
-                LbxUnitType.Items.Remove(SelectedType);
-
-                SelectedType = string.Empty;
-                if(LbxUnitType.Items.Count > 0)
-                {
-                    LbxUnitType.SelectedIndex = 0;
-                }
-            }
-        }
-
-        /// <summary>
         /// Unit Model 생성
         /// </summary>
         private void UnitModelAdd()
@@ -540,7 +664,7 @@ namespace Dnf.Communication.Frm
             string unitModelName = TxtUnitModel.Text.Trim();
 
             //Type이 선택된 상태인지 검사
-            if (SelectedType == null || SelectedType == string.Empty || SelectedType == "")
+            if (SelectedType == null)
             {
                 MessageBox.Show(RuntimeData.String("F030002"));
                 return;
@@ -552,14 +676,14 @@ namespace Dnf.Communication.Frm
                 return;
             }
             //동일한 Model명 있는지 검사
-            if (RuntimeData.dicUnitTypes[SelectedType].Keys.Contains(unitModelName))
+            if (SelectedType.Models.Keys.Contains(unitModelName))
             {
                 MessageBox.Show(RuntimeData.String("F030001"));
                 return;
             }
 
             LbxUnitModel.Items.Add(unitModelName);
-            RuntimeData.dicUnitTypes[SelectedType].Add(unitModelName, new UnitModel() { ModelName = unitModelName});
+            SelectedType.Models.Add(unitModelName, new UnitModel() { ModelName = unitModelName});
 
             //후처리
             TxtUnitModel.Text = "";
@@ -571,13 +695,13 @@ namespace Dnf.Communication.Frm
         /// </summary>
         private void UnitModelRemove()
         {
-            if ((SelectedType != string.Empty || SelectedType != "")
-                && (SelectedModel != string.Empty || SelectedModel != ""))
+            if ((SelectedType != null)
+                && (SelectedModel != null))
             {
-                RuntimeData.dicUnitTypes[SelectedType].Remove(SelectedModel);
+                SelectedType.Models.Remove(SelectedModel.ModelName);
                 LbxUnitModel.Items.Remove(SelectedModel);
 
-                SelectedModel = string.Empty;
+                SelectedModel = null;
                 if (LbxUnitModel.Items.Count > 0)
                 {
                     LbxUnitModel.SelectedIndex = 0;
@@ -585,19 +709,86 @@ namespace Dnf.Communication.Frm
             }
         }
 
+        #endregion UnitModel Event End
+        #region Protocol Event
+
         /// <summary>
         /// 통신 Protocol 사용여부 변경 Event
         /// </summary>
         private void ProtocolFlagChanged()
         {
-            if(SelectedType != string.Empty || SelectedModel != string.Empty)
+            if(SelectedType != null || SelectedModel != null)
             {
                 uProtocolType protocol = (uProtocolType)CLbxSupportProtocol.SelectedItem;
 
-                UnitModel model = RuntimeData.dicUnitTypes[SelectedType][SelectedModel];
+                UnitModel model = this.SelectedModel;
                 model.SupportProtocol[protocol] = CLbxSupportProtocol.GetItemChecked(CLbxSupportProtocol.SelectedIndex);
             }
         }
+
+        private void SelectedProtocol_SetGridRow()
+        {
+            if (SelectedModel == null) return;
+
+            gvRegistry.Rows.Clear();
+
+            DataGridViewRow row = null;
+            foreach (UnitRegistry registry in SelectedModel.RegistryMap.Values)
+            {
+                row = (DataGridViewRow)gvRegistry.Rows[gvRegistry.NewRowIndex].Clone();
+                row.Cells[colAddrDec.Index].Value = registry.AddressDec;
+                row.Cells[colAddrHex.Index].Value = registry.AddressDec.ToHexString();
+                row.Cells[colName.Index].Value = registry.RegName;
+                row.Cells[colEditor.Index].Value = registry.ValueType;
+                row.Cells[colDefaultValue.Index].Value = registry.DefaultValue;
+                row.Cells[colRW.Index].Value = registry.ReadOnly;
+
+                gvRegistry.Rows.Add(row);
+            }
+        }
+
+        #endregion Protocol Event
+
+        /// <summary>
+        /// Registry Protocol 선택된 Protocol Form의 선택된 Protocol로 지정하기
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CboProtocol_SelectedIndexChanged_SetFormSelectedProtocol(object sender, EventArgs e)
+        {
+            object value = CboProtocol.Value;
+
+            this.SelectedProtocol = (uProtocolType)value;
+        }
+
+        #region GridEvent
+
+        /// <summary>
+        /// Cell값 변경 시 Registry 저장
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void GvRegistry_CellValueChanged_SaveRegistry(object sender, DataGridViewCellEventArgs e)
+        {
+            //NewRow만 있으면 진행 return
+            if (gvRegistry.Rows.Count == 1) return;
+
+            DataGridViewRow dr = gvRegistry.Rows[e.RowIndex];
+
+            //Address Dec 입력 안했으면 진행 안함
+            if (dr.Cells[colAddrDec.Index].Value?.ToString() == "") return;
+
+            UnitRegistry reg = new UnitRegistry();
+            reg.AddressDec = Convert.ToInt32(dr.Cells[colAddrDec.Index].Value);
+            reg.ValueType = Convert.ToString(dr.Cells[colEditor.Index].Value);
+            reg.DefaultValue = Convert.ToString(dr.Cells[colDefaultValue.Index].Value);
+            reg.ReadOnly = Convert.ToBoolean(dr.Cells[colRW.Index].Value);
+
+            SelectedModel.RegistryMap[reg.AddressDec] = reg;
+        }
+
+        #region Address Event
 
         /// <summary>
         /// GridView Address기준 정렬
@@ -611,9 +802,9 @@ namespace Dnf.Communication.Frm
              * CellEndEdit에 자동정렬 넣으니 중복실행 생겨서 따로 정렬시키는 방식으로 재작업
              */
 
-            if (e.ColumnIndex == colAddrDecimal.Index)
+            if (e.ColumnIndex == colAddrDec.Index)
             {
-                gvRegistry.Sort(colAddrDecimal, ListSortDirection.Ascending);
+                gvRegistry.Sort(colAddrDec, ListSortDirection.Ascending);
             }
         }
 
@@ -624,7 +815,7 @@ namespace Dnf.Communication.Frm
         /// <param name="e"></param>
         private void Gv_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
         {
-            if (e.Column == colAddrDecimal)
+            if (e.Column == colAddrDec)
             {
                 //빈값이랑 비교하는 것 넘기기
                 if (e.CellValue1 == null || e.CellValue2 == null) return;
@@ -645,7 +836,7 @@ namespace Dnf.Communication.Frm
         /// <param name="e"></param>
         private void Gv_CellValidating_AddrDecimalDuplicateConfirm(object sender, DataGridViewCellValidatingEventArgs e)
         {
-            if (e.ColumnIndex == colAddrDecimal.Index ||
+            if (e.ColumnIndex == colAddrDec.Index ||
                 e.ColumnIndex == colAddrHex.Index)
             {
                 //Registry Address 중복 검사
@@ -659,13 +850,13 @@ namespace Dnf.Communication.Frm
                     if (dr.Index == gvRegistry.NewRowIndex) continue;
                     if (dr.Cells[colAddrHex.Index].Value == null) continue;
 
-                    if (e.ColumnIndex == colAddrDecimal.Index)
+                    if (e.ColumnIndex == colAddrDec.Index)
                     {
                         //Decimal
                         /*작업내역
                          * ==쓰면 true 안떠서 Equals 사용
                          */
-                        if (dr.Cells[colAddrDecimal.Index].Value.Equals(changedValue))
+                        if (dr.Cells[colAddrDec.Index].Value.Equals(changedValue))
                         {
                             bCancle = true;
                             break;
@@ -690,18 +881,17 @@ namespace Dnf.Communication.Frm
             }
         }
 
-        private bool CellValueChangedFlag = true;   //CellValueChagned시 다른값 변경시킬때 방지용
         private void Gv_CellValueChanged_DecimalToHex(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
 
-            if (e.ColumnIndex == colAddrDecimal.Index)
+            if (e.ColumnIndex == colAddrDec.Index)
             {
                 if (CellValueChangedFlag)
                 {
                     CellValueChangedFlag = false;
 
-                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value;
+                    object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrDec.Index].Value;
                     int value = Convert.ToInt32(changedValue);
 
                     gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value = value.ToString("X");
@@ -725,7 +915,7 @@ namespace Dnf.Communication.Frm
                     object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colAddrHex.Index].Value;
                     string value = Convert.ToString(changedValue);
 
-                    gvRegistry.Rows[e.RowIndex].Cells[colAddrDecimal.Index].Value = Convert.ToInt32(value, 16);
+                    gvRegistry.Rows[e.RowIndex].Cells[colAddrDec.Index].Value = Convert.ToInt32(value, 16);
                     gvRegistry.RefreshEdit();  //변경값 적용시키기
 
                     CellValueChangedFlag = true;
@@ -733,36 +923,8 @@ namespace Dnf.Communication.Frm
             }
         }
 
-        /// <summary>
-        /// ReadOnly Column 셀만 클릭해도 바뀌도록하는 이벤트
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Gv_CellClick_RWChange(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            if (e.ColumnIndex == colRW.Index)
-            {
-                if (CellValueChangedFlag)
-                {
-                    CellValueChangedFlag = false;
-
-                    DataGridViewCell cell = gvRegistry.Rows[e.RowIndex].Cells[colRW.Index];
-
-                    if (Convert.ToBoolean(cell.Value) == true)
-                    {
-                        cell.Value = false;
-                    }
-                    else
-                    {
-                        cell.Value = true;
-                    }
-
-                    gvRegistry.RefreshEdit();  //변경값 적용시키기
-
-                    CellValueChangedFlag = true;
-                }
-            }
-        }
+        #endregion Address Event
+        #region ValueType Event
 
         /// <summary>
         /// Cell에서 ComboBox 선택 시 바로 적용되도록 하는 Event
@@ -792,7 +954,7 @@ namespace Dnf.Communication.Frm
         {
             DataGridViewComboBoxCell cell = gvRegistry.CurrentCell as DataGridViewComboBoxCell;
 
-            if(cell != null)
+            if (cell != null)
             {
                 cell.Value = cell.EditedFormattedValue;
             }
@@ -880,17 +1042,82 @@ namespace Dnf.Communication.Frm
             }
         }
 
+        #endregion ValueType Event End
+        #region ReadWrite Event
+
         /// <summary>
-        /// Registry Protocol 선택된 Protocol Form의 선택된 Protocol로 지정하기
+        /// ReadOnly Column 셀만 클릭해도 바뀌도록하는 이벤트
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CboProtocol_SelectedIndexChanged_SetFormSelectedProtocol(object sender, EventArgs e)
+        private void Gv_CellClick_RWChange(object sender, DataGridViewCellMouseEventArgs e)
         {
-            object value = CboProtocol.Value;
+            if (e.ColumnIndex == colRW.Index)
+            {
+                if (CellValueChangedFlag)
+                {
+                    CellValueChangedFlag = false;
 
-            this.SelectedProtocol = value.ToString();
+                    DataGridViewCell cell = gvRegistry.Rows[e.RowIndex].Cells[colRW.Index];
+
+                    if (Convert.ToBoolean(cell.Value) == true)
+                    {
+                        cell.Value = false;
+                    }
+                    else
+                    {
+                        cell.Value = true;
+                    }
+
+                    gvRegistry.RefreshEdit();  //변경값 적용시키기
+
+                    CellValueChangedFlag = true;
+                }
+            }
         }
+
+
+        #endregion ReadWrite Event
+        #region Erase Event
+
+        /// <summary>
+        /// Grid Erase NewRow행 CellImage 설정
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void GvRegistry_CellFormatting_NewRowImageSet(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            //이거 안해주면 빨간 엑스표이미지가뜸
+            if (gvRegistry.Rows[e.RowIndex].IsNewRow && e.ColumnIndex == colErase.Index)
+            {
+                e.Value = colErase.Image;
+            }
+        }
+
+        /// <summary>
+        /// Grid에서 삭제아이콘 클릭 이벤트
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void EraseColumnClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (gvRegistry.Rows[e.RowIndex].IsNewRow) return;
+
+            if (e.ColumnIndex == colErase.Index)
+            {
+                //RemoveAt 진행
+                CellValueChangedFlag = true;
+
+                SelectedModel.RegistryMap.Remove(Convert.ToInt32(gvRegistry.Rows[e.RowIndex].Cells[colAddrDec.Index].Value));
+                gvRegistry.Rows.RemoveAt(e.RowIndex);
+
+                CellValueChangedFlag = false;
+            }
+        }
+
+        #endregion Erase Event End
+
+        #endregion GridEvent End
 
         #endregion Event End
 
@@ -906,16 +1133,24 @@ namespace Dnf.Communication.Frm
             XmlNode root = xdoc.CreateElement("UnitList");
             xdoc.AppendChild(root);
 
-            foreach (string unitType in RuntimeData.dicUnitTypes.Keys)
+            foreach (KeyValuePair<string, UnitType> pariType in dicUnitTypes.OrderBy(idx => idx.Key))
             {
+                UnitType unitType = pariType.Value;
+                /////////////////////////////////////////////////////////////
+                /////////////////////////  Unit Type  ///////////////////////
+                /////////////////////////////////////////////////////////////
                 XmlNode xmlType = xdoc.CreateElement("UnitType");
                 //그룹 이름 정의
                 XmlAttribute typeName = xdoc.CreateAttribute("Name");
-                typeName.Value = unitType;
+                typeName.Value = unitType.Name;
                 xmlType.Attributes.Append(typeName);
 
-                foreach (UnitModel model in RuntimeData.dicUnitTypes[unitType].Values)
+                foreach (KeyValuePair<string, UnitModel> pairModel in dicUnitTypes[unitType.Name].Models.OrderBy(idx => idx.Key))
                 {
+                    UnitModel model = pairModel.Value;
+                    /////////////////////////////////////////////////////////////
+                    ////////////////////////  Unit Model  ///////////////////////
+                    /////////////////////////////////////////////////////////////
                     XmlNode xmlUnitModel = xdoc.CreateElement("Model");
                     //Model 이름 정의
                     XmlAttribute attrModelName = xdoc.CreateAttribute("Name");
@@ -936,6 +1171,89 @@ namespace Dnf.Communication.Frm
                     }
                     xmlUnitModel.AppendChild(xmlProtocolTypeList);
 
+                    //RegistryMap
+                    XmlNode xmlRegistryMap = xdoc.CreateElement("Registry");
+                    foreach (KeyValuePair<int, UnitRegistry> pairReistry in model.RegistryMap.OrderBy(idx => idx.Key))
+                    {
+                        UnitRegistry registry = pairReistry.Value;
+
+                        /////////////////////////////////////////////////////////////
+                        //////////////////////  Unit Registry  //////////////////////
+                        /////////////////////////////////////////////////////////////
+                        XmlNode xmlParameter = xdoc.CreateElement("Parameter");
+                        XmlAttribute attrAddress = xdoc.CreateAttribute("Address");
+                        XmlAttribute attrName = xdoc.CreateAttribute("Name");
+                        XmlAttribute attrValueType = xdoc.CreateAttribute("ValueType");
+                        XmlAttribute attrDefaultvalue = xdoc.CreateAttribute("DefaultValue");
+                        XmlAttribute attrReadOnly = xdoc.CreateAttribute("ReadOnly");
+
+                        attrAddress.Value = registry.AddressDec.ToString();//필수값
+                        attrName.Value = registry.RegName;
+                        attrValueType.Value = Convert.ToString(registry.ValueType);
+                        attrDefaultvalue.Value = Convert.ToString(registry.DefaultValue);
+                        attrReadOnly.Value = registry.ReadOnly ? "1" : "0";
+
+                        xmlParameter.Attributes.Append(attrAddress);
+                        xmlParameter.Attributes.Append(attrName);
+                        xmlParameter.Attributes.Append(attrValueType);
+                        xmlParameter.Attributes.Append(attrDefaultvalue);
+                        xmlParameter.Attributes.Append(attrReadOnly);
+
+                        /////////////////////////////////////////////////////////////
+                        /////////////////////  Registry SubItem  ////////////////////
+                        /////////////////////////////////////////////////////////////
+                        if (attrValueType.Value == "Numeric")
+                        {
+                            XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
+                            XmlNode xmlDp = xdoc.CreateElement("DotPosition");
+                            XmlNode xmlMax = xdoc.CreateElement("MaxValue");
+                            XmlNode xmlMin = xdoc.CreateElement("MinValue");
+
+                            xmlDp.InnerText = registry.RegSubItem.DotPosition.ToString();
+                            xmlMax.InnerText = registry.RegSubItem.MaxValue.ToString();
+                            xmlMin.InnerText = registry.RegSubItem.MinValue.ToString();
+
+                            xmlSubItem.AppendChild(xmlDp);
+                            xmlSubItem.AppendChild(xmlMax);
+                            xmlSubItem.AppendChild(xmlMin);
+
+                            xmlParameter.AppendChild(xmlSubItem);
+                        }
+                        else if(attrValueType.Value == "Combo")
+                        {
+                            if (registry.RegSubItem.ComboItems.Count > 0)
+                            {
+                                XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
+                                XmlNode xmlComboItems = xdoc.CreateElement("ComboItem");
+
+                                string items = string.Empty;
+                                foreach (string item in registry.RegSubItem.ComboItems)
+                                {
+                                    items += "," + item;
+                                }
+                                items.Remove(items.Length - 1);
+
+                                xmlComboItems.InnerText = items;
+
+                                xmlSubItem.AppendChild(xmlComboItems);
+                                xmlParameter.AppendChild(xmlSubItem);
+                            }
+                        }
+                        else if(attrValueType.Value == "Text")
+                        {
+                            XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
+                            XmlNode xmlMaxLength = xdoc.CreateElement("MaxLength");
+
+                            xmlMaxLength.InnerText = registry.RegSubItem.MaxLength.ToString();
+                            
+                            xmlSubItem.AppendChild(xmlMaxLength);
+                            xmlParameter.AppendChild(xmlSubItem);
+                        }
+
+                        xmlRegistryMap.AppendChild(xmlParameter);
+                    }
+                    xmlUnitModel.AppendChild(xmlRegistryMap);
+
                     //그룹 하위로 추가
                     xmlType.AppendChild(xmlUnitModel);
                 }
@@ -947,22 +1265,113 @@ namespace Dnf.Communication.Frm
             xdoc.Save(InfoFilePath);
         }
 
+
+        private void Load_UnitInfo()
+        {
+            LoadUnitInfoXML("UnitInfo");
+            InitializeXML();
+        }
+
+        /// <summary>
+        /// 초기 Unit 정보들 호출
+        /// </summary>
+        /// <param name="fileName"></param>
+        private void LoadUnitInfoXML(string fileName)
+        {
+            string filePath = RuntimeData.DataPath + fileName + ".xml";
+
+            dicUnitTypes = new Dictionary<string, UnitType>();
+            if (System.IO.File.Exists(filePath))
+            {
+                XmlDocument xdoc = new XmlDocument();
+                xdoc.Load(filePath);
+
+                if (xdoc.ChildNodes.Count > 0)
+                {
+                    XmlNode unitList = xdoc.SelectSingleNode("UnitList");
+
+                    //가져온 Node Dictionary에 추가
+                    foreach (XmlNode TypeNode in unitList.ChildNodes)
+                    {
+                        ///////////////////////////////////////////
+                        ////////////   Unit Type 생성  ////////////
+                        ///////////////////////////////////////////
+                        string TypeName = TypeNode.Attributes["Name"].Value;
+                        UnitType unitType = new UnitType(TypeName);
+
+                        foreach (XmlNode ModelNode in TypeNode.ChildNodes)
+                        {
+                            ///////////////////////////////////////////
+                            ////////////   Unit Model 생성  ///////////
+                            ///////////////////////////////////////////
+                            UnitModel model = new UnitModel();
+                            model.ModelName = ModelNode.Attributes["Name"].Value;    //Model이름
+
+                            //지원 통신Protocol
+                            foreach (XmlNode nodeProtocol in ModelNode.SelectSingleNode("SupportProtocol").ChildNodes)
+                            {
+                                uProtocolType protocolType = UtilCustom.StringToEnum<uProtocolType>(nodeProtocol.Name);
+                                bool bValue = nodeProtocol.InnerText == 1.ToString() ? true : false;
+
+                                model.SupportProtocol[protocolType] = bValue;
+                            }
+
+                            //Registry Map
+                            foreach (XmlNode nodeParam in ModelNode.SelectSingleNode("Registry").ChildNodes)
+                            {
+                                /////////////////////////////////////////////////////////////
+                                //////////////////////  Unit Registry  //////////////////////
+                                /////////////////////////////////////////////////////////////
+                                UnitRegistry param = new UnitRegistry();
+                                param.AddressDec = Convert.ToInt32(nodeParam.Attributes["Address"].Value);
+                                param.RegName = nodeParam.Attributes["Name"].Value;
+                                param.ValueType = nodeParam.Attributes["ValueType"].Value;
+                                param.DefaultValue = nodeParam.Attributes["DefaultValue"].Value;
+                                param.ReadOnly = nodeParam.Attributes["ReadOnly"].Value == "1" ? true : false;
+
+                                /////////////////////////////////////////////////////////////
+                                /////////////////////  Registry SubItem  ////////////////////
+                                /////////////////////////////////////////////////////////////
+
+                                if(param.ValueType == "Combo")
+                                { 
+                                }
+                                else if (param.ValueType == "Numeric")
+                                { 
+                                }
+                                else if (param.ValueType == "Text")
+                                { 
+                                }
+
+
+
+                                model.RegistryMap.Add(param.AddressDec, param);
+                            }
+
+                            //Dictionary에 추가
+                            unitType.Models.Add(model.ModelName, model);
+                        }//Model 생성 End
+
+                        dicUnitTypes.Add(TypeName, unitType);
+                    }//Type 생성 End
+                }
+            }
+        }
+
         /// <summary>
         /// Unit정보 불러오기(RuntimeData에 가지고있음)
         /// </summary>
-        private void UnitInfoLoad()
+        private void InitializeXML()
         {
-            foreach(string TypeName in RuntimeData.dicUnitTypes.Keys)
+            foreach (string TypeName in dicUnitTypes.Keys)
             {
+                //Type
+                UnitType unitType = dicUnitTypes[TypeName];
                 LbxUnitType.Items.Add(TypeName);
-
-                foreach(string modelName in RuntimeData.dicUnitTypes[TypeName].Keys)
-                {
-                    LbxUnitModel.Items.Add(modelName);
-                }
+                //나머지는 Selected Event로 만들어짐
             }
 
-            if(LbxUnitType.Items.Count > 0)
+            if (LbxUnitType.Items.Count > 0)
             {
                 LbxUnitType.SelectedIndex = 0;
             }

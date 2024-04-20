@@ -49,8 +49,7 @@
     <Compile Include="Controls\Custom_EthernetPort.cs" />
     <Compile Include="Controls\EnumCustom.cs" />
     <Compile Include="Controls\Custom_SerialPort.cs" />
-    <Compile Include="Controls\UnitRegistry.cs" />
-    <Compile Include="Data\UnitModel.cs" />
+    <Compile Include="Data\ucXML.cs" />
     <Compile Include="Frm\FrmPort.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -102,6 +101,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
     <ItemGroup>
