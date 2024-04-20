@@ -2,6 +2,7 @@
 using Dnf.Utils.Controls;
 using Dnf.Utils.Views;
 using Microsoft.Win32;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,7 +25,6 @@ namespace Dnf.Communication.Frm
 {
     internal partial class Frm_UnitSetting : TabPage
     {
-
         #region UnitSetting 구조
 
         protected class UnitType
@@ -43,7 +43,7 @@ namespace Dnf.Communication.Frm
             /// <summary>지원하는 Protocol 여부</summary>
             internal Dictionary<uProtocolType, bool> SupportProtocol { get; set; }
             /// <summary>Registry Map</summary>
-            internal Dictionary<int, UnitRegistry> RegistryMap = new Dictionary<int, UnitRegistry>();
+            internal Dictionary<uProtocolType, Dictionary<int, UnitRegistry>> RegistryMap = new Dictionary<uProtocolType, Dictionary<int, UnitRegistry>>();
 
             internal UnitModel()
             {
@@ -102,7 +102,7 @@ namespace Dnf.Communication.Frm
         {
             //Combo
             /// <summary>ComboBox Item</summary>
-            internal ArrayList ComboItems = new ArrayList();
+            internal List<string> ComboItems = new List<string>();
             //Numeric
             /// <summary>Numeric 소수점 위치</summary>
             internal int DotPosition { get; set; }
@@ -145,7 +145,7 @@ namespace Dnf.Communication.Frm
         private DataGridViewTextBoxColumn colAddrDec = new DataGridViewTextBoxColumn();     //주소(10진법)
         private DataGridViewTextBoxColumn colAddrHex = new DataGridViewTextBoxColumn();     //주소(16진법)
         private DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();        //이름
-        private DataGridViewComboBoxColumn colEditor = new DataGridViewComboBoxColumn();    //값 속성
+        private DataGridViewComboBoxColumn colValueType = new DataGridViewComboBoxColumn();    //값 속성
         private DataGridViewTextBoxColumn colDefaultValue = new DataGridViewTextBoxColumn();//기본 값(Default Value)
         private DataGridViewCheckBoxColumn colRW = new DataGridViewCheckBoxColumn();        //Read/Write 모드
         private DataGridViewImageColumn colErase = new DataGridViewImageColumn();           //삭제
@@ -162,17 +162,16 @@ namespace Dnf.Communication.Frm
         private TextBox TxtCboItems = new TextBox();
         private Button btnCboItemsAdd = new Button();
         private Button btnCboItemsDel = new Button();
-        private CheckedListBox LbxCboItems = new CheckedListBox();
+        private ListBox LbxCboItems = new ListBox();
         #endregion Controls End
 
         private Dictionary<string, UnitType> dicUnitTypes;
         private UnitType SelectedType = null;
         private UnitModel SelectedModel = null;
-        private uProtocolType SelectedProtocol = uProtocolType.ModBusRTU;   //기본값 RTU
+        private uProtocolType SelectedProtocol;   //기본값 RTU
         private bool CellValueChangedFlag = true;   //CellValueChagned시 다른값 변경시킬때 방지용
 
         private string InfoFilePath = RuntimeData.DataPath + "UnitInfo.xml";
-        private string debugStr = "";
 
         internal Frm_UnitSetting()
         {
@@ -269,6 +268,7 @@ namespace Dnf.Communication.Frm
             LbxUnitType.SelectedIndexChanged += UnitTypeSelectedChanged;
             LbxUnitModel.SelectedIndexChanged += UnitModelSelectedChanged;
             CLbxSupportProtocol.SelectedValueChanged += (sender, e) => { ProtocolFlagChanged(); };
+            (CboProtocol.ctrl as ComboBox).SelectedIndexChanged += CboProtocol_SelectedIndexChanged_SetFormSelectedProtocol;
             (CboProtocol.ctrl as ComboBox).SelectedIndexChanged += (sender, e) => { SelectedProtocol_SetGridRow(); };
         }
 
@@ -296,7 +296,7 @@ namespace Dnf.Communication.Frm
             colAddrDec.Width = 70;
             colAddrHex.Width = 60;
             colName.Width = 100;
-            colEditor.Width = 80;
+            colValueType.Width = 80;
             colDefaultValue.Width = 60;
             colRW.Width = 40;
             colErase.Width = 20;
@@ -304,7 +304,7 @@ namespace Dnf.Communication.Frm
             colAddrDec.DisplayIndex = 0;
             colAddrHex.DisplayIndex = 1;
             colName.DisplayIndex = 2;
-            colEditor.DisplayIndex = 4;
+            colValueType.DisplayIndex = 4;
             colDefaultValue.DisplayIndex = 5;
             colRW.DisplayIndex = 6;
             colErase.DisplayIndex = 7;
@@ -312,26 +312,26 @@ namespace Dnf.Communication.Frm
             colAddrDec.Name = "colAddrDec";
             colAddrHex.Name = "colAddrHex";
             colName.Name = "colName";
-            colEditor.Name = "colEditor";
+            colValueType.Name = "colValueType";
             colDefaultValue.Name = "colDefaultValue";
             colRW.Name = "colRW";
             colErase.Name = "colErase";
 
-            colEditor.Items.AddRange("Numeric", "Combo", "Text", "Bool");
+            colValueType.Items.AddRange("Numeric", "Combo", "Text", "Bool");
 
             colErase.Image = Dnf.Utils.Properties.Resources.Erase_16x16;
 
             colAddrDec.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colAddrHex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colName.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colEditor.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colValueType.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colDefaultValue.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colRW.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             colAddrDec.SortMode = DataGridViewColumnSortMode.Programmatic;
             colAddrHex.SortMode = DataGridViewColumnSortMode.Programmatic;
             colName.SortMode = DataGridViewColumnSortMode.NotSortable;
-            colEditor.SortMode = DataGridViewColumnSortMode.NotSortable;
+            colValueType.SortMode = DataGridViewColumnSortMode.NotSortable;
             colDefaultValue.SortMode = DataGridViewColumnSortMode.NotSortable;
             colRW.SortMode = DataGridViewColumnSortMode.NotSortable;
 
@@ -339,9 +339,8 @@ namespace Dnf.Communication.Frm
             UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrDec.Name);
             UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrHex.Name, "Hex");
 
-            gvRegistry.Columns.AddRange(colAddrDec, colAddrHex, colName, colEditor, colDefaultValue, colRW, colErase);
+            gvRegistry.Columns.AddRange(colAddrDec, colAddrHex, colName, colValueType, colDefaultValue, colRW, colErase);
 
-            (CboProtocol.ctrl as ComboBox).SelectedIndexChanged += CboProtocol_SelectedIndexChanged_SetFormSelectedProtocol;
             gvRegistry.ColumnHeaderMouseClick += Gv_SortAddr;                                   //Address 정렬
             gvRegistry.SortCompare += Gv_SortCompare;                                           //Address 정렬 비교
             gvRegistry.CellValidating += Gv_CellValidating_AddrDecimalDuplicateConfirm;         //Address 중복검사
@@ -352,7 +351,8 @@ namespace Dnf.Communication.Frm
             gvRegistry.EditingControlShowing += Gv_EditingControlShowing_SetCboSelectedEvent;   //ValueType ComboBox Item 선택하면 바로 GridCell에 적용
             gvRegistry.CellMouseClick += Gv_CellClick_RWChange;                                 //RW 체크박스 클릭 안해도 체크 변경
             gvRegistry.CellContentClick += EraseColumnClick;                                    //Row삭제이미지 클릭 이벤트
-            gvRegistry.CellFormatting += GvRegistry_CellFormatting_NewRowImageSet;
+            gvRegistry.CellFormatting += GvRegistry_CellFormatting_NewRowImageSet;              //NewRow 이미지 X로나오는거 수정
+            gvRegistry.SelectionChanged += GvRegistry_SelectionChanged_VisibleSubItem;          //선택 Row 변경 시 SubItem Visible 변경
 
             this.Controls.Add(CboProtocol);
             this.Controls.Add(gvRegistry);
@@ -363,6 +363,12 @@ namespace Dnf.Communication.Frm
             lblSubItem.AutoSize = false;
             lblSubItem.TextAlign = ContentAlignment.MiddleCenter;
             lblSubItem.BorderStyle = BorderStyle.FixedSingle;
+
+            NumDotPosition.Name = "NumDotPosition";
+            NumMaxValue.Name = "NumMaxValue";
+            NumMinValue.Name = "NumMinValue";
+            NumMaxLength.Name = "NumMaxLength";
+            btnCboItemsAdd.Name = "btnCboItemsAdd";
 
             NumDotPosition.LblWidth = 80;
             (NumDotPosition.ctrl as ucNumeric).Value = 0;   //Default Value
@@ -399,6 +405,12 @@ namespace Dnf.Communication.Frm
             this.Controls.Add(btnCboItemsAdd);
             this.Controls.Add(btnCboItemsDel);
             this.Controls.Add(LbxCboItems);
+
+            (NumDotPosition.ctrl as ucNumeric).ValueChanged += SubItem_ValueChanged_SetRegistryClass;
+            (NumMaxValue.ctrl as ucNumeric).ValueChanged += SubItem_ValueChanged_SetRegistryClass;
+            (NumMinValue.ctrl as ucNumeric).ValueChanged += SubItem_ValueChanged_SetRegistryClass;
+            (NumMaxLength.ctrl as ucNumeric).ValueChanged += SubItem_ValueChanged_SetRegistryClass;
+            btnCboItemsAdd.Click += SubItem_ValueChanged_SetRegistryClass;
         }
 
         private void SetText()
@@ -413,7 +425,7 @@ namespace Dnf.Communication.Frm
             colAddrDec.HeaderText = RuntimeData.String("F03010400");
             colAddrHex.HeaderText = RuntimeData.String("F03010401");
             colName.HeaderText = RuntimeData.String("F03010402");
-            colEditor.HeaderText = RuntimeData.String("F03010403");
+            colValueType.HeaderText = RuntimeData.String("F03010403");
             colDefaultValue.HeaderText = RuntimeData.String("F03010404");
             colRW.HeaderText = RuntimeData.String("F03010405");
             colErase.HeaderText = "";
@@ -561,6 +573,7 @@ namespace Dnf.Communication.Frm
             if(this.SelectedType == null) { return; }
 
             gvRegistry.Rows.Clear();
+            VisibleSubItem("");
             //하위 모델이 있을경우 첫번째 Item 선택
             if (SelectedType.Models.Count > 0)
             {
@@ -636,24 +649,8 @@ namespace Dnf.Communication.Frm
 
             UnitModel model = this.SelectedModel;
             //지원하는 Protocol
-            (CboProtocol.ctrl as ComboBox).Items.Clear();
-            foreach (uProtocolType protocol in model.SupportProtocol.Keys)
-            {
-                int idx = CLbxSupportProtocol.Items.IndexOf(protocol);
-                bool flag = model.SupportProtocol[protocol];
-
-                //지원 Protocol CheckBox Item 수정
-                CLbxSupportProtocol.SetItemChecked(idx, flag);
-
-                //Registry Protocol ComboBox Item 수정
-                if (flag) { (CboProtocol.ctrl as ComboBox).Items.Add(protocol); }
-            }
-
-            if((CboProtocol.ctrl as ComboBox).Items.Count > 0)
-            {
-                (CboProtocol.ctrl as ComboBox).SelectedIndex = 0;
-            }
-
+            SetCboSupportProtocolList(model);
+            VisibleSubItem("");
         }
 
         /// <summary>
@@ -723,9 +720,54 @@ namespace Dnf.Communication.Frm
 
                 UnitModel model = this.SelectedModel;
                 model.SupportProtocol[protocol] = CLbxSupportProtocol.GetItemChecked(CLbxSupportProtocol.SelectedIndex);
+
+                if(model.SupportProtocol[protocol] == true)
+                {
+                    model.RegistryMap.Add(protocol, new Dictionary<int, UnitRegistry>());
+                }
+                else
+                {
+                    model.RegistryMap.Remove(protocol);
+                }
+
+                SetCboSupportProtocolList(model);
             }
         }
 
+        /// <summary>
+        /// 지원하는 Protocol Combobox List 수정
+        /// </summary>
+        /// <param name="model"></param>
+        private void SetCboSupportProtocolList(UnitModel model)
+        {
+            (CboProtocol.ctrl as ComboBox).Items.Clear();
+            foreach (uProtocolType protocol in model.SupportProtocol.Keys)
+            {
+                int idx = CLbxSupportProtocol.Items.IndexOf(protocol);
+                bool flag = model.SupportProtocol[protocol];
+
+                //지원 Protocol CheckBox Item 수정
+                CLbxSupportProtocol.SetItemChecked(idx, flag);
+
+                //Registry Protocol ComboBox Item 수정
+                if (flag) { (CboProtocol.ctrl as ComboBox).Items.Add(protocol); }
+            }
+
+            if ((CboProtocol.ctrl as ComboBox).Items.Count > 0)
+            {
+                (CboProtocol.ctrl as ComboBox).SelectedIndex = 0;
+                gvRegistry.Enabled = true;
+            }
+            else
+            {
+                gvRegistry.Rows.Clear();
+                gvRegistry.Enabled = false;
+            }
+        }
+
+        /// <summary>
+        /// 선택된 Protocol에 따라 DataGridView Row 생성
+        /// </summary>
         private void SelectedProtocol_SetGridRow()
         {
             if (SelectedModel == null) return;
@@ -733,13 +775,13 @@ namespace Dnf.Communication.Frm
             gvRegistry.Rows.Clear();
 
             DataGridViewRow row = null;
-            foreach (UnitRegistry registry in SelectedModel.RegistryMap.Values)
+            foreach (UnitRegistry registry in SelectedModel.RegistryMap[SelectedProtocol].Values)
             {
                 row = (DataGridViewRow)gvRegistry.Rows[gvRegistry.NewRowIndex].Clone();
                 row.Cells[colAddrDec.Index].Value = registry.AddressDec;
                 row.Cells[colAddrHex.Index].Value = registry.AddressDec.ToHexString();
                 row.Cells[colName.Index].Value = registry.RegName;
-                row.Cells[colEditor.Index].Value = registry.ValueType;
+                row.Cells[colValueType.Index].Value = registry.ValueType;
                 row.Cells[colDefaultValue.Index].Value = registry.DefaultValue;
                 row.Cells[colRW.Index].Value = registry.ReadOnly;
 
@@ -771,8 +813,8 @@ namespace Dnf.Communication.Frm
         /// <exception cref="NotImplementedException"></exception>
         private void GvRegistry_CellValueChanged_SaveRegistry(object sender, DataGridViewCellEventArgs e)
         {
-            //NewRow만 있으면 진행 return
-            if (gvRegistry.Rows.Count == 1) return;
+            if ((CboProtocol.ctrl as ComboBox).Items.Count == 0) return;
+            if (gvRegistry.Rows.Count == 1) return; //NewRow만 있으면 진행 return
 
             DataGridViewRow dr = gvRegistry.Rows[e.RowIndex];
 
@@ -781,11 +823,61 @@ namespace Dnf.Communication.Frm
 
             UnitRegistry reg = new UnitRegistry();
             reg.AddressDec = Convert.ToInt32(dr.Cells[colAddrDec.Index].Value);
-            reg.ValueType = Convert.ToString(dr.Cells[colEditor.Index].Value);
+            reg.ValueType = Convert.ToString(dr.Cells[colValueType.Index].Value);
             reg.DefaultValue = Convert.ToString(dr.Cells[colDefaultValue.Index].Value);
             reg.ReadOnly = Convert.ToBoolean(dr.Cells[colRW.Index].Value);
 
-            SelectedModel.RegistryMap[reg.AddressDec] = reg;
+            SelectedModel.RegistryMap[SelectedProtocol][reg.AddressDec] = reg;
+        }
+
+        /// <summary>
+        /// Grid 선택된 Row에 해당하는 ValueType에따라 SubItem Visible 및 값 조정
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void GvRegistry_SelectionChanged_VisibleSubItem(object sender, EventArgs e)
+        {
+            if (gvRegistry.SelectedCells.Count < 1) return;
+            if (gvRegistry.SelectedCells[0].RowIndex < 0) return;
+            DataGridViewRow row = gvRegistry.Rows[gvRegistry.SelectedCells[0].RowIndex];
+            if (row.IsNewRow) return;
+
+            string valueType = Convert.ToString(row.Cells[colValueType.Index].Value);
+            int addrDec = Convert.ToInt32(row.Cells[colAddrDec.Index].Value);
+
+            if (valueType != "")
+            {
+                VisibleSubItem(valueType);
+            }
+
+            if (SelectedModel.RegistryMap[SelectedProtocol].ContainsKey(addrDec))
+            {
+                RegistrySubItem sub = SelectedModel.RegistryMap[SelectedProtocol][addrDec].RegSubItem;
+
+                if(valueType == "Combo")
+                {
+                    LbxCboItems.Items.Clear();
+                    LbxCboItems.Items.AddRange(sub.ComboItems.ToArray());
+                }
+                else if(valueType == "Numeric")
+                {
+                    CellValueChangedFlag = false;
+
+                    NumMinValue.Value = sub.MinValue;
+                    NumMaxValue.Value = sub.MaxValue;
+                    NumDotPosition.Value = sub.DotPosition;
+
+                    CellValueChangedFlag = true;
+                }
+                else if(valueType == "Text")
+                {
+                    CellValueChangedFlag = false;
+
+                    NumMaxLength.Value = sub.MaxLength;
+
+                    CellValueChangedFlag = true;
+                }
+            }
         }
 
         #region Address Event
@@ -969,76 +1061,13 @@ namespace Dnf.Communication.Frm
         {
             if (e.RowIndex < 0) return;
 
-            if (e.ColumnIndex == colEditor.Index)
+            if (e.ColumnIndex == colValueType.Index)
             {
-                object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colEditor.Index].Value;
+                object changedValue = gvRegistry.Rows[e.RowIndex].Cells[colValueType.Index].Value;
                 string value = Convert.ToString(changedValue);
 
                 //"Numeric", "Combo", "Text", "Bool"
-                if (value == "Numeric")
-                {
-                    //Numeric
-                    NumDotPosition.Visible = true;
-                    NumMaxValue.Visible = true;
-                    NumMinValue.Visible = true;
-                    //Text
-                    NumMaxLength.Visible = false;
-                    //Combo
-                    TxtCboItems.Visible = false;
-                    btnCboItemsAdd.Visible = false;
-                    btnCboItemsDel.Visible = false;
-                    LbxCboItems.Visible = false;
-                }
-                else if (value == "Text")
-                {
-                    //Numeric
-                    NumDotPosition.Visible = false;
-                    NumMaxValue.Visible = false;
-                    NumMinValue.Visible = false;
-                    //Text
-                    NumMaxLength.Visible = true;
-                    //Combo
-                    TxtCboItems.Visible = false;
-                    btnCboItemsAdd.Visible = false;
-                    btnCboItemsDel.Visible = false;
-                    LbxCboItems.Visible = false;
-                }
-                else if (value == "Combo")
-                {
-                    //Numeric
-                    NumDotPosition.Visible = false;
-                    NumMaxValue.Visible = false;
-                    NumMinValue.Visible = false;
-                    //Text
-                    NumMaxLength.Visible = false;
-                    //Combo
-                    TxtCboItems.Visible = true;
-                    btnCboItemsAdd.Visible = true;
-                    btnCboItemsDel.Visible = true;
-                    LbxCboItems.Visible = true;
-                }
-                else
-                {
-                    //Numeric
-                    NumDotPosition.Visible = false;
-                    NumMaxValue.Visible = false;
-                    NumMinValue.Visible = false;
-                    //Text
-                    NumMaxLength.Visible = false;
-                    //Combo
-                    TxtCboItems.Visible = false;
-                    btnCboItemsAdd.Visible = false;
-                    btnCboItemsDel.Visible = false;
-                    LbxCboItems.Visible = false;
-                }
-
-                //Default값 적용
-                //NumDotPosition.Value = 0;
-                //NumMaxValue.Value = 0;
-                //NumMinValue.Value = -1;
-                //NumMaxLength.Value = 0;
-                //TxtCboItems.Text = "";
-                //LbxCboItems.Items.Clear();
+                VisibleSubItem(value);
             }
         }
 
@@ -1088,7 +1117,7 @@ namespace Dnf.Communication.Frm
         private void GvRegistry_CellFormatting_NewRowImageSet(object sender, DataGridViewCellFormattingEventArgs e)
         {
             //이거 안해주면 빨간 엑스표이미지가뜸
-            if (gvRegistry.Rows[e.RowIndex].IsNewRow && e.ColumnIndex == colErase.Index)
+            if (e.ColumnIndex == colErase.Index)
             {
                 e.Value = colErase.Image;
             }
@@ -1101,6 +1130,7 @@ namespace Dnf.Communication.Frm
         /// <param name="e"></param>
         private void EraseColumnClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex < 0) return;
             if (gvRegistry.Rows[e.RowIndex].IsNewRow) return;
 
             if (e.ColumnIndex == colErase.Index)
@@ -1108,7 +1138,7 @@ namespace Dnf.Communication.Frm
                 //RemoveAt 진행
                 CellValueChangedFlag = true;
 
-                SelectedModel.RegistryMap.Remove(Convert.ToInt32(gvRegistry.Rows[e.RowIndex].Cells[colAddrDec.Index].Value));
+                SelectedModel.RegistryMap[SelectedProtocol].Remove(Convert.ToInt32(gvRegistry.Rows[e.RowIndex].Cells[colAddrDec.Index].Value));
                 gvRegistry.Rows.RemoveAt(e.RowIndex);
 
                 CellValueChangedFlag = false;
@@ -1117,7 +1147,108 @@ namespace Dnf.Communication.Frm
 
         #endregion Erase Event End
 
+        private void VisibleSubItem(string valueType)
+        {
+            if (valueType == "Numeric")
+            {
+                //Numeric
+                NumDotPosition.Visible = true;
+                NumMaxValue.Visible = true;
+                NumMinValue.Visible = true;
+                //Text
+                NumMaxLength.Visible = false;
+                //Combo
+                TxtCboItems.Visible = false;
+                btnCboItemsAdd.Visible = false;
+                btnCboItemsDel.Visible = false;
+                LbxCboItems.Visible = false;
+            }
+            else if (valueType == "Text")
+            {
+                //Numeric
+                NumDotPosition.Visible = false;
+                NumMaxValue.Visible = false;
+                NumMinValue.Visible = false;
+                //Text
+                NumMaxLength.Visible = true;
+                //Combo
+                TxtCboItems.Visible = false;
+                btnCboItemsAdd.Visible = false;
+                btnCboItemsDel.Visible = false;
+                LbxCboItems.Visible = false;
+            }
+            else if (valueType == "Combo")
+            {
+                //Numeric
+                NumDotPosition.Visible = false;
+                NumMaxValue.Visible = false;
+                NumMinValue.Visible = false;
+                //Text
+                NumMaxLength.Visible = false;
+                //Combo
+                TxtCboItems.Visible = true;
+                btnCboItemsAdd.Visible = true;
+                btnCboItemsDel.Visible = true;
+                LbxCboItems.Visible = true;
+            }
+            else
+            {
+                //Numeric
+                NumDotPosition.Visible = false;
+                NumMaxValue.Visible = false;
+                NumMinValue.Visible = false;
+                //Text
+                NumMaxLength.Visible = false;
+                //Combo
+                TxtCboItems.Visible = false;
+                btnCboItemsAdd.Visible = false;
+                btnCboItemsDel.Visible = false;
+                LbxCboItems.Visible = false;
+            }
+        }
+
         #endregion GridEvent End
+
+        #region SubItem Event
+
+        /// <summary>
+        /// SubItem 값 변경 시 Registry SubItem 넣기
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SubItem_ValueChanged_SetRegistryClass(object sender, EventArgs e)
+        {
+            if ((CboProtocol.ctrl as ComboBox).Items.Count == 0) return;
+            if (gvRegistry.CurrentRow.IsNewRow || gvRegistry.CurrentRow == null) return; //NewRow만 있으면 진행 return
+            if (CellValueChangedFlag == false) return;
+
+            DataGridViewRow dr = gvRegistry.CurrentRow;
+            uProtocolType protocol = Convert.ToString(CboProtocol.Value).StringToEnum<uProtocolType>();
+            int addr = Convert.ToInt32(dr.Cells[colAddrDec.Index].Value);
+            RegistrySubItem subItem = SelectedModel.RegistryMap[protocol][addr].RegSubItem;
+
+            string ctrlName = (sender as Control).Name;
+            if (ctrlName == "NumDotPosition") { int value = Convert.ToInt32(NumDotPosition.Value); subItem.DotPosition = value; }
+            else if (ctrlName == "NumMaxValue") { int value = Convert.ToInt32(NumMaxValue.Value); subItem.MaxValue = value; }
+            else if (ctrlName == "NumMinValue") { int value = Convert.ToInt32(NumMinValue.Value); subItem.MinValue = value; }
+            else if (ctrlName == "NumMaxLength") { int value = Convert.ToInt32(NumMaxLength.Value); subItem.MaxLength = value; }
+            else if (ctrlName == "btnCboItemsAdd")
+            {
+                string itemName = TxtCboItems.Text;
+                if (LbxCboItems.Items.Contains(itemName))
+                {
+                    MessageBox.Show(RuntimeData.String("F030004"));
+                    return;
+                }
+
+                subItem.ComboItems.Add(itemName);
+                LbxCboItems.Items.Add(itemName);
+
+                TxtCboItems.Text = "";
+            }
+        }
+
+        #endregion SubItem Event End
 
         #endregion Event End
 
@@ -1164,95 +1295,121 @@ namespace Dnf.Communication.Frm
                     foreach (uProtocolType protocol in UtilCustom.EnumToItems<uProtocolType>())
                     {
                         XmlNode xmlProtocolType = xdoc.CreateElement(protocol.ToString());
+                        XmlAttribute attrEnable = xdoc.CreateAttribute("Enable");
+                        bool enable = model.SupportProtocol[protocol];
                         //지원하면 1 안하면 0
-                        xmlProtocolType.InnerText = (model.SupportProtocol[protocol] == true ? 1 : 0).ToString();
+                        attrEnable.Value = (enable == true ? 1 : 0).ToString();
+                        xmlProtocolType.Attributes.Append(attrEnable);
+
+                        if (enable == true)
+                        {
+                            /////////////////////////////////////////////////////////////
+                            //////////////////////  Unit Registry  //////////////////////
+                            /////////////////////////////////////////////////////////////
+
+                            if (model.RegistryMap[protocol].Count > 0)
+                            {
+                                XmlNode xmlRegistryMap = xdoc.CreateElement("Registry");
+
+                                foreach (KeyValuePair<int, UnitRegistry> pairReistry in model.RegistryMap[protocol].OrderBy(idx => idx.Key))
+                                {
+                                    UnitRegistry registry = pairReistry.Value;
+
+                                    XmlNode xmlParameter = xdoc.CreateElement("Parameter");
+                                    XmlAttribute attrAddress = xdoc.CreateAttribute("Address");
+                                    XmlAttribute attrName = xdoc.CreateAttribute("Name");
+                                    XmlAttribute attrValueType = xdoc.CreateAttribute("ValueType");
+                                    XmlAttribute attrDefaultvalue = xdoc.CreateAttribute("DefaultValue");
+                                    XmlAttribute attrReadOnly = xdoc.CreateAttribute("ReadOnly");
+
+                                    attrAddress.Value = registry.AddressDec.ToString();//필수값
+                                    attrName.Value = registry.RegName;
+                                    attrValueType.Value = Convert.ToString(registry.ValueType);
+                                    attrDefaultvalue.Value = Convert.ToString(registry.DefaultValue);
+                                    attrReadOnly.Value = registry.ReadOnly ? "1" : "0";
+
+                                    xmlParameter.Attributes.Append(attrAddress);
+                                    xmlParameter.Attributes.Append(attrName);
+                                    xmlParameter.Attributes.Append(attrValueType);
+                                    xmlParameter.Attributes.Append(attrDefaultvalue);
+                                    xmlParameter.Attributes.Append(attrReadOnly);
+
+                                    /////////////////////////////////////////////////////////////
+                                    /////////////////////  Registry SubItem  ////////////////////
+                                    /////////////////////////////////////////////////////////////
+                                    if (attrValueType.Value == "Numeric")
+                                    {
+                                        int dotPosition = registry.RegSubItem.DotPosition;
+                                        int maxValue = registry.RegSubItem.MaxValue;
+                                        int minValue = registry.RegSubItem.MinValue;
+
+                                        if (dotPosition != 0 || maxValue != 0 || minValue != 0)
+                                        {
+                                            XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
+                                            XmlNode xmlDp = xdoc.CreateElement("DotPosition");
+                                            XmlNode xmlMax = xdoc.CreateElement("MaxValue");
+                                            XmlNode xmlMin = xdoc.CreateElement("MinValue");
+
+                                            xmlDp.InnerText = dotPosition.ToString();
+                                            xmlMax.InnerText = maxValue.ToString();
+                                            xmlMin.InnerText = minValue.ToString();
+
+                                            xmlSubItem.AppendChild(xmlDp);
+                                            xmlSubItem.AppendChild(xmlMax);
+                                            xmlSubItem.AppendChild(xmlMin);
+
+                                            xmlParameter.AppendChild(xmlSubItem);
+                                        }
+                                    }
+                                    else if (attrValueType.Value == "Combo")
+                                    {
+                                        //0개면 생성안하도록 수정
+                                        if (registry.RegSubItem.ComboItems.Count > 0)
+                                        {
+                                            XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
+                                            XmlNode xmlComboItems = xdoc.CreateElement("ComboItem");
+
+                                            string items = string.Empty;
+                                            for(int i =0; i<registry.RegSubItem.ComboItems.Count; i++)
+                                            {
+                                                string item = registry.RegSubItem.ComboItems[i];
+
+                                                if(i == 0) { items += item; }
+                                                else { items += "," + item; }
+                                            }
+
+                                            xmlComboItems.InnerText = items;
+
+                                            xmlSubItem.AppendChild(xmlComboItems);
+                                            xmlParameter.AppendChild(xmlSubItem);
+                                        }
+                                    }
+                                    else if (attrValueType.Value == "Text")
+                                    {
+                                        if (registry.RegSubItem.MaxLength > 0)
+                                        {
+                                            XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
+                                            XmlNode xmlMaxLength = xdoc.CreateElement("MaxLength");
+
+                                            xmlMaxLength.InnerText = registry.RegSubItem.MaxLength.ToString();
+
+                                            xmlSubItem.AppendChild(xmlMaxLength);
+                                            xmlParameter.AppendChild(xmlSubItem);
+                                        }
+                                    }
+
+                                    xmlRegistryMap.AppendChild(xmlParameter);
+                                }
+
+                                xmlProtocolType.AppendChild(xmlRegistryMap);
+                            }
+                        }
 
                         xmlProtocolTypeList.AppendChild(xmlProtocolType);
                     }
                     xmlUnitModel.AppendChild(xmlProtocolTypeList);
 
                     //RegistryMap
-                    XmlNode xmlRegistryMap = xdoc.CreateElement("Registry");
-                    foreach (KeyValuePair<int, UnitRegistry> pairReistry in model.RegistryMap.OrderBy(idx => idx.Key))
-                    {
-                        UnitRegistry registry = pairReistry.Value;
-
-                        /////////////////////////////////////////////////////////////
-                        //////////////////////  Unit Registry  //////////////////////
-                        /////////////////////////////////////////////////////////////
-                        XmlNode xmlParameter = xdoc.CreateElement("Parameter");
-                        XmlAttribute attrAddress = xdoc.CreateAttribute("Address");
-                        XmlAttribute attrName = xdoc.CreateAttribute("Name");
-                        XmlAttribute attrValueType = xdoc.CreateAttribute("ValueType");
-                        XmlAttribute attrDefaultvalue = xdoc.CreateAttribute("DefaultValue");
-                        XmlAttribute attrReadOnly = xdoc.CreateAttribute("ReadOnly");
-
-                        attrAddress.Value = registry.AddressDec.ToString();//필수값
-                        attrName.Value = registry.RegName;
-                        attrValueType.Value = Convert.ToString(registry.ValueType);
-                        attrDefaultvalue.Value = Convert.ToString(registry.DefaultValue);
-                        attrReadOnly.Value = registry.ReadOnly ? "1" : "0";
-
-                        xmlParameter.Attributes.Append(attrAddress);
-                        xmlParameter.Attributes.Append(attrName);
-                        xmlParameter.Attributes.Append(attrValueType);
-                        xmlParameter.Attributes.Append(attrDefaultvalue);
-                        xmlParameter.Attributes.Append(attrReadOnly);
-
-                        /////////////////////////////////////////////////////////////
-                        /////////////////////  Registry SubItem  ////////////////////
-                        /////////////////////////////////////////////////////////////
-                        if (attrValueType.Value == "Numeric")
-                        {
-                            XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
-                            XmlNode xmlDp = xdoc.CreateElement("DotPosition");
-                            XmlNode xmlMax = xdoc.CreateElement("MaxValue");
-                            XmlNode xmlMin = xdoc.CreateElement("MinValue");
-
-                            xmlDp.InnerText = registry.RegSubItem.DotPosition.ToString();
-                            xmlMax.InnerText = registry.RegSubItem.MaxValue.ToString();
-                            xmlMin.InnerText = registry.RegSubItem.MinValue.ToString();
-
-                            xmlSubItem.AppendChild(xmlDp);
-                            xmlSubItem.AppendChild(xmlMax);
-                            xmlSubItem.AppendChild(xmlMin);
-
-                            xmlParameter.AppendChild(xmlSubItem);
-                        }
-                        else if(attrValueType.Value == "Combo")
-                        {
-                            if (registry.RegSubItem.ComboItems.Count > 0)
-                            {
-                                XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
-                                XmlNode xmlComboItems = xdoc.CreateElement("ComboItem");
-
-                                string items = string.Empty;
-                                foreach (string item in registry.RegSubItem.ComboItems)
-                                {
-                                    items += "," + item;
-                                }
-                                items.Remove(items.Length - 1);
-
-                                xmlComboItems.InnerText = items;
-
-                                xmlSubItem.AppendChild(xmlComboItems);
-                                xmlParameter.AppendChild(xmlSubItem);
-                            }
-                        }
-                        else if(attrValueType.Value == "Text")
-                        {
-                            XmlNode xmlSubItem = xdoc.CreateElement("SubItem");
-                            XmlNode xmlMaxLength = xdoc.CreateElement("MaxLength");
-
-                            xmlMaxLength.InnerText = registry.RegSubItem.MaxLength.ToString();
-                            
-                            xmlSubItem.AppendChild(xmlMaxLength);
-                            xmlParameter.AppendChild(xmlSubItem);
-                        }
-
-                        xmlRegistryMap.AppendChild(xmlParameter);
-                    }
-                    xmlUnitModel.AppendChild(xmlRegistryMap);
 
                     //그룹 하위로 추가
                     xmlType.AppendChild(xmlUnitModel);
@@ -1311,42 +1468,64 @@ namespace Dnf.Communication.Frm
                             foreach (XmlNode nodeProtocol in ModelNode.SelectSingleNode("SupportProtocol").ChildNodes)
                             {
                                 uProtocolType protocolType = UtilCustom.StringToEnum<uProtocolType>(nodeProtocol.Name);
-                                bool bValue = nodeProtocol.InnerText == 1.ToString() ? true : false;
+                                bool enable = nodeProtocol.Attributes["Enable"].Value == 1.ToString() ? true : false;
 
-                                model.SupportProtocol[protocolType] = bValue;
+                                model.SupportProtocol[protocolType] = enable;
+                                model.RegistryMap.Add(protocolType, new Dictionary<int, UnitRegistry>());
+
+                                if(enable == true && nodeProtocol.SelectSingleNode("Registry") != null)
+                                {
+                                    /////////////////////////////////////////////////////////////
+                                    //////////////////////  Unit Registry  //////////////////////
+                                    /////////////////////////////////////////////////////////////
+
+                                    foreach (XmlNode nodeParam in nodeProtocol.SelectSingleNode("Registry").ChildNodes)
+                                    {
+                                        UnitRegistry param = new UnitRegistry();
+                                        param.AddressDec = Convert.ToInt32(nodeParam.Attributes["Address"].Value);
+                                        param.RegName = nodeParam.Attributes["Name"].Value;
+                                        param.ValueType = nodeParam.Attributes["ValueType"].Value;
+                                        param.DefaultValue = nodeParam.Attributes["DefaultValue"].Value;
+                                        param.ReadOnly = nodeParam.Attributes["ReadOnly"].Value == "1" ? true : false;
+
+                                        /////////////////////////////////////////////////////////////
+                                        /////////////////////  Registry SubItem  ////////////////////
+                                        /////////////////////////////////////////////////////////////
+                                        XmlNode nodeSub = nodeParam.SelectSingleNode("SubItem");
+
+                                        if (nodeSub != null)
+                                        {
+                                            if (param.ValueType == "Combo")
+                                            {
+                                                XmlNode nodeItem = nodeSub.SelectSingleNode("ComboItem");
+
+                                                string[] items = nodeSub.InnerText.Split(',');
+
+                                                param.RegSubItem.ComboItems = items.ToList();
+                                            }
+                                            else if (param.ValueType == "Numeric")
+                                            {
+                                                foreach (XmlNode item in nodeSub.ChildNodes)
+                                                {
+                                                    if (item.Name == "DotPosition") { param.RegSubItem.DotPosition = Convert.ToInt32(item.InnerText); }
+                                                    else if (item.Name == "MaxValue") { param.RegSubItem.MaxValue = Convert.ToInt32(item.InnerText); }
+                                                    else if (item.Name == "MinValue") { param.RegSubItem.MinValue = Convert.ToInt32(item.InnerText); }
+                                                }
+                                            }
+                                            else if (param.ValueType == "Text")
+                                            {
+                                                XmlNode nodeItem = nodeSub.SelectSingleNode("MaxLength");
+
+                                                param.RegSubItem.MaxLength = Convert.ToInt32(nodeSub.InnerText);
+                                            }
+                                        }
+
+                                        model.RegistryMap[protocolType].Add(param.AddressDec, param);
+                                    }
+                                }
                             }
 
                             //Registry Map
-                            foreach (XmlNode nodeParam in ModelNode.SelectSingleNode("Registry").ChildNodes)
-                            {
-                                /////////////////////////////////////////////////////////////
-                                //////////////////////  Unit Registry  //////////////////////
-                                /////////////////////////////////////////////////////////////
-                                UnitRegistry param = new UnitRegistry();
-                                param.AddressDec = Convert.ToInt32(nodeParam.Attributes["Address"].Value);
-                                param.RegName = nodeParam.Attributes["Name"].Value;
-                                param.ValueType = nodeParam.Attributes["ValueType"].Value;
-                                param.DefaultValue = nodeParam.Attributes["DefaultValue"].Value;
-                                param.ReadOnly = nodeParam.Attributes["ReadOnly"].Value == "1" ? true : false;
-
-                                /////////////////////////////////////////////////////////////
-                                /////////////////////  Registry SubItem  ////////////////////
-                                /////////////////////////////////////////////////////////////
-
-                                if(param.ValueType == "Combo")
-                                { 
-                                }
-                                else if (param.ValueType == "Numeric")
-                                { 
-                                }
-                                else if (param.ValueType == "Text")
-                                { 
-                                }
-
-
-
-                                model.RegistryMap.Add(param.AddressDec, param);
-                            }
 
                             //Dictionary에 추가
                             unitType.Models.Add(model.ModelName, model);
@@ -1355,6 +1534,10 @@ namespace Dnf.Communication.Frm
                         dicUnitTypes.Add(TypeName, unitType);
                     }//Type 생성 End
                 }
+            }
+            else
+            {
+                Debug.Write("Frm_UnitSetting.cs / LoadUnitInfoXml / 'File not exist' ");
             }
         }
 

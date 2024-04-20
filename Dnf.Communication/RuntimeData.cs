@@ -120,6 +120,7 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F030001", "이미 존재하는 구분명입니다.");
             dtimsi.Rows.Add("F030002", "선택된 구분이 없습니다.");
             dtimsi.Rows.Add("F030003", "중복되는 Address가 있습니다.");
+            dtimsi.Rows.Add("F030004", "중복되는 Item이 있습니다.");
             dtimsi.Rows.Add("F0301", "Unit 속성");
             dtimsi.Rows.Add("F030100", "Unit 구분");
             dtimsi.Rows.Add("F030101", "Unit 모델");

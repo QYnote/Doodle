@@ -72,6 +72,23 @@ namespace Dnf.Utils.Views
             }
         }
 
+        private string name;
+        /// <summary>
+        /// Control 이름
+        /// </summary>
+        public string Name
+        { 
+            get
+            {
+                return name;
+            }
+            set
+            {
+                ctrl.Name = value;
+                name = value;
+            }
+        }
+
         /// <summary>
         /// Label + Control 세트
         /// </summary>
