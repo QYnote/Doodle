@@ -50,6 +50,8 @@ namespace Dnf.Communication
             //메뉴
             dtimsi.Rows.Add("F00", "메인화면");
             dtimsi.Rows.Add("F0000", "Message Box");
+            dtimsi.Rows.Add("F000000", "파일이 열려있습니다.");
+            dtimsi.Rows.Add("F000001", "저장이 완료되었습니다.");
             dtimsi.Rows.Add("F0001", "텍스트 메뉴");
             dtimsi.Rows.Add("F000100", "기초");
             dtimsi.Rows.Add("F00010000", "유닛 설정");
@@ -138,6 +140,21 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F03010501", "최대값");
             dtimsi.Rows.Add("F03010502", "최소값");
             dtimsi.Rows.Add("F03010503", "최대 글자수");
+            dtimsi.Rows.Add("F0302", "Excel");
+            dtimsi.Rows.Add("F030201", "설명란");
+            dtimsi.Rows.Add("F03020100", "[필수]Parameter 이름");
+            dtimsi.Rows.Add("F03020101", "입력 방법 ※1");
+            dtimsi.Rows.Add("F03020102", "기본값");
+            dtimsi.Rows.Add("F03020103", "TRUE : 읽기 전용, FALSE : 읽기/쓰기");
+            
+            dtimsi.Rows.Add("F03020104", "문자값 입력 ※2"); //입력방법
+            dtimsi.Rows.Add("F03020105", "숫자값 입력 ※3");
+            dtimsi.Rows.Add("F03020106", "선택 입력 ※4");
+
+            dtimsi.Rows.Add("F03020107", "입력값의 최대치를 지정합니다.");
+            dtimsi.Rows.Add("F03020108", "입력값의 최소치를 지정합니다.");
+            dtimsi.Rows.Add("F03020109", "최대 입력 글자 수를 지정합니다.");
+            dtimsi.Rows.Add("F0302010A", "선택 항목 목록입니다. 항목사이에 띄어쓰기 없이 쉼표(,)로 구분합니다.");
 
             dicTextList = dtimsi.AsEnumerable().ToDictionary(
                 row => row.Field<string>(0),

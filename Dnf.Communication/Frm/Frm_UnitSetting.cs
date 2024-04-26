@@ -1,25 +1,22 @@
 ﻿using Dnf.Communication.Data;
 using Dnf.Utils.Controls;
 using Dnf.Utils.Views;
-using Microsoft.Win32;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace Dnf.Communication.Frm
 {
@@ -31,6 +28,7 @@ namespace Dnf.Communication.Frm
         {
             internal UnitType(string name) { Name = name; }
 
+            /// <summary>Unit의 Type명</summary>
             internal string Name { get; set; }
             /// <summary>유형에 해당하는 Model</summary>
             internal Dictionary<string, UnitModel> Models = new Dictionary<string, UnitModel>();
@@ -43,6 +41,8 @@ namespace Dnf.Communication.Frm
             /// <summary>지원하는 Protocol 여부</summary>
             internal Dictionary<uProtocolType, bool> SupportProtocol { get; set; }
             /// <summary>Registry Map</summary>
+            /// 1개의 Model에 Protocol에 따라 Registry Map이 달라질 수 있음
+            /// 버전까지는 힘드니 여기까지 타협
             internal Dictionary<uProtocolType, Dictionary<int, UnitRegistry>> RegistryMap = new Dictionary<uProtocolType, Dictionary<int, UnitRegistry>>();
 
             internal UnitModel()
@@ -118,7 +118,12 @@ namespace Dnf.Communication.Frm
         #endregion Unit Setting 구조
         #region Controls
         private int marginValue = 3;
-        
+
+        //Menu
+        private ToolStrip IconMenu = new ToolStrip();
+        private ToolStripButton IconMenu_ExcelUpload = new ToolStripButton();
+        private ToolStripButton IconMenu_ExcelDownload = new ToolStripButton();
+
         //Unit Type
         private Label LblUnitType = new Label();
         private TextBox TxtUnitType = new TextBox();
@@ -145,7 +150,7 @@ namespace Dnf.Communication.Frm
         private DataGridViewTextBoxColumn colAddrDec = new DataGridViewTextBoxColumn();     //주소(10진법)
         private DataGridViewTextBoxColumn colAddrHex = new DataGridViewTextBoxColumn();     //주소(16진법)
         private DataGridViewTextBoxColumn colName = new DataGridViewTextBoxColumn();        //이름
-        private DataGridViewComboBoxColumn colValueType = new DataGridViewComboBoxColumn();    //값 속성
+        private DataGridViewComboBoxColumn colValueType = new DataGridViewComboBoxColumn(); //값 속성
         private DataGridViewTextBoxColumn colDefaultValue = new DataGridViewTextBoxColumn();//기본 값(Default Value)
         private DataGridViewCheckBoxColumn colRW = new DataGridViewCheckBoxColumn();        //Read/Write 모드
         private DataGridViewImageColumn colErase = new DataGridViewImageColumn();           //삭제
@@ -181,14 +186,16 @@ namespace Dnf.Communication.Frm
             this.Name = RuntimeData.String("F03");
             this.Text = this.Name;
             this.SizeChanged += FrmSizeChanged;
-
         }
+
+        #region Initialize
 
         /// <summary>
         /// Form 기초 셋팅
         /// </summary>
         private void InitializeForm()
         {
+            InitializeIconMenu();
             InitializeUnitInfo();
             InitializeRegistry();
             InitializeRegistrySubItem();
@@ -197,6 +204,26 @@ namespace Dnf.Communication.Frm
             SetText();
 
             Load_UnitInfo();
+        }
+
+        private void InitializeIconMenu()
+        {
+            IconMenu.ImageScalingSize = new Size(32, 32);
+
+            IconMenu_ExcelDownload.Name = "IconMenu_ExcelDownload";
+            IconMenu_ExcelUpload.Name = "IconMenu_ExcelUpload";
+
+            IconMenu_ExcelDownload.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            IconMenu_ExcelUpload.DisplayStyle = ToolStripItemDisplayStyle.Image;
+
+            IconMenu_ExcelDownload.Image = Dnf.Utils.Properties.Resources.Test_32x32;
+            IconMenu_ExcelUpload.Image = Dnf.Utils.Properties.Resources.Test_32x32;
+
+            IconMenu.Items.AddRange(new ToolStripItem[] {IconMenu_ExcelDownload, IconMenu_ExcelUpload});
+            this.Controls.Add(IconMenu);
+
+            IconMenu_ExcelDownload.Click += (sender, e) => {  };
+            IconMenu_ExcelUpload.Click += (sender, e) => { SaveExcel(); };
         }
 
         /// <summary>
@@ -446,7 +473,7 @@ namespace Dnf.Communication.Frm
              */
             int margin = marginValue;
 
-            LblUnitType.Location = new Point(margin, margin);
+            LblUnitType.Location = new Point(margin, IconMenu.Height + margin);
             LblUnitType.Size = new Size(160 + (margin * 2), 30);
 
             TxtUnitType.Location = new Point(margin,
@@ -544,6 +571,8 @@ namespace Dnf.Communication.Frm
             LbxCboItems.Size = new Size(lblSubItem.Width, LbxCboItems.Height);
         }
 
+        #endregion Initialize
+
         #region Event
 
         /// <summary>
@@ -568,10 +597,10 @@ namespace Dnf.Communication.Frm
             if (LbxUnitType.SelectedItem == null) return;
 
             this.SelectedType = dicUnitTypes[LbxUnitType.SelectedItem as string];
-            LbxUnitModel.Items.Clear();
 
             if(this.SelectedType == null) { return; }
 
+            LbxUnitModel.Items.Clear();
             gvRegistry.Rows.Clear();
             VisibleSubItem("");
             //하위 모델이 있을경우 첫번째 Item 선택
@@ -773,6 +802,7 @@ namespace Dnf.Communication.Frm
             if (SelectedModel == null) return;
 
             gvRegistry.Rows.Clear();
+            VisibleSubItem("");
 
             DataGridViewRow row = null;
             foreach (UnitRegistry registry in SelectedModel.RegistryMap[SelectedProtocol].Values)
@@ -1208,7 +1238,6 @@ namespace Dnf.Communication.Frm
         }
 
         #endregion GridEvent End
-
         #region SubItem Event
 
         /// <summary>
@@ -1252,6 +1281,8 @@ namespace Dnf.Communication.Frm
 
         #endregion Event End
 
+        #region XML
+        
         /// <summary>
         /// Unit정보 XML 저장
         /// </summary>
@@ -1396,46 +1427,45 @@ namespace Dnf.Communication.Frm
                                             xmlSubItem.AppendChild(xmlMaxLength);
                                             xmlParameter.AppendChild(xmlSubItem);
                                         }
-                                    }
+                                    }//Registry SubItem End
 
                                     xmlRegistryMap.AppendChild(xmlParameter);
                                 }
 
                                 xmlProtocolType.AppendChild(xmlRegistryMap);
-                            }
+                            }//Unit Registry End
                         }
 
                         xmlProtocolTypeList.AppendChild(xmlProtocolType);
-                    }
+                    }//지원하는 통신 Protocol End
                     xmlUnitModel.AppendChild(xmlProtocolTypeList);
-
-                    //RegistryMap
 
                     //그룹 하위로 추가
                     xmlType.AppendChild(xmlUnitModel);
-                }
+                }//Unit Model End
 
                 root.AppendChild(xmlType);
-            }
+            }//Unit Type End
 
             //작성파일 저장
             xdoc.Save(InfoFilePath);
         }
 
-
+        /// <summary>
+        /// 저장되어있는 Unit정보 호출
+        /// </summary>
         private void Load_UnitInfo()
         {
-            LoadUnitInfoXML("UnitInfo");
+            LoadUnitInfoXML();
             InitializeXML();
         }
 
         /// <summary>
         /// 초기 Unit 정보들 호출
         /// </summary>
-        /// <param name="fileName"></param>
-        private void LoadUnitInfoXML(string fileName)
+        private void LoadUnitInfoXML()
         {
-            string filePath = RuntimeData.DataPath + fileName + ".xml";
+            string filePath = InfoFilePath;
 
             dicUnitTypes = new Dictionary<string, UnitType>();
             if (System.IO.File.Exists(filePath))
@@ -1478,7 +1508,6 @@ namespace Dnf.Communication.Frm
                                     /////////////////////////////////////////////////////////////
                                     //////////////////////  Unit Registry  //////////////////////
                                     /////////////////////////////////////////////////////////////
-
                                     foreach (XmlNode nodeParam in nodeProtocol.SelectSingleNode("Registry").ChildNodes)
                                     {
                                         UnitRegistry param = new UnitRegistry();
@@ -1518,12 +1547,12 @@ namespace Dnf.Communication.Frm
 
                                                 param.RegSubItem.MaxLength = Convert.ToInt32(nodeSub.InnerText);
                                             }
-                                        }
+                                        }//Registry SubItem End
 
                                         model.RegistryMap[protocolType].Add(param.AddressDec, param);
-                                    }
+                                    }//Registry End
                                 }
-                            }
+                            }//지원 통신 Protocol End
 
                             //Registry Map
 
@@ -1559,5 +1588,207 @@ namespace Dnf.Communication.Frm
                 LbxUnitType.SelectedIndex = 0;
             }
         }
+
+        #endregion XML End
+
+        #region Excel
+
+        private void SaveExcel()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "엑셀 통합 파일(.xlsx)|*.xlsx|97-03통합(.xls)|*.xls";
+            saveFileDialog.FilterIndex = 1;
+            saveFileDialog.RestoreDirectory = true;
+            if (saveFileDialog.ShowDialog() != DialogResult.OK) return;
+            string savePath = saveFileDialog.FileName;
+
+            if (UtilCustom.CheckFileOpend(savePath) == true) return;
+
+
+            Excel.Application excelApp = new Excel.Application();
+            excelApp.DisplayAlerts = false; //중복이름 저장시 알림 삭제
+            Excel.Workbook wb = excelApp.Workbooks.Add();
+            Excel.Worksheet sheet = wb.Worksheets.get_Item(1) as Excel.Worksheet;
+
+            try
+            {
+                //Column Header Name
+                sheet.Cells[2,  1] = "Model Type";
+                sheet.Cells[3,  1] = "Model Name";
+                sheet.Cells[4,  1] = "Registry Protocol";
+
+                sheet.Cells[1,  4] = "Address";
+                sheet.Cells[1,  5] = "Name";
+                sheet.Cells[1,  6] = "Value Type";
+                sheet.Cells[1,  7] = "Default Value";
+                sheet.Cells[1,  8] = "ReadOnly";
+                sheet.Cells[1, 10] = "[Numeric]\nMaxValue";
+                sheet.Cells[1, 11] = "[Numeric]\nMinValue";
+                sheet.Cells[1, 12] = "[Text]\nMaxLength";
+                sheet.Cells[1, 13] = "[Combo]\nItems";
+
+                //Cell 정렬
+                //Header Cell
+                sheet.Cells[1,  4].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //Address
+                sheet.Cells[1,  5].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //Name
+                sheet.Cells[1,  6].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //Value Type
+                sheet.Cells[1,  7].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //Default Value
+                sheet.Cells[1,  8].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //Read Only
+                sheet.Cells[1, 10].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //[Numeric]MaxValue
+                sheet.Cells[1, 11].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //[Numeric]MinValue
+                sheet.Cells[1, 12].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //[Text]MaxLength
+                sheet.Cells[1, 13].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //[Combo]Items
+                //값 Cell
+                sheet.Range[sheet.Cells[2, 4] , sheet.Cells[65536, 4]] .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //Address
+                sheet.Range[sheet.Cells[2, 5] , sheet.Cells[65536, 5]] .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //Value Type
+                sheet.Range[sheet.Cells[2, 10], sheet.Cells[65536, 10]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //[Numeric]MaxValue
+                sheet.Range[sheet.Cells[2, 11], sheet.Cells[65536, 11]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //[Numeric]MinValue
+                sheet.Range[sheet.Cells[2, 12], sheet.Cells[65536, 12]].HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;  //[Text]MaxLength
+
+                //Column 너비 조정
+                sheet.Columns[1].ColumnWidth = 15;  
+                sheet.Columns[2].ColumnWidth = 20;  
+                sheet.Columns[3].ColumnWidth = 5;  
+                sheet.Columns[5].ColumnWidth = 10;  //Name
+                sheet.Columns[6].ColumnWidth = 13;  //ValueType
+                sheet.Columns[7].ColumnWidth = 13;  //Default Value
+                sheet.Columns[8].ColumnWidth = 9;   //ReadOnly
+                sheet.Columns[9].ColumnWidth = 5;   //SubItem 사이 공간
+                sheet.Columns[10].ColumnWidth = 10;  //[Numeric]MaxValue
+                sheet.Columns[11].ColumnWidth = 10;  //[Numeric]MinValue
+                sheet.Columns[12].ColumnWidth = 10;  //[Text]MaxLength
+
+
+                sheet.Cells[2, 2] = SelectedType.Name;
+                sheet.Cells[3, 2] = SelectedModel.ModelName;
+                sheet.Cells[4, 2] = SelectedProtocol.ToString();
+
+                int idx = 2;
+                foreach (UnitRegistry reg in SelectedModel.RegistryMap[SelectedProtocol].Values)
+                {
+                    //Registry
+                    sheet.Cells[idx, 4] = reg.AddressDec;
+                    sheet.Cells[idx, 5] = reg.RegName;
+                    sheet.Cells[idx, 6] = reg.ValueType;
+                    sheet.Cells[idx, 7] = reg.DefaultValue;
+                    sheet.Cells[idx, 8] = reg.ReadOnly;
+
+                    //Registry SubItem
+                    if(reg.ValueType == "Numeric")
+                    { 
+                        sheet.Cells[idx, 10] = reg.RegSubItem.MaxValue;
+                        sheet.Cells[idx, 11] = reg.RegSubItem.MinValue;
+                    }
+                    else if (reg.ValueType == "Text")
+                    {
+                        sheet.Cells[idx, 12] = reg.RegSubItem.MaxLength;
+                    }
+                    else if (reg.ValueType == "Combo")
+                    {
+                        if (reg.RegSubItem.ComboItems.Count > 0)
+                        {
+                            string items = string.Empty;
+                            for (int i = 0; i < reg.RegSubItem.ComboItems.Count; i++)
+                            {
+                                string item = reg.RegSubItem.ComboItems[i];
+
+                                if (i == 0) { items += item; }
+                                else { items += "," + item; }
+                            }
+
+                            sheet.Cells[idx, 13] = items;
+                        }
+                    }
+
+                    idx++;
+                }
+
+                //설명부
+                sheet.Cells[7, 1] = RuntimeData.String("F030201");  //설명란
+                sheet.Cells[8, 1] = "Name";
+                sheet.Cells[8, 2] = RuntimeData.String("F03020100");
+                sheet.Cells[9, 1] = "Value Type";
+                sheet.Cells[9, 2] = RuntimeData.String("F03020101");
+                sheet.Cells[10, 1] = "Default Value";
+                sheet.Cells[10, 2] = RuntimeData.String("F03020102");
+                sheet.Cells[11, 1] = "ReadOnly";
+                sheet.Cells[11, 2] = RuntimeData.String("F03020103");
+
+                sheet.Cells[13, 1] = RuntimeData.String("F03020101");   //입력방법 ※1
+                sheet.Cells[14, 1] = "Text";
+                sheet.Cells[14, 2] = RuntimeData.String("F03020104");   //문자값 입력 ※2
+                sheet.Cells[15, 1] = "Numeric";
+                sheet.Cells[15, 2] = RuntimeData.String("F03020105");   //숫자값 입력 ※3
+                sheet.Cells[16, 1] = "Combo";
+                sheet.Cells[16, 2] = RuntimeData.String("F03020106");   //선택 입력 ※4
+
+                sheet.Cells[18, 1] = RuntimeData.String("F03020104");   //문자값 입력 ※2
+                sheet.Cells[19, 1] = "MaxValue";
+                sheet.Cells[19, 2] = RuntimeData.String("F03020107");
+                sheet.Cells[20, 1] = "MinValue";
+                sheet.Cells[20, 2] = RuntimeData.String("F03020108");
+                sheet.Cells[21, 1] = RuntimeData.String("F03020105");   //숫자값 입력 ※3
+                sheet.Cells[22, 1] = "MaxLength";
+                sheet.Cells[22, 2] = RuntimeData.String("F03020109");
+                sheet.Cells[23, 1] = RuntimeData.String("F03020106");   //선택 입력 ※4
+                sheet.Cells[24, 1] = "Items";
+                sheet.Cells[24, 2] = RuntimeData.String("F0302010A");
+
+                //확장자 구분
+                string[] extention = savePath.Split('.');
+                if (extention[extention.Length - 1] == "xlsx")
+                {
+                    wb.SaveAs(savePath, Excel.XlFileFormat.xlWorkbookDefault);
+                }
+                else if (extention[extention.Length - 1] == "xls")
+                {
+                    wb.SaveAs(savePath, Excel.XlFileFormat.xlWorkbookNormal);
+                }
+
+                //엑셀 열린거 종료
+                wb.Close();
+                excelApp.Quit();
+
+                MessageBox.Show(RuntimeData.String("F000001"));
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+            finally
+            {
+                // Clean up
+                ReleaseExcelObject(sheet);
+                ReleaseExcelObject(wb);
+                ReleaseExcelObject(excelApp);
+            }
+        }
+
+        /// <summary>
+        /// Background Excel 종료
+        /// </summary>
+        /// <param name="obj"></param>
+        private static void ReleaseExcelObject(object obj)
+        {
+            try
+            {
+                if (obj != null)
+                {
+                    Marshal.ReleaseComObject(obj);
+                    obj = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                obj = null;
+                throw ex;
+            }
+            finally
+            {
+                GC.Collect();
+            }
+        }
+
+        #endregion Excel End
     }
 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -77,6 +78,8 @@ namespace Dnf.Utils.Controls
 
         #region 기능
 
+        #region 병합
+
         /// <summary>
         /// Byte Array 합치기
         /// </summary>
@@ -93,6 +96,9 @@ namespace Dnf.Utils.Controls
 
             return outputByts;
         }
+
+        #endregion 병합 End
+        #region 수정
 
         /// <summary>
         /// Dictionary Key값 수정
@@ -113,6 +119,40 @@ namespace Dnf.Utils.Controls
 
             return true;
         }
+
+
+        #endregion 수정 End
+        #region 검사
+
+        /// <summary>
+        /// 파일 열려있는지 검사
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns>true : 열려있음, false : 없거나 닫혀있음</returns>
+        static public bool CheckFileOpend(string filePath)
+        {
+            try
+            {
+                //존재하지 않으면 false 반환
+                if (File.Exists(filePath)) return false;
+
+                //파일 열기 시도
+                using (Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                {
+                    //열리면 false 반환
+                    stream.Close();
+                    return false;
+                }
+            }
+            catch
+            {
+                //안열리면 열려있다고 알리고 true 반환
+                MessageBox.Show("F000000");
+                return true;
+            }
+        }
+
+        #endregion 검사 End
 
         #endregion 기능 End
 
