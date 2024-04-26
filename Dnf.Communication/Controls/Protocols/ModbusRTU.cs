@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -111,7 +112,7 @@ namespace Dnf.Communication.Controls.Protocols
                         break;
                 }
 
-                Console.WriteLine(DebugStr); DebugStr = "";
+                Debug.WriteLine(DebugStr); DebugStr = "";
                 ReqFrameData.Dequeue();
             }
         }

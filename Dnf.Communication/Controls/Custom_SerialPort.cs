@@ -50,7 +50,7 @@ namespace Dnf.Communication.Controls
                 //필수정보 확인
                 if (PortName == null)
                 {
-                    Console.WriteLine("Port Name is empty");
+                    Debug.WriteLine("Port Name is empty");
                     return false;
                 }
 
@@ -64,7 +64,7 @@ namespace Dnf.Communication.Controls
             }
             else
             {
-                Console.WriteLine("({0}) Port is alreay opened", this.PortName);
+                Debug.WriteLine("({0}) Port is alreay opened", this.PortName);
                 return false;
             }
 
@@ -82,7 +82,7 @@ namespace Dnf.Communication.Controls
             //포트가 미사용 중인지 확인
             if (!serial.IsOpen)
             {
-                Console.WriteLine("({0}) Port is alreay closed", this.PortName);
+                Debug.WriteLine("({0}) Port is alreay closed", this.PortName);
                 return false;
             }
 
@@ -130,7 +130,7 @@ namespace Dnf.Communication.Controls
         {
             ModbusRTU_Read();
 
-            Console.WriteLine("Recived Onetime");
+            Debug.WriteLine("Recived Onetime");
         }
 
         #region Query보낼 시 Modebus 구조
@@ -141,8 +141,8 @@ namespace Dnf.Communication.Controls
 
             serial.Write(cmd, 0, cmd.Length);
 
-            Console.WriteLine(DebugStr);
-            Console.WriteLine("Write Onetime");
+            Debug.WriteLine(DebugStr);
+            Debug.WriteLine("Write Onetime");
         }
 
         private byte[] CmdQuery_Base()
@@ -222,7 +222,7 @@ namespace Dnf.Communication.Controls
                 default: CmdResponse_ReadRegister(readBytes); break;
             }
 
-            Console.WriteLine(DebugStr);
+            Debug.WriteLine(DebugStr);
             //ModbusASCII용
             //byte 10진수 -> 16진수 변환
             //str += string.Format("{0:X2} ", b);

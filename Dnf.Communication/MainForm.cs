@@ -75,7 +75,6 @@ namespace Dnf.Communication
 
         private void InitControl()
         {
-            CheckForIllegalCrossThreadCalls = false;
             this.FormClosed += FrmClosed;
 
             //Control Add
@@ -653,7 +652,6 @@ namespace Dnf.Communication
         private void FrmClosed(object sender, FormClosedEventArgs e)
         {
             if (bgWorker != null && bgWorker.IsBusy) bgWorker.CancelAsync();
-            RuntimeData.Ports = new Dictionary<string, Port>();
         }
 
         #endregion Event End
