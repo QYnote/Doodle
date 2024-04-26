@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Dnf.Utils/Resources/Connect_512x512.png
+/Dnf.Utils/Resources/Connect_Green_512x512.png
+/Dnf.Utils/Resources/Connect_Red_512x512.png
+/Dnf.Utils/Resources/GreenCircle_512x512.png
+/Dnf.Utils/Resources/RedCircle_512x512.png
