@@ -10,7 +10,7 @@ namespace Dnf.Communication.Data
 {
     internal static class ucXML
     {
-        private static string DefaultPath = Environment.CurrentDirectory + "Data\\";
+        private static string DefaultPath = Environment.CurrentDirectory + "\\Data\\";
         private static string UnitInfoFileName = "UnitInfo";
 
         /// <summary>
@@ -66,13 +66,13 @@ namespace Dnf.Communication.Data
                     XmlNode unitList = xdoc.SelectSingleNode("UnitList");
 
                     //unitType에 해당하는 Node가져오기
-                    string nodePath = string.Format("\\UnitType[@Name='{0}]'", unitType);
+                    string nodePath = string.Format("/UnitList/UnitType[@Name='{0}']", unitType);
                     XmlNode typeList = unitList.SelectSingleNode(nodePath);
 
                     if(typeList != null)
                     {
                         List<string> modelList = new List<string>();
-                        foreach (XmlNode modelNode in typeList.SelectNodes("UnitModel"))
+                        foreach (XmlNode modelNode in typeList.SelectNodes("Model"))
                         {
                             modelList.Add(modelNode.Attributes["Name"].Value);
                         }
@@ -108,7 +108,7 @@ namespace Dnf.Communication.Data
                     XmlNode unitList = xdoc.SelectSingleNode("UnitList");
 
                     //unitType에 해당하는 Node가져오기
-                    string nodePath = string.Format("\\UnitType[@Name='{0}]'\\UnitModel[@Name='{1}']\\SupportProtocol", unitType, unitModel);
+                    string nodePath = string.Format("UnitType[@Name='{0}']/Model[@Name='{1}']/SupportProtocol", unitType, unitModel);
                     XmlNode nodeProtocolList = unitList.SelectSingleNode(nodePath);
 
                     if (nodeProtocolList != null)

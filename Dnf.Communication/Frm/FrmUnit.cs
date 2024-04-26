@@ -477,7 +477,7 @@ namespace Dnf.Communication.Frm
             if (EditFlag)
             {
                 DataRow dr = GetSelectedGridDataRow();
-                string CtrlName = (sender as Control).Parent.Name;
+                string CtrlName = (sender as Control).Name;
 
                 if (dr == null) return;
                 Unit unit = dr["Unit"] as Unit;

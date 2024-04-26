@@ -1263,7 +1263,9 @@ namespace Dnf.Communication.Frm
             else if (ctrlName == "NumMaxLength") { int value = Convert.ToInt32(NumMaxLength.Value); subItem.MaxLength = value; }
             else if (ctrlName == "btnCboItemsAdd")
             {
-                string itemName = TxtCboItems.Text;
+                string itemName = TxtCboItems.Text.Trim();
+
+                if (itemName == "") return;
                 if (LbxCboItems.Items.Contains(itemName))
                 {
                     MessageBox.Show(RuntimeData.String("F030004"));
@@ -1325,11 +1327,15 @@ namespace Dnf.Communication.Frm
                     XmlNode xmlProtocolTypeList = xdoc.CreateElement("SupportProtocol");
                     foreach (uProtocolType protocol in UtilCustom.EnumToItems<uProtocolType>())
                     {
-                        XmlNode xmlProtocolType = xdoc.CreateElement(protocol.ToString());
+                        XmlNode xmlProtocolType = xdoc.CreateElement("Protocol");
+                        XmlAttribute attrProtocolName = xdoc.CreateAttribute("Name");
                         XmlAttribute attrEnable = xdoc.CreateAttribute("Enable");
                         bool enable = model.SupportProtocol[protocol];
                         //지원하면 1 안하면 0
+                        attrProtocolName.Value = protocol.ToString();
                         attrEnable.Value = (enable == true ? 1 : 0).ToString();
+
+                        xmlProtocolType.Attributes.Append(attrProtocolName);
                         xmlProtocolType.Attributes.Append(attrEnable);
 
                         if (enable == true)
@@ -1497,7 +1503,7 @@ namespace Dnf.Communication.Frm
                             //지원 통신Protocol
                             foreach (XmlNode nodeProtocol in ModelNode.SelectSingleNode("SupportProtocol").ChildNodes)
                             {
-                                uProtocolType protocolType = UtilCustom.StringToEnum<uProtocolType>(nodeProtocol.Name);
+                                uProtocolType protocolType = nodeProtocol.Attributes["Name"].Value.StringToEnum<uProtocolType>();
                                 bool enable = nodeProtocol.Attributes["Enable"].Value == 1.ToString() ? true : false;
 
                                 model.SupportProtocol[protocolType] = enable;
