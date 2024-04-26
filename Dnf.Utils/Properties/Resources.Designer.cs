@@ -103,6 +103,26 @@ namespace Dnf.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
+        public static System.Drawing.Bitmap Connect_Green_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Connect_Green_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Connect_Red_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Connect_Red_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
         public static System.Drawing.Bitmap empty_16x16 {
             get {
                 object obj = ResourceManager.GetObject("empty_16x16", resourceCulture);

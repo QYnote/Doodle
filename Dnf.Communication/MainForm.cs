@@ -179,9 +179,15 @@ namespace Dnf.Communication
 
             //IconMenusms ImageList 사용해서 가져오면 Image 깨짐
             IconMenu_Comm_CreatePort.Image = Dnf.Utils.Properties.Resources.Plus_00_32x32;
-            IconMenu_Test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
+            IconMenu_Comm_PortOpen.Image = Dnf.Utils.Properties.Resources.Connect_Green_32x32;
+            IconMenu_Comm_PortClose.Image = Dnf.Utils.Properties.Resources.Connect_Red_32x32;
 
-            IconMenu.Items.AddRange(new ToolStripItem[] { IconMenu_Comm_CreatePort, IconMenu_Test });
+            IconMenu_Test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
+            IconMenu.Items.AddRange(new ToolStripItem[] {
+                IconMenu_Comm_CreatePort,
+                IconMenu_Comm_PortOpen,
+                IconMenu_Comm_PortClose,
+                IconMenu_Test });
 
             IconMenu_Comm_CreatePort.Click += (sender, e) => { CreatePort(); };
             IconMenu_Test.Click += (sender, e) => { TestFunction(); };
@@ -746,12 +752,28 @@ namespace Dnf.Communication
 
         #endregion Menu Function End
 
-        private void SetNodeImage(TreeNode node, ConnectionState state)
+        private delegate void InvokerSetUI(Port port);
+        /// <summary>
+        /// 그려진 UI 변경
+        /// </summary>
+        private void SetUI(Port port)
         {
-            if (state == ConnectionState.Closed) { node.ImageKey = "DisConnect"; }      //미연결
-            else if (state == ConnectionState.Executing) { node.ImageKey = "ConnectError"; } //연결중
-            else if (state == ConnectionState.Open) { node.ImageKey = "Connect"; }  //연결됨
-            node.SelectedImageKey = node.ImageKey;
+            if (this.InvokeRequired)
+            {
+                //메인 Thred에서 사용중이면 해당 Thread에서 SetUI 실행해달라고 요청하기
+                this.Invoke(new InvokerSetUI(SetUI), new object[] { port });
+            }
+            else
+            {
+                //UI 설정
+                if(port.State == ConnectionState.Closed)
+                {
+                    //미연결 상태
+                    port.Node.ImageKey = "DisConnect";
+                    port.Node.SelectedImageKey = port.Node.ImageKey;
+                }
+
+            }
         }
 
         private void OpenTabPage(TabPage frm)

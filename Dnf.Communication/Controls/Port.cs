@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Dnf.Communication.Controls
 {
@@ -32,8 +33,11 @@ namespace Dnf.Communication.Controls
         /// Port에 연결된 하위 Unit들(ex. PLC, 센서 등), <slaveAddr, Unit>
         /// </summary>
         internal Dictionary<int, Unit> Units;
-
-        internal string DebugStr = "";
+        /// <summary>
+        /// 이 포트를 담당하는 TreeNode
+        /// </summary>
+        internal TreeNode Node;
+        internal string DebugStr;
 
         /// <summary>
         /// 연결된 Port 열기

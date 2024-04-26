@@ -83,6 +83,8 @@
     <None Include="Resources\Connect_32x32.png" />
     <None Include="Resources\empty_16x16.png" />
     <None Include="Resources\Erase_16x16.png" />
+    <Content Include="Resources\Connect_Green_32x32.png" />
+    <Content Include="Resources\Connect_Red_32x32.png" />
     <Content Include="Resources\GreenSync_16x16.png" />
     <Content Include="Resources\LAN_Come_16x16.png" />
     <Content Include="Resources\Plus_00_32x32.png" />
