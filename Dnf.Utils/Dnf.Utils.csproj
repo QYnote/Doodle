@@ -56,16 +56,16 @@
     <Compile Include="Views\FrmBase.Designer.cs">
       <DependentUpon>FrmBase.cs</DependentUpon>
     </Compile>
-    <Compile Include="Views\ucControlBox.cs">
+    <Compile Include="Controls\ucControlBox.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Views\ucControlBox.Designer.cs">
+    <Compile Include="Controls\ucControlBox.Designer.cs">
       <DependentUpon>ucControlBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="Views\ucNumeric.cs">
+    <Compile Include="Controls\ucNumeric.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Views\ucNumeric.Designer.cs">
+    <Compile Include="Controls\ucNumeric.Designer.cs">
       <DependentUpon>ucNumeric.cs</DependentUpon>
     </Compile>
   </ItemGroup>

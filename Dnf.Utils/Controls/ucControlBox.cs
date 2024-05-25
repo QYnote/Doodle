@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Utils.Views
+namespace Dnf.Utils.Controls
 {
     public enum CtrlType
     {

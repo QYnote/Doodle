@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace Dnf.Utils.Views
+namespace Dnf.Utils.Controls
 {
     public partial class ucNumeric : UserControl
     {

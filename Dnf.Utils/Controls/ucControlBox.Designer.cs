@@ -1,6 +1,6 @@
-﻿namespace Dnf.Utils.Views
+﻿namespace Dnf.Utils.Controls
 {
-    partial class ucNumeric
+    partial class ucControlBox
     {
         /// <summary> 
         /// 필수 디자이너 변수입니다.
