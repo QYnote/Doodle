@@ -6,19 +6,30 @@ using System.Linq;
 using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Dnf.Communication.Controls
 {
     internal class Unit
     {
-        internal ConnectionState State;
+        /// <summary>Unit 연결 상태</summary>
+        internal UnitConnectionState State;
+        /// <summary>Unit 상위 Port</summary>
         internal readonly Port ParentPort;  //등록된 Port
 
-        internal int SlaveAddr;       //Unit 주소
-        internal string UnitType;   //Unit 구분
-        internal string UnitModel;   //Unit 이름
-        internal string UnitName;    //Unit 사용자 지정명
-        internal Dictionary<int, object> UnitRegistry;    //Unit Registry정보<주소[Decimal], 정보List>
+        /// <summary>Unit 주소</summary>
+        internal int SlaveAddr;
+        /// <summary>Unit 구분</summary>
+        internal string UnitType;
+        /// <summary>Unit Model명</summary>
+        internal string UnitModel;
+        /// <summary>Unit 사용자 지정명</summary>
+        internal string UnitName;
+        /// <summary>Unit Registry [주소Dec, Value])></summary>
+        internal Dictionary<int, object> UnitRegistry;
+
+        /// <summary>Unit을 담당하는 Node</summary>
+        internal TreeNode Node;
 
         internal Unit(Port port, int addr, string type, string model, string modelName = null)
         { 
@@ -27,7 +38,7 @@ namespace Dnf.Communication.Controls
             UnitType = type;
             UnitModel = model;
             UnitName = modelName == null || modelName == "" ? model.ToString() : modelName;
-            State = ConnectionState.Closed;
+            State = UnitConnectionState.Close_DisConnect;
             UnitRegistry = new Dictionary<int, object>();
         }
     }

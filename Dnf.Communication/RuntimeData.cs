@@ -15,6 +15,7 @@ namespace Dnf.Communication
         internal readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
         internal static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
         internal static string LangType = "Ko";
+        internal static bool TestPortUsed = false;
         private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 
         static RuntimeData()

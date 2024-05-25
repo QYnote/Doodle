@@ -29,9 +29,8 @@ namespace Dnf.Communication.Controls
             StopBIt = stopBits;
 
             base.PortName = portName;   //UI에 표시되는 Port 이름(COM3 COM4 등)
-            base.Units = new Dictionary<int, Unit>();
             base.ProtocolType = type;
-            base.State = ConnectionState.Closed;
+            base.State = PortConnectionState.Close;
         }
 
         #region SerialPort
@@ -50,21 +49,20 @@ namespace Dnf.Communication.Controls
                 //필수정보 확인
                 if (PortName == null)
                 {
-                    Debug.WriteLine("Port Name is empty");
+                    Debug.WriteLine("[ERROR]{0} - Open() - PortName Empty", base.PortName);
                     return false;
                 }
 
-                serial.PortName = PortName;
+                serial.PortName = base.PortName;
 
-                serial.DataReceived += SerialPort_Recived;
                 serial.Open();
 
                 //상태값 수정
-                this.State = ConnectionState.Open;
+                base.State = PortConnectionState.Open;
             }
             else
             {
-                Debug.WriteLine("({0}) Port is alreay opened", this.PortName);
+                Debug.WriteLine("[ERROR]{0} - Open() - Port alreay opened", base.PortName);
                 return false;
             }
 
@@ -82,28 +80,23 @@ namespace Dnf.Communication.Controls
             //포트가 미사용 중인지 확인
             if (!serial.IsOpen)
             {
-                Debug.WriteLine("({0}) Port is alreay closed", this.PortName);
+                Debug.WriteLine("[ERROR]{0} - Close() - Port Not Open", base.PortName);
                 return false;
             }
 
-
-            serial.DataReceived -= SerialPort_Recived;
             serial.Close();
 
             //상태값 수정
-            this.State = ConnectionState.Closed;
+            this.State = PortConnectionState.Close;
 
             return true;
-
         }
 
-        #region ModbusRTU
-
         /// <summary>
-        /// SerialPort 데이터 전송
+        /// SerialPort Write
         /// </summary>
-        /// <returns></returns>
-        internal override bool Send()
+        /// <returns>true : Success / false : Fail</returns>
+        internal override bool Write(byte[] bytes)
         {
             try
             {
@@ -111,10 +104,11 @@ namespace Dnf.Communication.Controls
 
                 if (serial.IsOpen)
                 {
-                    ModbusRTU_Write(serial);
+                    serial.Write(bytes, 0, bytes.Length);
                 }
                 else
                 {
+                    Debug.WriteLine(string.Format("[ERROR]{0} - Write() - PortClose", base.PortName));
                     return false;
                 }
 
@@ -122,16 +116,13 @@ namespace Dnf.Communication.Controls
             }
             catch
             {
+                Debug.WriteLine(string.Format("[ERROR]{0} - Write() - Try Error", base.PortName));
+                Debug.WriteLine(DebugStr);
                 return false;
             }
         }
 
-        private void SerialPort_Recived(object sender, SerialDataReceivedEventArgs e)
-        {
-            ModbusRTU_Read();
-
-            Debug.WriteLine("Recived Onetime");
-        }
+        #region ModbusRTU
 
         #region Query보낼 시 Modebus 구조
 
@@ -202,8 +193,11 @@ namespace Dnf.Communication.Controls
             SerialPort serial = this.port;
             DebugStr = "";
 
-            byte[] readBytes = new byte[serial.BytesToRead]; //Recieve된 Byte들
-            serial.BaseStream.Read(readBytes, 0, serial.BytesToRead);    //Recieve된 Byte를 0번쨰부터 개수만큼 readbuff에 복사
+            /*DataRecieved이벤트가 아니라 Data Read를 사용하는 이유
+             * 이벤트를 통해 Read 할경우 데이터를 buffer에 저장하는데
+             * 데이터가 너무 많이 도착하면 오버플로우가 발생하여 데이터 손실이 생길 수 있고 메모리 사용량이 증가하기 때문*/
+            byte[] readBytes = new byte[serial.BytesToRead]; //Read할 수 잇는 수만큼 byte 설정
+            serial.Read(readBytes, 0, serial.BytesToRead);   //Recieve된 Byte를 0번쨰부터 개수만큼 readbuff에 복사
 
             //J1C에서는 1byte 32이하의 문자들은 전송이 불가능하므로 통신 시에 1byte만 받으니 당황하지 말고 2byte 데이터 받으려 하지 말것
             //byte(8bit) -> int

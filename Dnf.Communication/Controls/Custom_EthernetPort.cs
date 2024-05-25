@@ -26,9 +26,8 @@ namespace Dnf.Communication.Controls
             PortNo = portNo;
 
             this.PortName = addr.ToString() + ":" + portNo;
-            base.Units = new Dictionary<int, Unit>();
             base.ProtocolType = type;
-            base.State = ConnectionState.Closed;
+            base.State = PortConnectionState.Close;
         }
 
         internal override bool Open()
@@ -41,7 +40,7 @@ namespace Dnf.Communication.Controls
             return true;
         }
 
-        internal override bool Send()
+        internal override bool Write(byte[] bytes)
         {
             return true;
         }

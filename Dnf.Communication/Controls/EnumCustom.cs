@@ -22,6 +22,27 @@ namespace Dnf.Communication.Data
         ModBusTcpIp
     }
 
+    internal enum PortConnectionState
+    { 
+        /// <summary>Port 닫음</summary>
+        Close,
+        /// <summary>Port 염</summary>
+        Open
+    }
+
+
+    internal enum UnitConnectionState
+    {
+        /// <summary>Port닫힌 미연결</summary>
+        Close_DisConnect,
+        /// <summary>Port열린 미연결</summary>
+        Open_DisConnect,
+        /// <summary>연결</summary>
+        Connect,
+        /// <summary>연결중</summary>
+        Initializing
+    }
+
     internal enum BaudRate
     {
         _9600,

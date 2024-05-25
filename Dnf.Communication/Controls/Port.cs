@@ -20,7 +20,7 @@ namespace Dnf.Communication.Controls
         /// <summary>
         /// 포트 연결 상태
         /// </summary>
-        internal ConnectionState State;
+        internal PortConnectionState State;
         /// <summary>
         /// 통신 방법
         /// </summary>
@@ -32,11 +32,7 @@ namespace Dnf.Communication.Controls
         /// <summary>
         /// Port에 연결된 하위 Unit들(ex. PLC, 센서 등), <slaveAddr, Unit>
         /// </summary>
-        internal Dictionary<int, Unit> Units;
-        /// <summary>
-        /// 이 포트를 담당하는 TreeNode
-        /// </summary>
-        internal TreeNode Node;
+        internal Dictionary<int, Unit> Units = new Dictionary<int, Unit>();
         internal string DebugStr;
 
         /// <summary>
@@ -52,7 +48,8 @@ namespace Dnf.Communication.Controls
         /// <summary>
         /// Port Data 전송
         /// </summary>
+        /// <param name="bytes">전송할 Data byte Array</param>
         /// <returns>true : Success / false : Fail</returns>
-        internal abstract bool Send();
+        internal abstract bool Write(byte[] bytes);
     }
 }
