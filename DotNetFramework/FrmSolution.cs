@@ -14,6 +14,7 @@ namespace DotNetFramework
     public partial class FrmSolution : Form
     {
         ToolStripButton BtnCommunication;
+        ToolStripButton BtnServer;
         ToolStripButton BtnTest;
 
         public FrmSolution()
@@ -35,18 +36,25 @@ namespace DotNetFramework
             TopMenu.ItemClicked += (sender, e) => { MdiOpen(e.ClickedItem.Name); };
 
             BtnCommunication = new ToolStripButton() { Name = "Communication", DisplayStyle = ToolStripItemDisplayStyle.Image}; //통신
+            BtnServer = new ToolStripButton() { Name = "Serer", DisplayStyle = ToolStripItemDisplayStyle.Image}; //통신
             BtnTest = new ToolStripButton() { Name = "Test", DisplayStyle = ToolStripItemDisplayStyle.Image}; //통신
 
             //아이콘
             BtnCommunication.Image = Dnf.Utils.Properties.Resources.Connect_32x32;
+            BtnServer.Image = Dnf.Utils.Properties.Resources.Server_32x32;
             BtnTest.Image = Dnf.Utils.Properties.Resources.Test_32x32;
 
             //설명
             BtnCommunication.ToolTipText = "통신";
+            BtnServer.ToolTipText = "서버";
             BtnTest.ToolTipText = "테스트";
 
             //메뉴 추가
-            TopMenu.Items.AddRange(new ToolStripItem[] { BtnCommunication, BtnTest });
+            TopMenu.Items.AddRange(new ToolStripItem[] { 
+                BtnCommunication,
+                BtnServer,
+                BtnTest 
+            });
 
             this.Controls.Add(TopMenu);
         }
@@ -71,6 +79,7 @@ namespace DotNetFramework
             {
                 //Form 생성
                 if (btnName == BtnCommunication.Name) { frm = new Dnf.Communication.MainForm() { Name = BtnCommunication.Name }; }
+                else if (btnName == BtnServer.Name) { frm = new Dnf.Server.FrmMain() { Name = BtnServer.Name }; }
                 else if (btnName == BtnTest.Name) { frm = null; }
 
                 //이미 틀어져 있는지 검색

@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -86,15 +88,16 @@ namespace Dnf.Utils.Controls
         /// <param name="frontBytes">앞에위치할 Byte Array</param>
         /// <param name="backBytes">뒤에 위치할 Byte Array</param>
         /// <returns></returns>
-        static public byte[] BytesAppend(byte[] frontBytes, byte[] backBytes)
+        static public byte[] BytesAppend(this byte[] baseBytes, byte[] backBytes)
         {
-            byte[] outputByts = new byte[frontBytes.Length + backBytes.Length];
+            byte[] containByts = new byte[baseBytes.Length + backBytes.Length];
 
             //옮길 Array, 옮길 Array 시작 index, 넘겨받은 Array, 넘겨받을 Array index, 옮길 Array 수
-            Buffer.BlockCopy(frontBytes, 0, outputByts, 0, frontBytes.Length);
-            Buffer.BlockCopy(backBytes, 0, outputByts, frontBytes.Length, backBytes.Length);
+            Buffer.BlockCopy(baseBytes, 0, containByts, 0, baseBytes.Length);
+            Buffer.BlockCopy(backBytes, 0, containByts, baseBytes.Length, backBytes.Length);
 
-            return outputByts;
+            baseBytes = containByts;
+            return baseBytes;
         }
 
         #endregion 병합 End
@@ -150,6 +153,15 @@ namespace Dnf.Utils.Controls
                 MessageBox.Show("F000000");
                 return true;
             }
+        }
+
+        /// <summary>실행시킨 Class와 실행시킨 Method Name Debug로 뿌려주기</summary>
+        static public void DebugWrite(string addStr = "Debug")
+        {
+            StackFrame frame = new StackFrame(2);
+            MethodBase method = frame.GetMethod();
+
+            Debug.WriteLine(string.Format("{0:yyyy-MM-dd HH:mm:ss:fff} {1} - {2}() / {3}", DateTime.Now, method.Name, method.DeclaringType.Name, addStr));
         }
 
         #endregion 검사 End

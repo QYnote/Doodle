@@ -85,7 +85,7 @@ namespace Dnf.Communication.Controls.Protocols
         }
 
         /// <summary>
-        /// Recieve된 Data 검증 및 데이터 적용
+        /// Receive된 Data 검증 및 데이터 적용
         /// </summary>
         /// <param name="recvData"></param>
         /// <returns></returns>
@@ -97,7 +97,7 @@ namespace Dnf.Communication.Controls.Protocols
             //Receive데이터가 Request데이터에 맞는 데이터인지 확인
             if (reqData[0] == recvData[0] && reqData[1] == recvData[1])
             {
-                DebugStr += string.Format("RecieveData - SlaveAddr : {0} / Func : {1}", recvData[0], recvData[1]);
+                DebugStr += string.Format("ReceiveData - SlaveAddr : {0} / Func : {1}", recvData[0], recvData[1]);
                 byte func = recvData[1];
                 switch (func)
                 {

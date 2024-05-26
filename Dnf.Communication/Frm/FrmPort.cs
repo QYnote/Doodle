@@ -460,7 +460,7 @@ namespace Dnf.Communication.Frm
                     string bfPortName = port.PortName;//변경전 PortName 미리 저장
 
                     port.IPAddr = IPAddress.Parse((txtIPaddr.ctrl as TextBox).Text);
-                    port.PortNo = ushort.Parse((txtPortNo.ctrl as TextBox).Text);
+                    port.PortNo = ushort.Parse(txtPortNo.Value.ToString());
                     port.PortName = port.IPAddr.ToString() + ":" + port.PortNo;
 
                     //Runtime에 있는 Port Name 수정

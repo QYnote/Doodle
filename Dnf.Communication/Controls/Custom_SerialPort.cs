@@ -193,11 +193,11 @@ namespace Dnf.Communication.Controls
             SerialPort serial = this.port;
             DebugStr = "";
 
-            /*DataRecieved이벤트가 아니라 Data Read를 사용하는 이유
+            /*DataReceived이벤트가 아니라 Data Read를 사용하는 이유
              * 이벤트를 통해 Read 할경우 데이터를 buffer에 저장하는데
              * 데이터가 너무 많이 도착하면 오버플로우가 발생하여 데이터 손실이 생길 수 있고 메모리 사용량이 증가하기 때문*/
             byte[] readBytes = new byte[serial.BytesToRead]; //Read할 수 잇는 수만큼 byte 설정
-            serial.Read(readBytes, 0, serial.BytesToRead);   //Recieve된 Byte를 0번쨰부터 개수만큼 readbuff에 복사
+            serial.Read(readBytes, 0, serial.BytesToRead);   //Receive된 Byte를 0번쨰부터 개수만큼 readbuff에 복사
 
             //J1C에서는 1byte 32이하의 문자들은 전송이 불가능하므로 통신 시에 1byte만 받으니 당황하지 말고 2byte 데이터 받으려 하지 말것
             //byte(8bit) -> int

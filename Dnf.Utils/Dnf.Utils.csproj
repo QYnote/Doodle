@@ -92,6 +92,7 @@
     <Content Include="Resources\Serial_Come_16x16.png" />
     <None Include="Resources\TreeChild_16x16.png" />
     <None Include="Resources\Test_32x32.png" />
+    <None Include="Resources\Server_32x32.png" />
     <Content Include="Resources\YellowWarning_16x16.png" />
   </ItemGroup>
   <ItemGroup>
