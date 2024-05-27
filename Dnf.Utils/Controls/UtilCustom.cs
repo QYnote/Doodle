@@ -90,6 +90,7 @@ namespace Dnf.Utils.Controls
         /// <returns></returns>
         static public byte[] BytesAppend(this byte[] baseBytes, byte[] backBytes)
         {
+            if (backBytes == null) return baseBytes;
             byte[] containByts = new byte[baseBytes.Length + backBytes.Length];
 
             //옮길 Array, 옮길 Array 시작 index, 넘겨받은 Array, 넘겨받을 Array index, 옮길 Array 수

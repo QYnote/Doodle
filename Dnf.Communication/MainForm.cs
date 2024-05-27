@@ -92,6 +92,8 @@ namespace Dnf.Communication
             InitializeBackGroundWorker();
         }
 
+        #region Control 설정
+
         /// <summary>
         /// 메뉴, TabControl 생성
         /// </summary>
@@ -469,6 +471,8 @@ namespace Dnf.Communication
             colUnitPropertyName.HeaderText  = RuntimeData.String("F000400");
             colUnitPropertyValue.HeaderText = RuntimeData.String("F000401");
         }
+
+        #endregion Control 설정
 
         #region Event
 
