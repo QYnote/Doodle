@@ -49,7 +49,7 @@ namespace Dnf.Server
 
             TxtLog.Location = new Point(0, 64);
             TxtLog.AutoSize = false;
-            TxtLog.Size = new Size(this.ClientSize.Width, this.ClientSize.Height-  64);
+            TxtLog.Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 64);
             TxtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             TxtLog.ReadOnly = true;
             TxtLog.BorderStyle = BorderStyle.FixedSingle;
@@ -106,17 +106,18 @@ namespace Dnf.Server
 
         private void ServerOpen()
         {
-            if(ServerUserOpen == true)
+            if (ServerUserOpen == true)
             {
                 return;
             }
 
             //Open Server 구분
-            
+
             if (ServerType == "TCP Server")
             {
                 this.server = new TCPServer(new System.Net.Sockets.TcpListener(IPAddress.Parse("127.0.0.1"), 5000));
                 (this.server as TCPServer).ReceiveActiveEvent += DataReceive;  //Receive 이벤트 지정
+                this.server.SendMsg += (msg) => { UpdateUI("ServerLog", new object[] { msg }); };
             }
 
             //없는 서버타입이면 취소
@@ -124,7 +125,6 @@ namespace Dnf.Server
 
             this.server.Open();
 
-            TxtLog.AppendText(string.Format("\r\nServer Open : {0}", ServerType));
             ServerUserOpen = true;
             IconMenu_Connect_Open.Visible = false;
             IconMenu_Connect_Close.Visible = true;
@@ -140,7 +140,6 @@ namespace Dnf.Server
             this.server.Close();
 
             //후처리
-            TxtLog.AppendText(string.Format("\r\nServer Close : {0}", ServerType));
             ServerUserOpen = false;
             IconMenu_Connect_Open.Visible = true;
             IconMenu_Connect_Close.Visible = false;
@@ -153,11 +152,16 @@ namespace Dnf.Server
                 this.Invoke(new UpdateUIdelegate(UpdateUI), new object[] { type, obj });
             else
             {
-                if(type == "ReceiveLog")
+                if (type == "ReceiveLog")
                 {
                     //데이터 Log 기록
-                    TxtLog.AppendText(string.Format("\r\nData Receive : {0}", (byte[])obj[0]));
-                    TxtLog.AppendText(string.Format("\r\nData Send : {0}", (byte[])obj[1]));
+                    TxtLog.AppendText(string.Format("\r\nData Receive : {0}", obj[0]));
+                    TxtLog.AppendText(string.Format("\r\nData Send : {0}", obj[1]));
+                }
+                else if (type == "ServerLog")
+                {
+                    TxtLog.AppendText(string.Format("\r\n{0} ServerLog - {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"), obj[0]));
+
                 }
             }
         }
@@ -178,5 +182,6 @@ namespace Dnf.Server
             UpdateUI("ReceiveLog", new object[] { readBytes, writeBytes });
             return writeBytes;
         }
+
     }
 }

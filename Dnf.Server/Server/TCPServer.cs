@@ -44,10 +44,11 @@ namespace Dnf.Server.Server
                 //접속 확인용 Thread를 생성하여 접속시도하는 client 확인
                 Thread ServerThread = new Thread(AcceptClient);
                 ServerThread.Start();
+                base.SendMsg?.Invoke("TCP Server Open");
             }
             else
             {
-                UtilCustom.DebugWrite("Already Open");
+                base.SendMsg?.Invoke("Already Open");
             }
         }
 
@@ -64,10 +65,15 @@ namespace Dnf.Server.Server
                     //접속한 Client 데이터 Receive 처리해주는 Thread 생성
                     Thread clientThread = new Thread(() => ClientMethod(client));
                     clientThread.Start();
+                    IPEndPoint ep = client.Client.RemoteEndPoint as IPEndPoint;
+                    base.SendMsg?.Invoke(string.Format("Client Accepted / IP : {0}, Port : {1}", ep.Address.ToString(), ep.Port));
                 }
-                catch
+                catch(Exception ex)
                 {
-                    UtilCustom.DebugWrite("Error");
+                    if (ex.HResult != -2147467259)
+                    {
+                        base.SendMsg?.Invoke("Client Accept Error");
+                    }
                 }
             }
         }
@@ -96,15 +102,16 @@ namespace Dnf.Server.Server
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
-                UtilCustom.DebugWrite(string.Format("Error : {0}", new Exception().Message));
+                base.SendMsg?.Invoke(string.Format("Error : {0}", ex.Message));
             }
             finally
             {
                 client.Close();
                 this.clientList.Remove(client);
-                UtilCustom.DebugWrite("Client Receive End");
+                IPEndPoint ep = client.Client.RemoteEndPoint as IPEndPoint;
+                base.SendMsg?.Invoke(string.Format("Client Receive End / IP : {0}, Port : {1}", ep.Address.ToString(), ep.Port));
             }
         }
 
@@ -115,10 +122,12 @@ namespace Dnf.Server.Server
             {
                 base.IsOpen = false;
                 this.server.Stop();
+
+                base.SendMsg?.Invoke("TCP Server Close");
             }
             else
             {
-                UtilCustom.DebugWrite("Already Close");
+                base.SendMsg?.Invoke("Already Close");
             }
         }
     }
