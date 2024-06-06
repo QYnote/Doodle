@@ -220,8 +220,8 @@ namespace Dnf.Communication.Frm
                 (numDataBits.ctrl as ucNumeric).Value = (numDataBits.ctrl as ucNumeric).MaxValue;
 
                 //Ethernet 정보
-                (txtPortNo.ctrl as MaskedTextBox).Text = "0502";
-                (txtIPaddr.ctrl as TextBox).Text = "192.168.0.1";
+                (txtPortNo.ctrl as MaskedTextBox).Text = "5000";
+                (txtIPaddr.ctrl as TextBox).Text = "127.0.0.1";
             }
             else if(OpenType == FrmEditType.Edit && frmPort != null)
             {
