@@ -1,4 +1,5 @@
 ﻿using Dnf.Communication.Data;
+using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -19,21 +20,32 @@ namespace Dnf.Communication.Controls
         internal Parity Parity;       //Parity Bit
         internal StopBits StopBIt;    //Stop Bit
 
-        internal Custom_SerialPort(string portName, uProtocolType type, BaudRate baud, int databits, StopBits stopBits, Parity parity)
+        internal Custom_SerialPort(string portName, uProtocolType type, BaudRate baud, int databits, StopBits stopBits, Parity parity) : base(portName, type)
         {
             port = new SerialPort();
 
-            BaudRate = baud;
-            DataBits = databits;
-            Parity = parity;
-            StopBIt = stopBits;
-
-            base.PortName = portName;   //UI에 표시되는 Port 이름(COM3 COM4 등)
-            base.ProtocolType = type;
-            base.State = PortConnectionState.Close;
+            this.BaudRate = baud;
+            this.DataBits = databits;
+            this.Parity = parity;
+            this.StopBIt = stopBits;
         }
 
         #region SerialPort
+
+        /// <summary>
+        /// 포트 연결 상태
+        /// </summary>
+        internal override bool IsOpen
+        { 
+            get
+            {
+                //포트가 없거나 열려있지 않으면 false
+                if(this.port == null || this.port.IsOpen == false) 
+                    return false;
+                else 
+                    return true;
+            } 
+        }
 
         /// <summary>
         /// SerialPort Open
@@ -53,12 +65,8 @@ namespace Dnf.Communication.Controls
                     return false;
                 }
 
-                serial.PortName = base.PortName;
-
                 serial.Open();
-
-                //상태값 수정
-                base.State = PortConnectionState.Open;
+                base.BgWorker.RunWorkerAsync();
             }
             else
             {
@@ -85,9 +93,7 @@ namespace Dnf.Communication.Controls
             }
 
             serial.Close();
-
-            //상태값 수정
-            this.State = PortConnectionState.Close;
+            base.BgWorker.CancelAsync();
 
             return true;
         }
@@ -95,8 +101,7 @@ namespace Dnf.Communication.Controls
         /// <summary>
         /// SerialPort Write
         /// </summary>
-        /// <returns>true : Success / false : Fail</returns>
-        internal override bool Write(byte[] bytes)
+        internal override void Write(byte[] bytes)
         {
             try
             {
@@ -108,18 +113,55 @@ namespace Dnf.Communication.Controls
                 }
                 else
                 {
-                    Debug.WriteLine(string.Format("[ERROR]{0} - Write() - PortClose", base.PortName));
-                    return false;
+                    Debug.WriteLine(string.Format("[ERROR]{0} - PortWrite() - PortClose", base.PortName));
+                    return ;
                 }
 
-                return true;
+                return ;
             }
             catch
             {
-                Debug.WriteLine(string.Format("[ERROR]{0} - Write() - Try Error", base.PortName));
-                Debug.WriteLine(DebugStr);
-                return false;
+                Debug.WriteLine(string.Format("[ERROR]{0} - PortWrite() - Try Error", base.PortName));
+                return ;
             }
+        }
+
+        /// <summary>
+        /// SerialPort Read
+        /// </summary>
+        /// <param name="ClassBuffer">담아갈 Byte[]</param>
+        internal override void Read()
+        {
+            try
+            {
+                if (this.port != null && this.port.IsOpen == true)
+                {
+                    if(this.port.BytesToRead > 0)
+                    {
+                        byte[] bufffer = new byte[this.port.BytesToRead];
+
+                        this.port.Read(bufffer, 0, bufffer.Length);
+
+                        if (base.ReadingBuffer != null)
+                        {
+                            base.ReadingBuffer.BytesAppend(bufffer);
+                        }
+                        else
+                            base.ReadingBuffer = bufffer;
+                    }
+                    return;
+                }
+                else
+                {
+                    UtilCustom.DebugWrite(string.Format("{0} Port 닫힘", base.PortName));
+                }
+            }
+            catch(Exception ex)
+            {
+                UtilCustom.DebugWrite(string.Format("Try Error : {0}", ex.Message));
+            }
+
+            return;
         }
 
         #region ModbusRTU
@@ -132,36 +174,28 @@ namespace Dnf.Communication.Controls
 
             serial.Write(cmd, 0, cmd.Length);
 
-            Debug.WriteLine(DebugStr);
             Debug.WriteLine("Write Onetime");
         }
 
         private byte[] CmdQuery_Base()
         {
             byte[] cmd;
-            DebugStr = "";
-
             //ADU - Address(Slave ID)
             int address = 1;
             byte addr = Convert.ToByte(address);
-            DebugStr += "Slave Address : " + address;
 
             //ADU,PDU - FunctionCode
             int functionCode = 2;
             byte funcCode = Convert.ToByte(functionCode);
-            DebugStr += " / Function Code : " + functionCode + "\n";
 
             //Start Address
             int startAddr = 3;
             byte addrHi = (byte)(startAddr >> 8);
             byte addrLo = (byte)startAddr;
-            DebugStr += string.Format("Start Reg Address : {0}", startAddr);
 
             int value = 4;
             byte valueHi = (byte)(value >> 8);
             byte valueLo = (byte)value;
-            DebugStr += string.Format(" / Write Value : {0}", value);
-
 
             cmd = new byte[] { addr, funcCode, addrHi, addrLo, valueHi, valueLo };
 
@@ -191,7 +225,6 @@ namespace Dnf.Communication.Controls
         private void ModbusRTU_Read()
         {
             SerialPort serial = this.port;
-            DebugStr = "";
 
             /*DataReceived이벤트가 아니라 Data Read를 사용하는 이유
              * 이벤트를 통해 Read 할경우 데이터를 buffer에 저장하는데
@@ -205,9 +238,7 @@ namespace Dnf.Communication.Controls
             string func = string.Format("{0:D2}", readBytes[1]);
 
             //Slave ID(Address)
-            DebugStr += "Addr : " + addr + " / ";
             //Function Code
-            DebugStr += "Func : " + func + "\n";
 
             //Function Code에 따라 Protocol 구조가 다름에 따른 Frame 구분
             switch (func)
@@ -216,7 +247,6 @@ namespace Dnf.Communication.Controls
                 default: CmdResponse_ReadRegister(readBytes); break;
             }
 
-            Debug.WriteLine(DebugStr);
             //ModbusASCII용
             //byte 10진수 -> 16진수 변환
             //str += string.Format("{0:X2} ", b);
@@ -230,15 +260,12 @@ namespace Dnf.Communication.Controls
             //Data Length
             int DataCnt = readBytes[2];
             //Test시 입력가능한 ! 가 33이라 데이터 최소 33개부터 가져와야함
-            DebugStr = "Data Byte Count : " + DataCnt;
 
             //Data
-            DebugStr += " / Data : ";
 
             for (int i = 0; i < DataCnt; i++)
             {
                 //RTU 통신일 경우 byte ASCII 변환(ex. 'a' 데이터 Receive : 받는 데이터 '97', ASCII 변환 시 'a'
-                DebugStr += readBytes[i + 3] + " ";
             }
 
             ////CRC
@@ -253,15 +280,6 @@ namespace Dnf.Communication.Controls
             //Data Length
             int DataCnt = readBytes[2];
             //Test시 입력가능한 ! 가 33이라 데이터 최소 33개부터 가져와야함
-            DebugStr = "Data Byte Count : " + string.Format("{0:D2}", DataCnt) + "\n";
-
-            for (int i = 0; i < DataCnt; i += 2)
-            {
-                DebugStr += string.Format("Data{0:D2} : ", (i / 2) + 1);
-                DebugStr += readBytes[3 + i];
-                DebugStr += readBytes[4 + i];
-                DebugStr += "\n";
-            }
 
             ////CRC
             //byte crcLow = readBytes[readBytes.Length - 2];
@@ -275,12 +293,10 @@ namespace Dnf.Communication.Controls
             //Data Length
             string regAddr = "";
             regAddr += string.Format("{0:D2}", readBytes[2]) + string.Format("{0:D2}", readBytes[3]);
-            DebugStr += "Reg Start Addr : " + regAddr;
 
             //Data
             string regData = "";
             regData += string.Format("{0:D2}", readBytes[4]) + string.Format("{0:D2}", readBytes[5]);
-            DebugStr += " / Data : " + regData;
 
             ////CRC
             //byte crcLow = readBytes[readBytes.Length - 2];

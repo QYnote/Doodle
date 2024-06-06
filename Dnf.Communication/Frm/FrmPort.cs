@@ -425,10 +425,10 @@ namespace Dnf.Communication.Frm
             else if (protocolType == uProtocolType.ModBusTcpIp)
             {
                 //TCP Port일경우
-                IPAddress ip = IPAddress.Parse((txtIPaddr.ctrl as TextBox).Text);
+                string ip = (txtIPaddr.ctrl as TextBox).Text;
                 ushort portNo = ushort.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
 
-                port = new Custom_EthernetPort(protocolType, ip, portNo);
+                port = new Custom_EthernetPort(ip, protocolType, portNo);
             }
 
             return port;
@@ -484,10 +484,10 @@ namespace Dnf.Communication.Frm
                 else if (protocolType == uProtocolType.ModBusTcpIp)
                 {
                     //Ethernet Port
-                    IPAddress ip = IPAddress.Parse((txtIPaddr.ctrl as TextBox).Text);
+                    string ip = (txtIPaddr.ctrl as TextBox).Text;
                     ushort portNo = ushort.Parse((txtPortNo.ctrl as TextBox).Text);
 
-                    Port port = new Custom_EthernetPort(protocolType, ip, portNo);
+                    Port port = new Custom_EthernetPort(ip, protocolType, portNo);
 
                     //Runtime에 있는 Port Name 수정
                     RuntimeData.Ports.Remove(frmPort.PortName);

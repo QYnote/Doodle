@@ -175,9 +175,9 @@ namespace Dnf.Server
         /// <returns>보낸 Client에게 보내줄 Data</returns>
         private byte[] DataReceive(byte[] readBytes, int bytesLength)
         {
-            byte[] writeBytes = null;
+            byte[] writeBytes = new byte[] {1,3,5};
 
-            StackBytes.BytesAppend(readBytes);
+            StackBytes.BytesAppend(writeBytes);
 
             UpdateUI("ReceiveLog", new object[] { readBytes, writeBytes });
             return writeBytes;

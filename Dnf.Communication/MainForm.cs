@@ -694,14 +694,14 @@ namespace Dnf.Communication
                     }
 
                     //메뉴 Visible
-                    if (this.SelectedPort.State == PortConnectionState.Open)
+                    if (this.SelectedPort.IsOpen == true)
                     {
                         TextMenu_Comm_PortOpen.Visible = false;
                         TextMenu_Comm_PortClose.Visible = true;
                         IconMenu_Comm_PortOpen.Visible = false;
                         IconMenu_Comm_PortClose.Visible = true;
                     }
-                    else if (this.SelectedPort.State == PortConnectionState.Close)
+                    else if (this.SelectedPort.IsOpen == false)
                     {
                         TextMenu_Comm_PortOpen.Visible = true;
                         TextMenu_Comm_PortClose.Visible = false;
@@ -727,14 +727,14 @@ namespace Dnf.Communication
                     }
 
                     //메뉴 Visible
-                    if (this.SelectedPort.State == PortConnectionState.Open)
+                    if (this.SelectedPort.IsOpen == true)
                     {
                         TextMenu_Comm_PortOpen.Visible = false;
                         TextMenu_Comm_PortClose.Visible = true;
                         IconMenu_Comm_PortOpen.Visible = false;
                         IconMenu_Comm_PortClose.Visible = true;
                     }
-                    else if (this.SelectedPort.State == PortConnectionState.Close)
+                    else if (this.SelectedPort.IsOpen == false)
                     {
                         TextMenu_Comm_PortOpen.Visible = true;
                         TextMenu_Comm_PortClose.Visible = false;

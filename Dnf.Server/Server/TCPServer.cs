@@ -78,7 +78,9 @@ namespace Dnf.Server.Server
             }
         }
 
-        /// <summary>접속한 Client에서 데이터를 Receive 받아 그에따른 처리 진행</summary>
+        /// <summary>
+        /// 접속한 Client에서 데이터를 Receive 받아 그에따른 처리 진행
+        /// </summary>
         /// <param name="client">연결된 TCP Client</param>
         private void ClientMethod(TcpClient client)
         {

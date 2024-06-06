@@ -98,6 +98,9 @@ namespace Dnf.Utils.Controls
             Buffer.BlockCopy(backBytes, 0, containByts, baseBytes.Length, backBytes.Length);
 
             baseBytes = containByts;
+
+            //메모리 초기화
+            containByts = null;
             return baseBytes;
         }
 
