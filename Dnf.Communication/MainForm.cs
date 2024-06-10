@@ -48,6 +48,7 @@ namespace Dnf.Communication
         private ImageList TreeImgList = new ImageList();
         private ContextMenuStrip TreeMenu = new ContextMenuStrip();  //Tree 우클릭 메뉴
         private ToolStripMenuItem TreeMenu_CreatePort = new ToolStripMenuItem();
+        private ToolStripMenuItem TreeMenu_DeletePort = new ToolStripMenuItem();
         private ToolStripMenuItem TreeMenu_EditPort = new ToolStripMenuItem();
         private ToolStripSeparator TreeMenuLine1 = new ToolStripSeparator();
         private ToolStripMenuItem TreeMenu_CreateUnit = new ToolStripMenuItem();
@@ -187,6 +188,8 @@ namespace Dnf.Communication
             IconMenu_Comm_PortOpen.Image = Dnf.Utils.Properties.Resources.Connect_Green_32x32;
             IconMenu_Comm_PortClose.Image = Dnf.Utils.Properties.Resources.Connect_Red_32x32;
 
+            IconMenu_Comm_PortClose.Visible = false;
+
             IconMenu_Test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
             IconMenu.Items.AddRange(new ToolStripItem[] {
                 IconMenu_Comm_CreatePort,
@@ -319,6 +322,7 @@ namespace Dnf.Communication
         private void Initialize_TreeMenu()
         {
             TreeMenu_CreatePort.Name = "TreeMenu_CreatePort";
+            TreeMenu_DeletePort.Name = "TreeMenu_DeletePort";
             TreeMenu_EditPort.Name = "TreeMenu_EditPort";
             TreeMenu_CreateUnit.Name = "TreeMenu_CreateUnit";
             TreeMenu_EditUnit.Name = "TreeMenu_EditUnit";
@@ -328,12 +332,16 @@ namespace Dnf.Communication
             TreeMenu.Items.Add(TreeMenuLine1);
             TreeMenu.Items.Add(TreeMenu_CreatePort);
             TreeMenu.Items.Add(TreeMenu_EditPort);
+            TreeMenu.Items.Add(TreeMenu_DeletePort);
             TreeMenu.Items.Add(TreeMenuLine2);
             TreeMenu.Items.Add(TreeMenu_CreateUnit);
             TreeMenu.Items.Add(TreeMenu_EditUnit);
 
+            TreeMenu_PortOpen.Click += (sender, e) => { ConnectPort(); };
+            TreeMenu_PortClose.Click += (sender, e) => { DisConnectPort(); };
             TreeMenu_CreatePort.Click += (sender, e) => { CreatePort(); };
             TreeMenu_EditPort.Click   += (sender, e) => { EditPort(); };
+            TreeMenu_DeletePort.Click += (sender, e) => { DeletePort(); };
             TreeMenu_CreateUnit.Click += (sender, e) => { CreateUnit(); };
             TreeMenu_EditUnit.Click   += (sender, e) => { EditUnit(); };
 
@@ -459,11 +467,12 @@ namespace Dnf.Communication
 
             //TreeMenu
             TreeMenu_CreatePort.Text = RuntimeData.String("F000300");
-            TreeMenu_EditPort.Text   = RuntimeData.String("F000301");
-            TreeMenu_CreateUnit.Text = RuntimeData.String("F000302");
-            TreeMenu_EditUnit.Text   = RuntimeData.String("F000303");
-            TreeMenu_PortOpen.Text   = RuntimeData.String("F000304");
-            TreeMenu_PortClose.Text  = RuntimeData.String("F000305");
+            TreeMenu_DeletePort.Text = RuntimeData.String("F000301");
+            TreeMenu_EditPort.Text   = RuntimeData.String("F000302");
+            TreeMenu_CreateUnit.Text = RuntimeData.String("F000303");
+            TreeMenu_EditUnit.Text   = RuntimeData.String("F000304");
+            TreeMenu_PortOpen.Text   = RuntimeData.String("F000305");
+            TreeMenu_PortClose.Text  = RuntimeData.String("F000306");
 
             //Property Grid
             colPortPropertyName.HeaderText  = RuntimeData.String("F000400");
@@ -486,11 +495,24 @@ namespace Dnf.Communication
         private void CreatePort()
         {
             //Port 생성
-            FrmPort frmPort = new FrmPort(FrmEditType.New);
+            FrmPort frmPort = new FrmPort();
 
             if (frmPort.ShowDialog() == DialogResult.OK)
             {
                 InitTreeItem();
+            }
+        }
+
+        private void DeletePort()
+        {
+            TreeNode selectedNode = this.Tree.SelectedNode;
+
+            if (selectedNode != null && selectedNode.Tag is Port == true)
+            {
+                Port port = selectedNode.Tag as Port;
+
+                RuntimeData.Ports.Remove(port.PortName);
+                selectedNode.Remove();
             }
         }
 
@@ -502,7 +524,7 @@ namespace Dnf.Communication
         private void EditPort()
         {
             //Port 수정
-            FrmPort frmPort = new FrmPort(FrmEditType.Edit, SelectedPort);
+            FrmPort frmPort = new FrmPort(SelectedPort);
 
             if (frmPort.ShowDialog() == DialogResult.OK)
             {
@@ -605,32 +627,41 @@ namespace Dnf.Communication
             {
                 //TreeMenu
                 TreeMenu_CreatePort.Visible = true;
+                TreeMenu_DeletePort.Visible = false;
                 TreeMenu_EditPort.Visible = false;
                 TreeMenuLine1.Visible = false;
                 TreeMenu_CreateUnit.Visible = false;
                 TreeMenu_EditUnit.Visible = false;
                 TreeMenuLine2.Visible = false;
-                TreeMenu_PortOpen.Visible = false;
-                TreeMenu_PortClose.Visible = false;
             }
             //Port
             else if (nodeLvl == 1)
             {
                 //TreeMenu
                 TreeMenu_CreatePort.Visible = false;
+                TreeMenu_DeletePort.Visible = true;
                 TreeMenu_EditPort.Visible = true;
                 TreeMenuLine1.Visible = true;
                 TreeMenu_CreateUnit.Visible = true;
                 TreeMenu_EditUnit.Visible = false;
                 TreeMenuLine2.Visible = true;
-                TreeMenu_PortOpen.Visible = true;
-                TreeMenu_PortClose.Visible = true;
+                if ((this.Tree.SelectedNode.Tag as Port).IsUserOpen == true)
+                {
+                    TreeMenu_PortOpen.Visible = false;
+                    TreeMenu_PortClose.Visible = true;
+                }
+                else
+                {
+                    TreeMenu_PortOpen.Visible = true;
+                    TreeMenu_PortClose.Visible = false;
+                }
             }
             //Unit
             else if (nodeLvl == 2)
             {
                 //TreeMenu
                 TreeMenu_CreatePort.Visible = false;
+                TreeMenu_DeletePort.Visible = false;
                 TreeMenu_EditPort.Visible = false;
                 TreeMenuLine1.Visible = false;
                 TreeMenu_CreateUnit.Visible = false;
@@ -646,6 +677,7 @@ namespace Dnf.Communication
             {
                 //TreeMenu
                 TreeMenu_CreatePort.Visible = false;
+                TreeMenu_DeletePort.Visible = false;
                 TreeMenu_EditPort.Visible = false;
                 TreeMenuLine1.Visible = false;
                 TreeMenu_CreateUnit.Visible = false;
@@ -678,11 +710,11 @@ namespace Dnf.Communication
                     //Porperty 변경
                     if (type == "Custom_SerialPort")
                     {
-                        dt = SerialPortProperty(e.Node.Tag as Custom_SerialPort);
+                        dt = SerialPortProperty(this.SelectedPort);
                     }
                     else if (type == "Custom_EthernetPort")
                     {
-                        dt = EthernetPortProperty(e.Node.Tag as Custom_EthernetPort);
+                        dt = EthernetPortProperty(this.SelectedPort);
                     }
 
                     if (dt != null)
@@ -694,14 +726,14 @@ namespace Dnf.Communication
                     }
 
                     //메뉴 Visible
-                    if (this.SelectedPort.IsOpen == true)
+                    if (this.SelectedPort.IsUserOpen == true)
                     {
                         TextMenu_Comm_PortOpen.Visible = false;
                         TextMenu_Comm_PortClose.Visible = true;
                         IconMenu_Comm_PortOpen.Visible = false;
                         IconMenu_Comm_PortClose.Visible = true;
                     }
-                    else if (this.SelectedPort.IsOpen == false)
+                    else if (this.SelectedPort.IsUserOpen == false)
                     {
                         TextMenu_Comm_PortOpen.Visible = true;
                         TextMenu_Comm_PortClose.Visible = false;
@@ -727,14 +759,14 @@ namespace Dnf.Communication
                     }
 
                     //메뉴 Visible
-                    if (this.SelectedPort.IsOpen == true)
+                    if (this.SelectedPort.IsUserOpen == true)
                     {
                         TextMenu_Comm_PortOpen.Visible = false;
                         TextMenu_Comm_PortClose.Visible = true;
                         IconMenu_Comm_PortOpen.Visible = false;
                         IconMenu_Comm_PortClose.Visible = true;
                     }
-                    else if (this.SelectedPort.IsOpen == false)
+                    else if (this.SelectedPort.IsUserOpen == false)
                     {
                         TextMenu_Comm_PortOpen.Visible = true;
                         TextMenu_Comm_PortClose.Visible = false;
@@ -832,41 +864,38 @@ namespace Dnf.Communication
             }
 
             //종료이벤트
-            if (TabCtrl.TabPages[pageName].GetType() == typeof(Frm_UnitSetting))
-            {
-                (TabCtrl.TabPages[pageName] as Frm_UnitSetting).UnitInfoSave();
-            }
-
-            TabCtrl.TabPages.RemoveByKey(pageName);
+            (TabCtrl.TabPages[pageName] as TabPageBase).Remove();
         }
 
         #endregion TabPage End
         #region Property
 
-        private DataTable SerialPortProperty(Custom_SerialPort port)
+        private DataTable SerialPortProperty(Port port)
         {
             DataTable dt = new DataTable();
             dt.Columns.Add("P", typeof(string));
             dt.Columns.Add("V", typeof(string));
 
-            dt.Rows.Add("PortName", port.PortName);
+            PortSerial serial = port.PortBase as PortSerial;
+            dt.Rows.Add("PortName", serial.COMName);
             dt.Rows.Add("ProtocolType", port.ProtocolType);
-            dt.Rows.Add("BaudRate", port.BaudRate);
-            dt.Rows.Add("DataBits", port.DataBits);
-            dt.Rows.Add("Parity", port.Parity);
-            dt.Rows.Add("StopBit", port.StopBIt);
+            dt.Rows.Add("BaudRate", serial.BaudRate);
+            dt.Rows.Add("DataBits", serial.DataBits);
+            dt.Rows.Add("Parity", serial.Parity);
+            dt.Rows.Add("StopBit", serial.StopBit);
 
             return dt;
         }
 
-        private DataTable EthernetPortProperty(Custom_EthernetPort port)
+        private DataTable EthernetPortProperty(Port port)
         {
             DataTable dt = new DataTable();
             dt.Columns.Add("P", typeof(string));
             dt.Columns.Add("V", typeof(string));
 
-            dt.Rows.Add("PortNo", port.PortNo);
-            dt.Rows.Add("IP", port.IPAddr);
+            PortEthernet ethernet = port.PortBase as PortEthernet;
+            dt.Rows.Add("PortNo", ethernet.PortNo);
+            dt.Rows.Add("IP", ethernet.IP);
 
             return dt;
         }
@@ -916,15 +945,42 @@ namespace Dnf.Communication
         private void FrmClosed(object sender, FormClosedEventArgs e)
         {
             if (bgWorker != null && bgWorker.IsBusy) bgWorker.CancelAsync();
+            RuntimeData.Ports.Clear();
         }
 
         #endregion Event End
 
         private void TestFunction()
         {
-            if(RuntimeData.TestPortUsed == true)
-                { RuntimeData.TestPortUsed = false; }
-            else{ RuntimeData.TestPortUsed = true; }
+            //실행중인 Port 검사
+            bool closeCheck = false;
+            foreach(Port port in RuntimeData.Ports.Values)
+            {
+                if(port.IsUserOpen == true)
+                {
+                    if(closeCheck == true)
+                    {
+                        port.Close();
+                        continue;
+                    }
+
+                    if(MessageBox.Show("실행중인 모든 Port가 종료되어야 합니다. 종료하시겠습니까?", "테스터기", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
+                    {
+                        closeCheck = true;
+                        port.Close();
+                        continue;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (this.SelectedPort != null)
+            {
+                OpenTabPage(new Frm_LogCommunication("Port Tester", "Port Data Tester기"));
+            }
         }
 
     }

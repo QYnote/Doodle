@@ -43,12 +43,6 @@ namespace Dnf.Communication.Data
         Initializing
     }
 
-    internal enum BaudRate
-    {
-        _9600,
-        _14400
-    }
-
     /// <summary>
     /// Channel Value 종류
     /// </summary>
@@ -57,5 +51,10 @@ namespace Dnf.Communication.Data
         CV, //현재값
         LV, //하한값
         HV  //상한값
+    }
+
+    internal static class EnumCustom
+    {
+        internal static string[] BaudRate = new string[] { "9600", "14400" };
     }
 }

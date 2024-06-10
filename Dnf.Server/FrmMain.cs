@@ -155,8 +155,21 @@ namespace Dnf.Server
                 if (type == "ReceiveLog")
                 {
                     //데이터 Log 기록
-                    TxtLog.AppendText(string.Format("\r\nData Receive : {0}", obj[0]));
-                    TxtLog.AppendText(string.Format("\r\nData Send : {0}", obj[1]));
+                    string str = string.Empty;
+                    byte[] arr = obj[0] as byte[];
+                    foreach (byte b in arr)
+                    {
+                        str += b + " ";
+                    }
+                    TxtLog.AppendText(string.Format("\r\nData Receive : {0}", str));
+
+                    str = string.Empty;
+                    arr = obj[1] as byte[];
+                    foreach (byte b in arr)
+                    {
+                        str += b + " ";
+                    }
+                    TxtLog.AppendText(string.Format("\r\nData Send : {0}", str));
                 }
                 else if (type == "ServerLog")
                 {

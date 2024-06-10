@@ -20,15 +20,15 @@ namespace Dnf.Communication.Frm
         /// <summary>
         /// Form Open 형태, New : 신규생성, Edit : 수정
         /// </summary>
-        FrmEditType OpenType;
+        FrmEditType OpenType {  get; set; }
         /// <summary>
         /// Form 내부 Port
         /// </summary>
-        Port BasePort;
+        Port BasePort { get; set; }
         /// <summary>
         /// 선택된 Unit
         /// </summary>
-        Unit SelectedUnit;
+        Unit SelectedUnit {  get; set; }
 
         #region Controls
         Panel pnlButton = new Panel();

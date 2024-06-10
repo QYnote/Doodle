@@ -85,16 +85,19 @@ namespace Dnf.Server.Server
         private void ClientMethod(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[1024];
+            byte[] bufferFull = new byte[1024];
             byte[] returnBytes = null;
             int bytesLength;
 
             try
             {
                 //읽을때마다 새로 읽은 Data buffer에 덮어씌우기
-                while((bytesLength = stream.Read(buffer, 0, buffer.Length)) > 0)
+                while((bytesLength = stream.Read(bufferFull, 0, bufferFull.Length)) > 0)
                 {
                     //Data Receive에 따른 무언가 처리
+                    byte[] buffer = new byte[bytesLength];
+                    Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
+
                     returnBytes = this.ReceiveActiveEvent?.Invoke(buffer, bytesLength);
 
                     //보낸 Client에게 되돌려주는 Data
@@ -110,9 +113,9 @@ namespace Dnf.Server.Server
             }
             finally
             {
+                IPEndPoint ep = client.Client.RemoteEndPoint as IPEndPoint;
                 client.Close();
                 this.clientList.Remove(client);
-                IPEndPoint ep = client.Client.RemoteEndPoint as IPEndPoint;
                 base.SendMsg?.Invoke(string.Format("Client Receive End / IP : {0}, Port : {1}", ep.Address.ToString(), ep.Port));
             }
         }

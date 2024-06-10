@@ -20,7 +20,7 @@ using Excel = Microsoft.Office.Interop.Excel;
 
 namespace Dnf.Communication.Frm
 {
-    internal partial class Frm_UnitSetting : TabPage
+    internal partial class Frm_UnitSetting : TabPageBase
     {
         #region UnitSetting 구조
 
@@ -178,14 +178,14 @@ namespace Dnf.Communication.Frm
 
         private string InfoFilePath = RuntimeData.DataPath + "UnitInfo.xml";
 
-        internal Frm_UnitSetting()
+        internal Frm_UnitSetting() : base(RuntimeData.String("F03"), RuntimeData.String("F03"))
         {
             InitializeComponent();
             InitializeForm();
 
-            this.Name = RuntimeData.String("F03");
             this.Text = this.Name;
             this.SizeChanged += FrmSizeChanged;
+            this.BeforeRemovePageHandler += UnitInfoSave;
         }
 
         #region Initialize

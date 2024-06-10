@@ -22,11 +22,11 @@ namespace Dnf.Communication.Frm
         /// <summary>
         /// Form Open 형태, New : 신규생성, Edit : 수정
         /// </summary>
-        FrmEditType OpenType;
+        FrmEditType OpenType { get; set; }
         /// <summary>
         /// Form 내부 Port
         /// </summary>
-        Port frmPort;
+        Port frmPort {  get; set; }
 
         #region Controls
 
@@ -40,7 +40,7 @@ namespace Dnf.Communication.Frm
         ucControlBox cboPortName = new ucControlBox(CtrlType.ComboBox);      //연결된 포트
         ucControlBox cboProtocolType = new ucControlBox(CtrlType.ComboBox);  //통신방법 구분
         ucControlBox cboBaudRate = new ucControlBox(CtrlType.ComboBox);      //BaudRate
-        ucControlBox numDataBits = new ucControlBox(CtrlType.Numberic);     //Data Bits
+        ucControlBox numDataBits = new ucControlBox(CtrlType.Numberic);      //Data Bits
         ucControlBox cboStopBit = new ucControlBox(CtrlType.ComboBox);       //StopBit
         ucControlBox cboParity = new ucControlBox(CtrlType.ComboBox);        //ParityBit
 
@@ -52,13 +52,18 @@ namespace Dnf.Communication.Frm
         /// <summary>
         /// Port 관리 Form
         /// </summary>
-        /// <param name="frm">상위 Form</param>
-        /// <param name="type">Form 열리는 Type / New, Edit</param>
         /// <param name="port">Edit일 때 수정할 Port</param>
-        internal FrmPort(FrmEditType type, Port port = null)
+        internal FrmPort(Port port = null)
         {
-            OpenType = type;
-            frmPort = port;
+            if(port == null)
+            {
+                this.OpenType = FrmEditType.New;
+            }
+            else
+            {
+                this.OpenType = FrmEditType.Edit;
+                this.frmPort = port;
+            }
 
             InitializeComponent();
             InitialForm();
@@ -79,7 +84,6 @@ namespace Dnf.Communication.Frm
             SetText();
             SetDefaultValue();
             SetVisible();
-            SetEnable();
         }
 
         /// <summary>
@@ -132,7 +136,7 @@ namespace Dnf.Communication.Frm
             //Items
             (cboPortName.ctrl as ComboBox).Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
             (cboProtocolType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());
-            (cboBaudRate.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<BaudRate>());
+            (cboBaudRate.ctrl as ComboBox).Items.AddRange(EnumCustom.BaudRate);
             (cboStopBit.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<StopBits>());
             (cboParity.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<Parity>());
 
@@ -223,46 +227,29 @@ namespace Dnf.Communication.Frm
                 (txtPortNo.ctrl as MaskedTextBox).Text = "5000";
                 (txtIPaddr.ctrl as TextBox).Text = "127.0.0.1";
             }
-            else if(OpenType == FrmEditType.Edit && frmPort != null)
+            else if(OpenType == FrmEditType.Edit)
             {
                 cboProtocolType.Value = frmPort.ProtocolType;
 
                 //Serial Port일경우
                 if (frmPort.ProtocolType == uProtocolType.ModBusRTU || frmPort.ProtocolType == uProtocolType.ModBusAscii)
                 {
-                    Custom_SerialPort port = frmPort as Custom_SerialPort;
+                    PortSerial serial = this.frmPort.PortBase as PortSerial;
 
-                    (cboPortName.ctrl as ComboBox).Text = port.PortName;
-                    cboProtocolType.Value = port.ProtocolType;
-                    cboBaudRate.Value = port.BaudRate;
-                    cboStopBit.Value = port.StopBIt;
-                    cboParity.Value = port.Parity;
-                    (numDataBits.ctrl as ucNumeric).Value = port.DataBits;
+                    (cboPortName.ctrl as ComboBox).Text = serial.COMName;
+                    cboProtocolType.Value = this.frmPort.ProtocolType;
+                    cboBaudRate.Value = serial.BaudRate;
+                    cboStopBit.Value = serial.StopBit;
+                    cboParity.Value = serial.Parity;
+                    (numDataBits.ctrl as ucNumeric).Value = serial.DataBits;
                 }
                 //Ethernet Port인경우
                 else if(frmPort.ProtocolType == uProtocolType.ModBusTcpIp)
                 {
-                    Custom_EthernetPort port = frmPort as Custom_EthernetPort;
+                    PortEthernet ethernet = this.frmPort.PortBase as PortEthernet;
 
-                    (txtPortNo.ctrl as MaskedTextBox).Text = port.PortNo.ToString("D4");
-                    (txtIPaddr.ctrl as TextBox).Text = port.IPAddr.ToString();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Controls 비활성화 처리
-        /// </summary>
-        private void SetEnable()
-        {
-            //수정사항일 시 비활성화 처리
-            if (OpenType == FrmEditType.Edit)
-            {
-                uProtocolType protocolType = frmPort.ProtocolType;
-
-                if (protocolType == uProtocolType.ModBusRTU || protocolType == uProtocolType.ModBusAscii)
-                {
-                    cboPortName.Enabled = false;
+                    (txtPortNo.ctrl as MaskedTextBox).Text = ethernet.PortNo.ToString("D4");
+                    (txtIPaddr.ctrl as TextBox).Text = ethernet.IP.ToString();
                 }
             }
         }
@@ -310,7 +297,7 @@ namespace Dnf.Communication.Frm
             {
                 cboPortName.Visible = true;
                 cboBaudRate.Visible = true;
-                numDataBits.Visible = true;
+                numDataBits.Visible = true; 
                 cboStopBit.Visible = true;
                 cboParity.Visible = true;
 
@@ -326,51 +313,146 @@ namespace Dnf.Communication.Frm
         /// <param name="e"></param>
         private void ClickButton_OK(object sender, EventArgs e)
         {
-            Port port = null;
-            if (OpenType == FrmEditType.New)
+            //Port 중복 확인
+            if (ConfirmPort() == false) return;
+
+            //생성 or 변경절차 실행
+            if (this.OpenType == FrmEditType.New)
             {
-                //Port 생성
-                if (ConfirmCreate())
+                //신규생성 Process
+                uProtocolType protocolType = (uProtocolType)cboProtocolType.Value;
+
+                if (protocolType == uProtocolType.ModBusRTU
+                    || protocolType == uProtocolType.ModBusAscii)
                 {
-                    port = CreatePort();
-                    if (port == null)
+                    //Serial Port일경우
+                    string portName = cboPortName.Value.ToString();
+                    string baudRate = cboBaudRate.Value.ToString();
+                    int dataBits = Convert.ToInt32(numDataBits.Value);
+                    Parity parity = (Parity)cboParity.Value;
+                    StopBits stopBits = (StopBits)cboStopBit.Value;
+
+                    this.frmPort = new Port(portName, baudRate, dataBits, parity, stopBits, protocolType);
+                }
+                else if (protocolType == uProtocolType.ModBusTcpIp)
+                {
+                    //TCP Port일경우
+                    string ip = (txtIPaddr.ctrl as TextBox).Text;
+                    int portNo = int.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
+
+                    this.frmPort = new Port(ip, portNo, protocolType);
+                }
+
+                if (frmPort != null)
+                {
+                    FrmUnit frmUnit = new FrmUnit(FrmEditType.New, frmPort);
+
+                    //정상처리시 Runtime에 추가
+                    if (frmUnit.ShowDialog() == DialogResult.OK)
                     {
-                        MessageBox.Show(RuntimeData.String("F010001"));
-                        return;
+                        RuntimeData.Ports.Add(this.frmPort.PortName, this.frmPort);
+                        this.DialogResult = DialogResult.OK;
                     }
-
-                    frmPort = port; 
                 }
             }
-            else if(OpenType == FrmEditType.Edit && frmPort != null)
+            else if (this.OpenType == FrmEditType.Edit)
             {
-                //Port 수정
-                EditPort();
-            }
+                //수정 Process
+                string BfPortName = this.frmPort.PortName;
+                uProtocolType protocolType = (uProtocolType)cboProtocolType.Value;
 
-            //화면 종료
-            if(OpenType == FrmEditType.New && frmPort != null)
-            {
-                FrmUnit frmUnit = new FrmUnit(FrmEditType.New, frmPort);
-
-                //정상처리시 Runtime에 추가
-                if (port != null && frmUnit.ShowDialog() == DialogResult.OK)
+                //BasePort가 바뀌는 Protocol로 바뀌었을 경우
+                if (CheckBaseProtocolChange() == true)
                 {
-                    RuntimeData.Ports.Add(port.PortName, port);
-                    this.DialogResult = DialogResult.OK;
+                    if (protocolType == uProtocolType.ModBusRTU
+                        || protocolType == uProtocolType.ModBusAscii)
+                    {
+                        //Serial Port일경우
+                        string portName = cboPortName.Value.ToString();
+                        string baudRate = cboBaudRate.Value.ToString();
+                        int dataBits = Convert.ToInt32(numDataBits.Value);
+                        Parity parity = (Parity)cboParity.Value;
+                        StopBits stopBits = (StopBits)cboStopBit.Value;
+
+                        this.frmPort.PortName = portName;
+                        this.frmPort.PortBase = new PortSerial(portName, baudRate, dataBits, parity, stopBits);
+                    }
+                    else if (protocolType == uProtocolType.ModBusTcpIp)
+                    {
+                        //TCP Port일경우
+                        string ip = (txtIPaddr.ctrl as TextBox).Text;
+                        int portNo = int.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
+
+                        this.frmPort.PortName = ip + ":" + portNo;
+                        this.frmPort.PortBase = new PortEthernet(ip, portNo);
+                    }
                 }
-            }
-            else if(OpenType == FrmEditType.Edit)
-            {
+                else
+                {
+                    if (protocolType == uProtocolType.ModBusRTU
+                        || protocolType == uProtocolType.ModBusAscii)
+                    {
+                        PortSerial serial = this.frmPort.PortBase as PortSerial;
+                        //Serial Port일경우
+                        serial.COMName = cboPortName.Value.ToString();
+                        serial.BaudRate = cboBaudRate.Value.ToString();
+                        serial.DataBits = Convert.ToInt32(numDataBits.Value);
+                        serial.Parity = (Parity)cboParity.Value;
+                        serial.StopBit = (StopBits)cboStopBit.Value;
+
+                        this.frmPort.PortName = serial.COMName;
+                    }
+                    else if (protocolType == uProtocolType.ModBusTcpIp)
+                    {
+                        PortEthernet ethernet = this.frmPort.PortBase as PortEthernet;
+
+                        //TCP Port일경우
+                        ethernet.IP = (txtIPaddr.ctrl as TextBox).Text;
+                        ethernet.PortNo = int.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
+
+                        this.frmPort.PortName = ethernet.IP + ":" + ethernet.PortNo;
+                    }
+                }
+
+
+                UtilCustom.DictKeyChange(RuntimeData.Ports, BfPortName, this.frmPort.PortName);
                 this.DialogResult = DialogResult.OK;
             }
         }
 
         /// <summary>
-        /// Create Port 확인 절차
+        /// BaseProtocol 변경 여부
+        /// </summary>
+        /// <returns>true : 변경안됨 / false : 변경됨</returns>
+        private bool CheckBaseProtocolChange()
+        {
+            uProtocolType BfProtocol = this.frmPort.ProtocolType;   //기존 Protocol
+            uProtocolType AfProtocol = (uProtocolType)cboProtocolType.Value;    //변경된 Protocol
+
+            if (BfProtocol == uProtocolType.ModBusRTU
+                || BfProtocol == uProtocolType.ModBusAscii)
+            {
+                if (AfProtocol == uProtocolType.ModBusTcpIp)
+                    return true;
+                else
+                    return false;
+            }
+            else if(BfProtocol == uProtocolType.ModBusTcpIp)
+            {
+                if (AfProtocol == uProtocolType.ModBusTcpIp)
+                    return false;
+                else
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Port 확인 절차
         /// </summary>
         /// <returns>true : OK / false : Error</returns>
-        private bool ConfirmCreate()
+        private bool ConfirmPort()
         {
             //사전 검사
             //Port명 중복 검사
@@ -398,102 +480,6 @@ namespace Dnf.Communication.Frm
 
 
             return true;
-        }
-
-        /// <summary>
-        /// Port 생성하기
-        /// </summary>
-        /// <returns></returns>
-        private Port CreatePort()
-        {
-            //Port 생성
-            Port port = null;
-
-            uProtocolType protocolType = (uProtocolType)cboProtocolType.Value;
-
-            if (protocolType == uProtocolType.ModBusRTU || protocolType == uProtocolType.ModBusAscii)
-            {
-                //Serial Port일경우
-                string portName = cboPortName.Value.ToString();
-                BaudRate baudRate = (BaudRate)cboBaudRate.Value;
-                int dataBits = Convert.ToInt32(numDataBits.Value);
-                StopBits stopBits = (StopBits)cboStopBit.Value;
-                Parity parity = (Parity)cboParity.Value;
-
-                port = new Custom_SerialPort(portName, protocolType, baudRate, dataBits, stopBits, parity);
-            }
-            else if (protocolType == uProtocolType.ModBusTcpIp)
-            {
-                //TCP Port일경우
-                string ip = (txtIPaddr.ctrl as TextBox).Text;
-                ushort portNo = ushort.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
-
-                port = new Custom_EthernetPort(ip, protocolType, portNo);
-            }
-
-            return port;
-        }
-
-        /// <summary>
-        /// Port 수정하기
-        /// </summary>
-        private void EditPort()
-        {
-            uProtocolType protocolType = (uProtocolType)cboProtocolType.Value;
-            //변경할 Protocol과 이전 Protocol이 같을경우
-            if (protocolType == frmPort.ProtocolType)
-            {
-                if (frmPort.ProtocolType == uProtocolType.ModBusRTU || frmPort.ProtocolType == uProtocolType.ModBusAscii)
-                {
-                    //Serial Port
-                    Custom_SerialPort port = frmPort as Custom_SerialPort;
-
-                    port.BaudRate = (BaudRate)cboBaudRate.Value;
-                    port.DataBits = Convert.ToInt32(numDataBits.Value);
-                    port.StopBIt = (StopBits)cboStopBit.Value;
-                    port.Parity = (Parity)cboParity.Value;
-                }
-                else if (frmPort.ProtocolType == uProtocolType.ModBusTcpIp)
-                {
-                    //Ethernet Port
-                    Custom_EthernetPort port = frmPort as Custom_EthernetPort;
-                    string bfPortName = port.PortName;//변경전 PortName 미리 저장
-
-                    port.IPAddr = IPAddress.Parse((txtIPaddr.ctrl as TextBox).Text);
-                    port.PortNo = ushort.Parse(txtPortNo.Value.ToString());
-                    port.PortName = port.IPAddr.ToString() + ":" + port.PortNo;
-
-                    //Runtime에 있는 Port Name 수정
-                    UtilCustom.DictKeyChange(RuntimeData.Ports, bfPortName, port.PortName);
-                }
-            }
-            //변경할 Protocol과 이전 Protocol이 다를경우
-            else
-            {
-                if (protocolType == uProtocolType.ModBusRTU || protocolType == uProtocolType.ModBusAscii)
-                {
-                    //Serial Port
-                    BaudRate baudRate = (BaudRate)cboBaudRate.Value;
-                    int DataBits = Convert.ToInt32(numDataBits.Value);
-                    StopBits stopBIt = (StopBits)cboStopBit.Value;
-                    Parity parity = (Parity)cboParity.Value;
-
-                    Port port = new Custom_SerialPort(frmPort.PortName, protocolType, baudRate, DataBits, stopBIt, parity);
-                    RuntimeData.Ports[frmPort.PortName] = port;
-                }
-                else if (protocolType == uProtocolType.ModBusTcpIp)
-                {
-                    //Ethernet Port
-                    string ip = (txtIPaddr.ctrl as TextBox).Text;
-                    ushort portNo = ushort.Parse((txtPortNo.ctrl as TextBox).Text);
-
-                    Port port = new Custom_EthernetPort(ip, protocolType, portNo);
-
-                    //Runtime에 있는 Port Name 수정
-                    RuntimeData.Ports.Remove(frmPort.PortName);
-                    RuntimeData.Ports.Add(port.PortName, port);
-                }
-            }
         }
 
         private void ClickButton_Cancel(object sender, EventArgs e)

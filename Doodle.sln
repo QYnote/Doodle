@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.Utils", "Dnf.Utils\Dnf.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.Server", "Dnf.Server\Dnf.Server.csproj", "{63FEE339-283B-4E4D-9664-5BAF7E07A582}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.Comm.Protocols", "Dnf.Comm.Protocols\Dnf.Comm.Protocols.csproj", "{198EBF4F-FBD9-47E6-BCBF-4A2AA2F91EB4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +32,6 @@ Global
 		{63FEE339-283B-4E4D-9664-5BAF7E07A582}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63FEE339-283B-4E4D-9664-5BAF7E07A582}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63FEE339-283B-4E4D-9664-5BAF7E07A582}.Release|Any CPU.Build.0 = Release|Any CPU
-		{198EBF4F-FBD9-47E6-BCBF-4A2AA2F91EB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{198EBF4F-FBD9-47E6-BCBF-4A2AA2F91EB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{198EBF4F-FBD9-47E6-BCBF-4A2AA2F91EB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{198EBF4F-FBD9-47E6-BCBF-4A2AA2F91EB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

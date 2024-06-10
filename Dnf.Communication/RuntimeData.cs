@@ -15,7 +15,6 @@ namespace Dnf.Communication
         internal readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
         internal static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
         internal static string LangType = "Ko";
-        internal static bool TestPortUsed = false;
         private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 
         static RuntimeData()
@@ -71,11 +70,12 @@ namespace Dnf.Communication
             dtimsi.Rows.Add("F000204", "통신 닫기");
             dtimsi.Rows.Add("F0003", "트리 메뉴");
             dtimsi.Rows.Add("F000300", "통신 생성");
-            dtimsi.Rows.Add("F000301", "통신 수정");
-            dtimsi.Rows.Add("F000302", "유닛 생성");
-            dtimsi.Rows.Add("F000303", "유닛 수정");
-            dtimsi.Rows.Add("F000304", "통신 열기");
-            dtimsi.Rows.Add("F000305", "통신 닫기");
+            dtimsi.Rows.Add("F000301", "통신 삭제");
+            dtimsi.Rows.Add("F000302", "통신 수정");
+            dtimsi.Rows.Add("F000303", "유닛 생성");
+            dtimsi.Rows.Add("F000304", "유닛 수정");
+            dtimsi.Rows.Add("F000305", "통신 열기");
+            dtimsi.Rows.Add("F000306", "통신 닫기");
             dtimsi.Rows.Add("F0004", "속성 Grid");
             dtimsi.Rows.Add("F000400", "이름");
             dtimsi.Rows.Add("F000401", "값");

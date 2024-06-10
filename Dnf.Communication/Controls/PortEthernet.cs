@@ -2,7 +2,6 @@
 using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -11,52 +10,62 @@ using System.Threading.Tasks;
 
 namespace Dnf.Communication.Controls
 {
-    internal class Custom_EthernetPort : Port
+    internal class PortEthernet : PortBase
     {
         /// <summary>
-        /// Port IP번호
+        /// Port 연결 상태
         /// </summary>
-        internal IPAddress IPAddr;
-        /// <summary>
-        /// Port번호
-        /// </summary>
-        internal ushort PortNo;
-        internal Socket clientSocket;
-        internal int MaxBufferSize {  get; set; }
-
-        internal Custom_EthernetPort(string ipAddress, uProtocolType type, ushort portNo) : base(ipAddress, type)
-        {
-            this.IPAddr = IPAddress.Parse(ipAddress);
-            this.PortNo = portNo;
-            this.MaxBufferSize = 1024;
-
-            base.UserPortOpenFlag = false;
-        }
-
         internal override bool IsOpen
         {
             get
             {
-                if (this.clientSocket == null || this.clientSocket.Connected == false)
+                if (clientSocket == null || clientSocket.Connected == false)
                     return false;
                 else
                     return true;
             }
         }
-
         /// <summary>
-        /// 연결된 Port 열기
+        /// 서버와 연결할 Socket
         /// </summary>
-        /// <returns>true : Success / false : Fail</returns>
+        private Socket clientSocket { get; set; }
+        /// <summary>
+        /// Port IP번호
+        /// </summary>
+        internal string IP {  get; set; }
+        /// <summary>
+        /// Port번호
+        /// </summary>
+        internal int PortNo;
+        /// <summary>
+        /// Port가 담당할 Buffer 최대 크기
+        /// </summary>
+        internal int MaxBufferSize { get; set; }
+        /// <summary>
+        /// Port에서 Receive한 Buffer
+        /// </summary>
+        private byte[] ReadingBuffer { get; set; }
+
+        internal PortEthernet(string ipAddress, int portNo)
+        {
+            this.IP = ipAddress;
+            this.PortNo = portNo;
+            this.MaxBufferSize = 1024;
+        }
+        /// <summary>
+        /// Ethernet Port 열기
+        /// </summary>
+        /// <returns>true : 정상 열림 / false : 열기 실패</returns>
         internal override bool Open()
         {
             if (this.IsOpen == false)
             {
+                IPAddress ipAddr = IPAddress.Parse(this.IP);
                 this.clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
 
                 try
                 {
-                    var asyncResult = this.clientSocket.BeginConnect(IPAddr, PortNo, null, this.clientSocket);  //연결 시도
+                    var asyncResult = this.clientSocket.BeginConnect(ipAddr, PortNo, null, this.clientSocket);  //연결 시도
                     bool connectResult = asyncResult.AsyncWaitHandle.WaitOne(3000); //최대 3초간 연결 대기
 
                     if (connectResult == true)
@@ -75,20 +84,17 @@ namespace Dnf.Communication.Controls
                 }
                 catch
                 {
-                    base.PortLogHandler?.Invoke("[ERROR]Port Open Fail");
+                    UtilCustom.DebugWrite("[ERROR]Port Open Fail");
                     return false;
                 }
-
-                base.BgWorker.RunWorkerAsync();
             }
             else
             {
-                base.PortLogHandler?.Invoke("[Alart]Port Already Open");
+                UtilCustom.DebugWrite("[Alart]Port Already Open");
             }
 
             return true;
         }
-
         /// <summary>
         /// Receive 종료 이벤트
         /// </summary>
@@ -100,44 +106,59 @@ namespace Dnf.Communication.Controls
             {
                 if (e.BytesTransferred > 0)
                 {
-                    if (base.ReadingBuffer == null)
-                        base.ReadingBuffer = e.Buffer;
+                    byte[] buffer = new byte[e.BytesTransferred];
+                    Buffer.BlockCopy(e.Buffer, 0, buffer, 0, buffer.Length);
+
+                    if (this.ReadingBuffer == null)
+                        this.ReadingBuffer = buffer;
                     else
-                        base.ReadingBuffer.BytesAppend(e.Buffer);
+                        this.ReadingBuffer.BytesAppend(buffer);
 
                     this.clientSocket.ReceiveAsync(e);
                 }
             }
         }
-
+        /// <summary>
+        /// Port 닫기
+        /// </summary>
+        /// <returns>true : 정상 닫기 / false : 닫기 실패</returns>
         internal override bool Close()
         {
-            if(this.IsOpen == true)
+            if (this.IsOpen == true)
             {
-                this.clientSocket.Close();
-                base.BgWorker.CancelAsync();
+                this.clientSocket.Close();      //Socket 닫기
             }
             else
             {
-                base.PortLogHandler?.Invoke("[Alart]Port Already Close");
+                UtilCustom.DebugWrite("[Alart]Port Already Close");
 
                 return false;
             }
 
             return true;
         }
+        /// <summary>
+        /// Port Data 읽어서 PortClass의 ReadingData에 쌓기
+        /// </summary>
+        /// <param name="buffer">담아갈 byte Array</param>
+        internal override void Read(ref byte[] buffer)
+        {
+            buffer = this.ReadingBuffer;
 
+            this.ReadingBuffer = null;
+        }
+        /// <summary>
+        /// Port Data 전송
+        /// </summary>
+        /// <param name="bytes">전송할 Data byte Array</param>
         internal override void Write(byte[] bytes)
         {
-            if(this.IsOpen == true)
+            if (this.IsOpen == true)
             {
                 this.clientSocket.Send(bytes);
             }
 
-            return ;
+            return;
         }
-
-        /// <summary>[미사용]AsyncEvent_Completed이벤트가 대신 데이터 읽어줌</summary>
-        internal override void Read(){}
     }
 }

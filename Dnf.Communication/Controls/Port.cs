@@ -1,19 +1,15 @@
 ﻿using Dnf.Communication.Controls.Protocols;
 using Dnf.Communication.Data;
-using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Dnf.Communication.Controls
 {
@@ -42,24 +38,49 @@ namespace Dnf.Communication.Controls
         internal byte CurSendTryCount { get; set; }
     }
 
-    internal abstract class Port
+    internal class Port
     {
         internal delegate void PortLogDelegate(string Msg);
         /// <summary>Port Log 작성용 이벤트</summary>
-        internal PortLogDelegate PortLogHandler;
+        internal PortLogDelegate PortLogHandler { get; set; }
         /// <summary>
-        /// 기본 Port 정의
+        /// SerialPort 생성 Class
         /// </summary>
-        internal Port(string portName, uProtocolType protocol)
+        /// <param name="COMName">Port 명</param>
+        /// <param name="BaudRate">통신속도</param>
+        /// <param name="DataBits">데이터길이</param>
+        /// <param name="Parity">Parity</param>
+        /// <param name="StopBits">StopBit</param>
+        /// <param name="Protocol">통신규격</param>
+        internal Port(string COMName, string BaudRate, int DataBits, Parity Parity, StopBits StopBits, uProtocolType Protocol)
         {
-            //Port 정보
-            this.PortName = portName;       //UI에 표시되는 Port명(ex. COM5, COM3)
-            this.ProtocolType = protocol;   //통신방법
-            this.Processor = null;
+            this.PortBase = new PortSerial(COMName, BaudRate, DataBits, Parity, StopBits);
+            this.PortName = COMName;
+            this.ProtocolType = Protocol;
+
+            CommInitializePort();
+        }
+        /// <summary>
+        /// Ethernet Port 생성 Class
+        /// </summary>
+        /// <param name="IpAddress"></param>
+        /// <param name="PortNo"></param>
+        /// <param name="Protocol"></param>
+        internal Port(string IpAddress, int PortNo, uProtocolType Protocol)
+        {
+            this.PortBase = new PortEthernet(IpAddress, PortNo);
+            this.PortName = IpAddress + ":" + PortNo;
+            this.ProtocolType = Protocol;
+
+            CommInitializePort();
+        }
+        /// <summary>
+        /// Port 공통 초기화 Method
+        /// </summary>
+        private void CommInitializePort()
+        {
             this.Units = new Dictionary<int, Unit>();
 
-            //Port 상태값
-            this.UserPortOpenFlag = false;
             this.BgWorker = new BackgroundWorker();
             this.BgWorker.WorkerSupportsCancellation = true;
             this.BgWorker.DoWork += PortWorker;
@@ -67,32 +88,47 @@ namespace Dnf.Communication.Controls
             //Port 전송처리 Property
             this.SendingQueue = new Queue<CommFrame>();
             this.ReceiveQueue = new Queue<CommFrame>();
-            this.RemainBytesLength = 0;
+            this.RemainBufferLength = 0;
             this.ReadingTimeout = 6000;
             this.NoneReceiveTimeout = 6000;
         }
-        #region Property
-        
         /// <summary>
-        /// 유저가 Port Open요청 했는지에대한 상태값 Flag
+        /// User가 Open했는지에대한 확인
         /// </summary>
-        internal bool UserPortOpenFlag { get; set; }
+        internal bool IsUserOpen { get; set; }
         /// <summary>
-        /// 포트 연결 상태
+        /// Port 연결 상태
         /// </summary>
-        internal abstract bool IsOpen { get; }
+        internal bool IsOpen
+        {
+            get
+            {
+                if(PortBase == null || PortBase.IsOpen == false)
+                    return false;
+                else
+                    return true;
+            }
+        }
+        /// <summary>
+        /// Port 종류
+        /// </summary>
+        internal PortBase PortBase { get; set; }
         /// <summary>
         /// 통신 방법
         /// </summary>
         internal uProtocolType ProtocolType { get; set; }
         /// <summary>
-        /// Port명, RunTimeData의 Port Dictionary 이름 구분용으로 사용
+        /// Port 이름
         /// </summary>
         internal string PortName { get; set; }
         /// <summary>
         /// Port에 연결된 하위 Unit들(ex. PLC, 센서 등), (SlaveAddr, Unit)
         /// </summary>
         internal Dictionary<int, Unit> Units { get; set; }
+        /// <summary>
+        /// 읽어들인 Buffer 처리방법 Class
+        /// </summary>
+        private ProtocolBase Processor { get; set; }
         /// <summary>
         /// Data 송,수신 처리할 Background Thread
         /// </summary>
@@ -108,15 +144,11 @@ namespace Dnf.Communication.Controls
         /// <summary>
         /// 읽고있는 중인 Class에 보관된 Buffer
         /// </summary>
-        internal byte[] ReadingBuffer { get; set; }
-        /// <summary>
-        /// Protocol에따른 Frmae 처리 Class
-        /// </summary>
-        private ProtocolBase Processor { get; set; }
+        private byte[] ReadingBuffer = null;
         /// <summary>
         /// 남은 Buffer 길이, 읽은 Buffer 확인용
         /// </summary>
-        private int RemainBytesLength { get; set; }
+        private int RemainBufferLength {  get; set; }
         /// <summary>
         /// 미수신 Timeout 시간, 단위(ms), Default 6000
         /// </summary>
@@ -129,29 +161,52 @@ namespace Dnf.Communication.Controls
         /// 최근 보낸 Frame, 
         /// </summary>
         private CommFrame RecentSendFrame { get; set; }
+        /// <summary>
+        /// 통신 열기
+        /// </summary>
+        internal void Open()
+        {
+            if (this.IsUserOpen == false)
+            {
+                if (this.ProtocolType == uProtocolType.ModBusTcpIp)
+                    this.Processor = (ProtocolBase)null;
+                else
+                    this.Processor = (ProtocolBase)null;
 
-        #endregion Property
+                this.PortBase.Open();
 
+                this.IsUserOpen = true;
+                this.BgWorker.RunWorkerAsync();
+            }
+        }
         /// <summary>
-        /// 연결된 Port 열기
+        /// 통신 닫기
         /// </summary>
-        /// <returns>true : Success / false : Fail</returns>
-        internal abstract bool Open();
-        /// <summary>
-        /// 연결된 Port 닫기
-        /// </summary>
-        /// <returns>true : Success / false : Fail</returns>
-        internal abstract bool Close();
-        /// <summary>
-        /// Port Data 전송
-        /// </summary>
-        /// <param name="bytes">전송할 Data byte Array</param>
-        internal abstract void Write(byte[] bytes);
-        /// <summary>
-        /// Port Data 읽어서 PortClass의 ReadingData에 쌓기
-        /// </summary>
-        internal abstract void Read();
+        internal void Close()
+        {
+            if(this.IsUserOpen == true)
+            {
+                this.PortBase.Close();
 
+                this.IsUserOpen = false;
+                this.BgWorker.CancelAsync();
+            }
+        }
+        /// <summary>
+        /// 통신 데이터 쓰기
+        /// </summary>
+        /// <param name="commFrame">ReqDataBytes가 입력된 CommFrame</param>
+        private void Write(CommFrame commFrame)
+        {
+            if (commFrame.ReqDataBytes == null) return;
+
+            commFrame.SendTimeTick = DateTime.Now.Ticks;    //전송시간
+            commFrame.IsTimeout = false;    //Timeout 여부
+
+            this.PortBase.Write(commFrame.ReqDataBytes);    //Data 전송
+
+            this.RecentSendFrame = commFrame;   //최근 보낸 Data
+        }
         /// <summary>
         /// Background Worker 진행 Event, 송,수신 처리
         /// </summary>
@@ -165,35 +220,31 @@ namespace Dnf.Communication.Controls
                     return;
                 else
                 {
+                    if (this.IsUserOpen == false) return;
 
-                    if (this.UserPortOpenFlag == false) return;
-
-                    //User Open && Port DisConnect 시
-                    if(this.IsOpen == false)
+                    //Port 끊켜있으면 재연결
+                    if (this.IsOpen == false)
                     {
                         //Port 초기화
-                        this.Close();
                         this.SendingQueue.Clear();
 
                         //Port 재연결
-                        this.Open();
+                        this.PortBase.Open();
                         continue;
                     }
 
                     //전송할 Data List가 있을 경우
-                    while(SendingQueue.Count > 0)
+                    while (SendingQueue.Count > 0)
                     {
                         Thread.Sleep(50);
+                        if (this.IsOpen == false) break;
 
                         CommFrame commFrame = this.SendingQueue.Peek();
 
-                        if(commFrame.Equals(this.RecentSendFrame) == false)
+                        if (commFrame.ReqDataBytes.Equals(this.RecentSendFrame.ReqDataBytes) == false)
                         {
                             //최근 보낸 Data와 Queue에 마지막에있는 Data가 다를경우 Data 전송
-                            
-                            this.Write(commFrame.ReqDataBytes);
-
-                            commFrame.SendTimeTick = DateTime.Now.Ticks;
+                            this.Write(commFrame);
                         }
                         else
                         {
@@ -206,11 +257,11 @@ namespace Dnf.Communication.Controls
                             //2. Timeout 검사
                             if (TimeoutCheck(commFrame, readStartTimeTick) == true) continue;
 
-                            this.Read();
+                            this.PortBase.Read(ref ReadingBuffer);
 
                             //3. 마지막 Read한 버퍼 량에서 추가적으로 더 들어오지 않았다면 재실행
                             //2개가 연속으로 들어왔을 경우에는 어떻게?
-                            if (this.ReadingBuffer == null || this.ReadingBuffer.Length == this.RemainBytesLength) continue;
+                            if (this.ReadingBuffer == null || this.ReadingBuffer.Length == this.RemainBufferLength) continue;
 
                             //4. Protocol에따른 Bytes Frame 추출
                             int tailEndIdx = ReadingBuffer.Length - 1;//-1;
@@ -248,13 +299,17 @@ namespace Dnf.Communication.Controls
                                 Buffer.BlockCopy(this.ReadingBuffer, tailEndIdx + 1, remainBytes, 0, remainLen); //끝에 잘려서 가져오는지 확인
                             }
                             this.ReadingBuffer = remainBytes;
-                            this.RemainBytesLength = remainLen;
+                            this.RemainBufferLength = remainLen;
 
                             str = "RemainBytes : ";
-                            foreach (byte b in remainBytes)
+                            if (remainLen > 0)
                             {
-                                str += b + " ";
+                                foreach (byte b in remainBytes)
+                                {
+                                    str += b + " ";
+                                }
                             }
+                            str += "\r\n";
                             this.PortLogHandler?.Invoke(str);
 
                             this.ReceiveQueue.Enqueue(commFrame);
@@ -262,7 +317,7 @@ namespace Dnf.Communication.Controls
                         }
                     }//while(SendQueue.Count) End
                 }
-            }//while(true) ENd
+            }//while(true) End
         }
         /// <summary>
         /// Timeout 검사
@@ -273,7 +328,7 @@ namespace Dnf.Communication.Controls
         private bool TimeoutCheck(CommFrame sendingFrame, long readStartTime)
         {
             long curTimeTick = DateTime.Now.Ticks;
-            if (this.RemainBytesLength <= ReadingBuffer.Length)
+            if (this.RemainBufferLength <= (ReadingBuffer == null ? 0 : ReadingBuffer.Length))
             {
                 //데이터가 너무 오래들어오는 Timeout
                 if (curTimeTick - readStartTime > this.ReadingTimeout)
@@ -324,6 +379,5 @@ namespace Dnf.Communication.Controls
 
             return false;
         }
-
     }
 }
