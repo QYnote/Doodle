@@ -1,4 +1,4 @@
-﻿using Dnf.Communication.Controls;
+﻿using Dnf.Comm.Controls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,13 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Dnf.Communication
+namespace Dnf.Comm
 {
     //프로그램 실행동안 가질 데이터
     internal static class RuntimeData
     {
         internal readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
-        internal static Dictionary<string, Port> Ports = new Dictionary<string, Port>();  //만들어진 Port
+        internal static Dictionary<string, ProgramPort> Ports = new Dictionary<string, ProgramPort>();  //만들어진 Port
         internal static string LangType = "Ko";
         private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 

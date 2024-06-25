@@ -54,6 +54,42 @@ namespace Dnf.Utils.Controls
             //int Bit Shift
             return new byte[] { (byte)(value >> 8), (byte)value };
         }
+        /// <summary>
+        /// String Hex값 byte로 변환
+        /// <para>ex. 1F → 31</para>
+        /// </summary>
+        /// <param name="str">2글자 String</param>
+        /// <returns>변환된 byte값, 2글자 이상일 시 0</returns>
+        static public byte StringHexToByte(this string str)
+        {
+            if (str.Length > 2) return 0;
+            foreach (char c in str)
+            {
+                if (!(char.IsDigit(c)
+                    || c == 'A' || c == 'B'
+                    || c == 'C' || c == 'D'
+                    || c == 'E' || c == 'F'
+                    ))
+                    return 0;
+            }
+
+            return Convert.ToByte(str, 16);
+        }
+        /// <summary>
+        /// String Dec값 byte로 변환
+        /// </summary>
+        /// <param name="str">3글자 String</param>
+        /// <returns>변환된 byte값, 3글자 이상일 시 0</returns>
+        static public byte StringDecToByte(this string str)
+        {
+            if (str.Length > 3) return 0;
+            foreach (char c in str)
+            {
+                if (!char.IsDigit(c)) return 0;
+            }
+
+            return Convert.ToByte(str);
+        }
 
         /// <summary>
         /// string -> Enum값으로 변경

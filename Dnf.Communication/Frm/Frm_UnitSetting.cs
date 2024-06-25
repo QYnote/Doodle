@@ -1,4 +1,4 @@
-﻿using Dnf.Communication.Data;
+﻿using Dnf.Comm.Data;
 using Dnf.Utils.Controls;
 using Dnf.Utils.Views;
 using System;
@@ -18,7 +18,7 @@ using System.Windows.Forms;
 using System.Xml;
 using Excel = Microsoft.Office.Interop.Excel;
 
-namespace Dnf.Communication.Frm
+namespace Dnf.Comm.Frm
 {
     internal partial class Frm_UnitSetting : TabPageBase
     {

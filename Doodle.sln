@@ -4,7 +4,7 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetFramework", "DotNetFramework\DotNetFramework.csproj", "{4C8CC7A6-458E-42CD-86D5-72BD43F25688}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.Communication", "Dnf.Communication\Dnf.Communication.csproj", "{51E53D22-AD2C-4C18-99D5-6B6D73FDD404}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.Comm", "Dnf.Communication\Dnf.Comm.csproj", "{51E53D22-AD2C-4C18-99D5-6B6D73FDD404}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.Utils", "Dnf.Utils\Dnf.Utils.csproj", "{4C5EA9DD-25AA-4820-97D7-2575C955922A}"
 EndProject

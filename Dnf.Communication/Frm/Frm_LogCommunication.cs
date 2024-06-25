@@ -1,4 +1,4 @@
-﻿using Dnf.Communication.Controls;
+﻿using Dnf.Comm.Controls;
 using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
@@ -11,11 +11,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Communication.Frm
+namespace Dnf.Comm.Frm
 {
     internal partial class Frm_LogCommunication : TabPageBase
     {
-        Port TestPort { get; set; }
+        ProgramPort TestPort { get; set; }
+        MainForm Frm {  get; set; }
 
         #region Controls
 
@@ -27,8 +28,14 @@ namespace Dnf.Communication.Frm
 
         #endregion Controls End
 
-        internal Frm_LogCommunication(string PageName, string Caption) : base(PageName, Caption)
+        internal Frm_LogCommunication(MainForm frm, string PageName, string Caption) : base(PageName, Caption)
         {
+            Frm = frm;
+            Frm.TextMenu.Enabled = false;
+            Frm.IconMenu.Enabled = false;
+            Frm.Tree.Enabled = false;
+            Frm.pnlProperty.Enabled = false;
+
             InitializeComponent();
             InitializeControl();
 
@@ -104,23 +111,57 @@ namespace Dnf.Communication.Frm
 
             string sendText = TxtSendData.Value.ToString().Trim();
 
+            //DEC : #000, Hex: $00
+            List<byte> bytes = new List<byte>();
+            for (int i = 0; i < sendText.Length; i++)
+            {
+                if(sendText[i] == '#')
+                {
+                    //Dec값 변환
+                    if (i + 1 >= sendText.Length) return;
+                    if (sendText[i + 1] == '#')
+                    {
+                        //'#'값을 전송할 경우
+                        bytes.Add((byte)sendText[i]);
+
+                        i += 1;
+                    }
+                    else
+                    {
+                        //Dec에 해당하는 Byte를 전송할 경우
+                        if (i + 3 >= sendText.Length) return;
+                        string dec = sendText[i + 1].ToString() + sendText[i + 2] + sendText[i + 3];
+
+                        bytes.Add(dec.StringDecToByte());
+
+                        i += 3;
+                    }
+                }
+                else if (sendText[i] == '$')
+                {
+                    //Hex값 변환
+                    if (i + 2 >= sendText.Length) return;
+                    string hex = sendText[i + 1].ToString() + sendText[i + 2];
+
+                    bytes.Add(hex.StringHexToByte());
+
+                    i += 2;
+                }
+                else
+                {
+                    //일반 변환
+                    bytes.Add((byte)sendText[i]);
+                }
+            }
+
             if (this.TestPort.IsOpen == true)
             {
                 if (sendText == "") return;
 
                 CommFrame data = new CommFrame();
-                data.ReqDataBytes = Encoding.UTF8.GetBytes(sendText);
+                data.ReqDataBytes = bytes.ToArray();
                 TestPort.SendingQueue.Enqueue(data);
-
-                string str = string.Empty;
-                foreach (byte b in data.ReqDataBytes)
-                {
-                    str += b + " ";
-                }
-
-                WriteLog(string.Format("Send Message byte : {0}", str));
             }
-
         }
 
         private void DataClear(object sender, EventArgs e)
@@ -155,10 +196,15 @@ namespace Dnf.Communication.Frm
                 this.TestPort.PortLogHandler -= WriteLog;
             }
 
-            if (TestPort.IsOpen == true)
+            if (TestPort != null && TestPort.IsUserOpen == true)
             {
                 TestPort.Close();
             }
+
+            Frm.TextMenu.Enabled = true;
+            Frm.IconMenu.Enabled = true;
+            Frm.Tree.Enabled = true;
+            Frm.pnlProperty.Enabled = true;
         }
     }
 }

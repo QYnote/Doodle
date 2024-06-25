@@ -1,4 +1,4 @@
-﻿namespace Dnf.Communication.Frm
+﻿namespace Dnf.Comm.Frm
 {
     partial class Frm_LogCommunication
     {

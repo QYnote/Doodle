@@ -4,10 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication.Controls
+namespace Dnf.Comm.Controls.PCPorts
 {
-    internal abstract class PortBase
+    /// <summary>
+    /// 프로그램 - Client 사이의 Port
+    /// </summary>
+    public abstract class PCPortBase
     {
+        internal abstract string PortName { get; }
         /// <summary>
         /// Port 연결 상태
         /// </summary>
@@ -26,7 +30,7 @@ namespace Dnf.Communication.Controls
         /// Port Data 읽어서 PortClass의 ReadingData에 쌓기
         /// </summary>
         /// <param name="buffer">담아갈 byte Array</param>
-        internal abstract void Read(ref byte[] buffer);
+        internal abstract byte[] Read(byte[] buffer);
         /// <summary>
         /// Port Data 전송
         /// </summary>

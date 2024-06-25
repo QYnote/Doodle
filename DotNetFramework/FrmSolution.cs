@@ -78,7 +78,7 @@ namespace DotNetFramework
             if (!isOpen)
             {
                 //Form 생성
-                if (btnName == BtnCommunication.Name) { frm = new Dnf.Communication.MainForm() { Name = BtnCommunication.Name }; }
+                if (btnName == BtnCommunication.Name) { frm = new Dnf.Comm.MainForm() { Name = BtnCommunication.Name }; }
                 else if (btnName == BtnServer.Name) { frm = new Dnf.Server.FrmMain() { Name = BtnServer.Name }; }
                 else if (btnName == BtnTest.Name) { frm = null; }
 

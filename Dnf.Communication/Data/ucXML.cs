@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Dnf.Communication.Data
+namespace Dnf.Comm.Data
 {
     internal static class ucXML
     {

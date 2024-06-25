@@ -1,5 +1,5 @@
-﻿using Dnf.Communication.Controls;
-using Dnf.Communication.Data;
+﻿using Dnf.Comm.Controls;
+using Dnf.Comm.Data;
 using Dnf.Utils.Controls;
 using Dnf.Utils.Views;
 using System;
@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Communication.Frm
+namespace Dnf.Comm.Frm
 {
     internal partial class FrmUnit : Form
     {
@@ -22,9 +22,9 @@ namespace Dnf.Communication.Frm
         /// </summary>
         FrmEditType OpenType {  get; set; }
         /// <summary>
-        /// Form 내부 Port
+        /// Form 내부 ProgramPort
         /// </summary>
-        Port BasePort { get; set; }
+        ProgramPort BasePort { get; set; }
         /// <summary>
         /// 선택된 Unit
         /// </summary>
@@ -58,7 +58,7 @@ namespace Dnf.Communication.Frm
         /// </summary>
         bool EditFlag = false;
 
-        internal FrmUnit(FrmEditType type, Port port, Unit unit = null)
+        internal FrmUnit(FrmEditType type, ProgramPort port, Unit unit = null)
         {
             OpenType = type;
             BasePort = port;
@@ -278,7 +278,7 @@ namespace Dnf.Communication.Frm
         {
             EditFlag = false;
 
-            //Port Protocol 정보
+            //ProgramPort Protocol 정보
             (cboProtocolType.ctrl as ComboBox).SelectedItem = BasePort.ProtocolType;
 
             if (OpenType == FrmEditType.New)

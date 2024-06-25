@@ -1,7 +1,8 @@
-﻿using Dnf.Communication.Controls;
-using Dnf.Communication.Data;
+﻿using Dnf.Comm.Controls;
+using Dnf.Comm.Controls.PCPorts;
+using Dnf.Comm.Data;
 using Dnf.Utils.Controls;
-using Dnf.Utils.Views;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,7 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Communication.Frm
+namespace Dnf.Comm.Frm
 {
     internal partial class FrmPort : Form
     {
@@ -26,7 +27,7 @@ namespace Dnf.Communication.Frm
         /// <summary>
         /// Form 내부 Port
         /// </summary>
-        Port frmPort {  get; set; }
+        ProgramPort frmPort {  get; set; }
 
         #region Controls
 
@@ -53,7 +54,7 @@ namespace Dnf.Communication.Frm
         /// Port 관리 Form
         /// </summary>
         /// <param name="port">Edit일 때 수정할 Port</param>
-        internal FrmPort(Port port = null)
+        internal FrmPort(ProgramPort port = null)
         {
             if(port == null)
             {
@@ -234,7 +235,7 @@ namespace Dnf.Communication.Frm
                 //Serial Port일경우
                 if (frmPort.ProtocolType == uProtocolType.ModBusRTU || frmPort.ProtocolType == uProtocolType.ModBusAscii)
                 {
-                    PortSerial serial = this.frmPort.PortBase as PortSerial;
+                    PortSerial serial = this.frmPort.PCPort as PortSerial;
 
                     (cboPortName.ctrl as ComboBox).Text = serial.COMName;
                     cboProtocolType.Value = this.frmPort.ProtocolType;
@@ -246,7 +247,7 @@ namespace Dnf.Communication.Frm
                 //Ethernet Port인경우
                 else if(frmPort.ProtocolType == uProtocolType.ModBusTcpIp)
                 {
-                    PortEthernet ethernet = this.frmPort.PortBase as PortEthernet;
+                    PortEthernet ethernet = this.frmPort.PCPort as PortEthernet;
 
                     (txtPortNo.ctrl as MaskedTextBox).Text = ethernet.PortNo.ToString("D4");
                     (txtIPaddr.ctrl as TextBox).Text = ethernet.IP.ToString();
@@ -332,7 +333,8 @@ namespace Dnf.Communication.Frm
                     Parity parity = (Parity)cboParity.Value;
                     StopBits stopBits = (StopBits)cboStopBit.Value;
 
-                    this.frmPort = new Port(portName, baudRate, dataBits, parity, stopBits, protocolType);
+                    this.frmPort = new ProgramPort(portName, baudRate, dataBits, parity, stopBits);
+                    this.frmPort.ProtocolType = protocolType;
                 }
                 else if (protocolType == uProtocolType.ModBusTcpIp)
                 {
@@ -340,7 +342,8 @@ namespace Dnf.Communication.Frm
                     string ip = (txtIPaddr.ctrl as TextBox).Text;
                     int portNo = int.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
 
-                    this.frmPort = new Port(ip, portNo, protocolType);
+                    this.frmPort = new ProgramPort(ip, portNo);
+                    this.frmPort.ProtocolType = protocolType;
                 }
 
                 if (frmPort != null)
@@ -374,8 +377,7 @@ namespace Dnf.Communication.Frm
                         Parity parity = (Parity)cboParity.Value;
                         StopBits stopBits = (StopBits)cboStopBit.Value;
 
-                        this.frmPort.PortName = portName;
-                        this.frmPort.PortBase = new PortSerial(portName, baudRate, dataBits, parity, stopBits);
+                        this.frmPort.PCPort = new PortSerial(portName, baudRate, dataBits, parity, stopBits);
                     }
                     else if (protocolType == uProtocolType.ModBusTcpIp)
                     {
@@ -383,8 +385,7 @@ namespace Dnf.Communication.Frm
                         string ip = (txtIPaddr.ctrl as TextBox).Text;
                         int portNo = int.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
 
-                        this.frmPort.PortName = ip + ":" + portNo;
-                        this.frmPort.PortBase = new PortEthernet(ip, portNo);
+                        this.frmPort.PCPort = new PortEthernet(ip, portNo);
                     }
                 }
                 else
@@ -392,25 +393,21 @@ namespace Dnf.Communication.Frm
                     if (protocolType == uProtocolType.ModBusRTU
                         || protocolType == uProtocolType.ModBusAscii)
                     {
-                        PortSerial serial = this.frmPort.PortBase as PortSerial;
+                        PortSerial serial = this.frmPort.PCPort as PortSerial;
                         //Serial Port일경우
                         serial.COMName = cboPortName.Value.ToString();
                         serial.BaudRate = cboBaudRate.Value.ToString();
                         serial.DataBits = Convert.ToInt32(numDataBits.Value);
                         serial.Parity = (Parity)cboParity.Value;
                         serial.StopBit = (StopBits)cboStopBit.Value;
-
-                        this.frmPort.PortName = serial.COMName;
                     }
                     else if (protocolType == uProtocolType.ModBusTcpIp)
                     {
-                        PortEthernet ethernet = this.frmPort.PortBase as PortEthernet;
+                        PortEthernet ethernet = this.frmPort.PCPort as PortEthernet;
 
                         //TCP Port일경우
                         ethernet.IP = (txtIPaddr.ctrl as TextBox).Text;
                         ethernet.PortNo = int.Parse((txtPortNo.ctrl as MaskedTextBox).Text);
-
-                        this.frmPort.PortName = ethernet.IP + ":" + ethernet.PortNo;
                     }
                 }
 

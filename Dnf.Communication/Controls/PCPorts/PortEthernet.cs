@@ -1,16 +1,16 @@
-﻿using Dnf.Communication.Data;
-using Dnf.Utils.Controls;
+﻿using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication.Controls
+namespace Dnf.Comm.Controls.PCPorts
 {
-    internal class PortEthernet : PortBase
+    internal class PortEthernet : PCPortBase
     {
         /// <summary>
         /// Port 연결 상태
@@ -25,6 +25,7 @@ namespace Dnf.Communication.Controls
                     return true;
             }
         }
+        internal override string PortName { get { return this.IP + ":" + this.PortNo; } }
         /// <summary>
         /// 서버와 연결할 Socket
         /// </summary>
@@ -141,11 +142,21 @@ namespace Dnf.Communication.Controls
         /// Port Data 읽어서 PortClass의 ReadingData에 쌓기
         /// </summary>
         /// <param name="buffer">담아갈 byte Array</param>
-        internal override void Read(ref byte[] buffer)
+        internal override byte[] Read(byte[] buffer)
         {
-            buffer = this.ReadingBuffer;
+            //읽은 Buffer 없으면 기존꺼 return
+            if (this.ReadingBuffer == null || this.ReadingBuffer.Length == 0)
+                return buffer;
+
+            byte[] returnBuffer = null;
+            if(buffer == null || buffer.Length == 0)
+                returnBuffer = this.ReadingBuffer;
+            else
+                returnBuffer = buffer.BytesAppend(this.ReadingBuffer);
 
             this.ReadingBuffer = null;
+
+            return returnBuffer;
         }
         /// <summary>
         /// Port Data 전송

@@ -1,5 +1,4 @@
-﻿using Dnf.Communication.Data;
-using Dnf.Utils.Controls;
+﻿using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,16 +6,14 @@ using System.IO.Ports;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 
-namespace Dnf.Communication.Controls
+namespace Dnf.Comm.Controls.PCPorts
 {
-    internal class PortSerial:PortBase
+    public class PortSerial : PCPortBase
     {
         internal PortSerial(string COMName, string BaudRate, int DataBits, Parity Parity, StopBits StopBits)
         {
-            Port = new SerialPort();
+            this.Port = new SerialPort();
 
             this.COMName = COMName;
             this.BaudRate = BaudRate;
@@ -24,6 +21,7 @@ namespace Dnf.Communication.Controls
             this.Parity = Parity;
             this.StopBit = StopBits;
         }
+        internal override string PortName { get { return this.COMName; }}
         /// <summary>
         /// 서버와 연결할 Serial Port
         /// </summary>
@@ -31,23 +29,23 @@ namespace Dnf.Communication.Controls
         /// <summary>
         /// 연결할 Port명
         /// </summary>
-        internal string COMName {  get; set; }
+        public string COMName {  get; set; }
         /// <summary>
         /// 통신속도
         /// </summary>
-        internal string BaudRate { get; set; }
+        public string BaudRate { get; set; }
         /// <summary>
         /// 데이터 길이
         /// </summary>
-        internal int DataBits { get; set; }
+        public int DataBits { get; set; }
         /// <summary>
         /// Parity Bit
         /// </summary>
-        internal Parity Parity { get; set; }
+        public Parity Parity { get; set; }
         /// <summary>
         /// Stop Bit
         /// </summary>
-        internal StopBits StopBit { get; set; }
+        public StopBits StopBit { get; set; }
         /// <summary>
         /// Port 연결 상태
         /// </summary>
@@ -114,7 +112,7 @@ namespace Dnf.Communication.Controls
         /// Port Data 읽어서 PortClass의 ReadingData에 쌓기
         /// </summary>
         /// <param name="buffer">담아갈 byte Array</param>
-        internal override void Read(ref byte[] buffer)
+        internal override byte[] Read(byte[] buffer)
         {
             try
             {
@@ -142,7 +140,7 @@ namespace Dnf.Communication.Controls
                 Debug.WriteLine(string.Format("[ERROR]{0} - Read() - Try Error", this.COMName));
             }
 
-            return;
+            return buffer;
         }
         /// <summary>
         /// Port Data 전송

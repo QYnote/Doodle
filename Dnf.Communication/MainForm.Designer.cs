@@ -1,4 +1,4 @@
-﻿namespace Dnf.Communication
+﻿namespace Dnf.Comm
 {
     partial class MainForm
     {

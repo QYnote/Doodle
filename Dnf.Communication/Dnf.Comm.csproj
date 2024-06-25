@@ -46,11 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls\PortEthernet.cs" />
-    <Compile Include="Controls\Port.cs" />
+    <Compile Include="Controls\PCPortBase.cs" />
+    <Compile Include="Controls\PCPorts\PortEthernet.cs" />
+    <Compile Include="Controls\ProgramPort.cs" />
     <Compile Include="Data\EnumCustom.cs" />
-    <Compile Include="Controls\PortBase.cs" />
-    <Compile Include="Controls\PortSerial.cs" />
+    <Compile Include="Controls\PCPorts\PortSerial.cs" />
     <Compile Include="Controls\Protocols\ProtocolBase.cs" />
     <Compile Include="Data\ucXML.cs" />
     <Compile Include="Frm\FrmPort.cs">
@@ -138,6 +138,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
     <ItemGroup>

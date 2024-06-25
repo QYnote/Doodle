@@ -1,4 +1,4 @@
-﻿using Dnf.Communication.Data;
+﻿using Dnf.Comm.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,14 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Communication.Controls
+namespace Dnf.Comm.Controls
 {
     internal class Unit
     {
         /// <summary>Unit 연결 상태</summary>
         internal UnitConnectionState State;
         /// <summary>Unit 상위 Port</summary>
-        internal readonly Port ParentPort;  //등록된 Port
+        internal readonly ProgramPort ParentPort;  //등록된 Port
 
         /// <summary>Unit 주소</summary>
         internal int SlaveAddr;
@@ -31,7 +31,7 @@ namespace Dnf.Communication.Controls
         /// <summary>Unit을 담당하는 Node</summary>
         internal TreeNode Node;
 
-        internal Unit(Port port, int addr, string type, string model, string modelName = null)
+        internal Unit(ProgramPort port, int addr, string type, string model, string modelName = null)
         { 
             ParentPort = port;
             SlaveAddr = addr;

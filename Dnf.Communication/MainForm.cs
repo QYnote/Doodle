@@ -8,18 +8,20 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Dnf.Communication.Controls;
-using Dnf.Communication.Data;
-using Dnf.Communication.Frm;
+
+using Dnf.Comm.Controls;
+using Dnf.Comm.Controls.PCPorts;
+using Dnf.Comm.Data;
+using Dnf.Comm.Frm;
 
 //Button Resource 사이트
 
-namespace Dnf.Communication
+namespace Dnf.Comm
 {
     public partial class MainForm : Dnf.Utils.Views.FrmBase
     {
         #region Control 모음
-        private MenuStrip TextMenu = new MenuStrip();   
+        internal MenuStrip TextMenu = new MenuStrip();   
         private ToolStripMenuItem TextMenu_Basic = new ToolStripMenuItem();
         private ToolStripMenuItem TextMenu_Basic_Unit = new ToolStripMenuItem();
         private ToolStripMenuItem TextMenu_File = new ToolStripMenuItem();
@@ -29,7 +31,7 @@ namespace Dnf.Communication
         private ToolStripMenuItem TextMenu_Comm_CreatePort = new ToolStripMenuItem();
         private ToolStripMenuItem TextMenu_Comm_PortOpen = new ToolStripMenuItem();
         private ToolStripMenuItem TextMenu_Comm_PortClose = new ToolStripMenuItem();
-        private ToolStrip IconMenu = new ToolStrip();   //상단 아이콘 메뉴
+        internal ToolStrip IconMenu = new ToolStrip();   //상단 아이콘 메뉴
         private ToolStripButton IconMenu_File_XmlSave = new ToolStripButton();
         private ToolStripButton IconMenu_File_XmlLoad = new ToolStripButton();
         private ToolStripButton IconMenu_Comm_CreatePort = new ToolStripButton();
@@ -44,7 +46,7 @@ namespace Dnf.Communication
         private Button BtnTabClose;                     //Tab Page 닫기 버튼
 
         private Panel pnlList;      //생성된 정보들모음
-        private TreeView Tree;      //등록된 Port-Unit Tree
+        internal TreeView Tree;      //등록된 ProgramPort-Unit Tree
         private ImageList TreeImgList = new ImageList();
         private ContextMenuStrip TreeMenu = new ContextMenuStrip();  //Tree 우클릭 메뉴
         private ToolStripMenuItem TreeMenu_CreatePort = new ToolStripMenuItem();
@@ -57,7 +59,7 @@ namespace Dnf.Communication
         private ToolStripMenuItem TreeMenu_PortOpen = new ToolStripMenuItem();
         private ToolStripMenuItem TreeMenu_PortClose = new ToolStripMenuItem();
 
-        private Panel pnlProperty = new Panel();
+        internal Panel pnlProperty = new Panel();
         private DataGridView gvPort = new DataGridView();
         private DataGridView gvUnit = new DataGridView();
         private DataGridViewColumn colPortPropertyName = new DataGridViewTextBoxColumn();
@@ -67,7 +69,7 @@ namespace Dnf.Communication
         #endregion Control 모음 End
 
         private BackgroundWorker bgWorker;
-        private Port SelectedPort;
+        private ProgramPort SelectedPort;
         private Unit SelectedUnit;
 
         public MainForm()
@@ -204,7 +206,7 @@ namespace Dnf.Communication
         }
 
         /// <summary>
-        /// Port, Unit 정보창 Panel
+        /// ProgramPort, Unit 정보창 Panel
         /// </summary>
         private void InitializeControl_Info()
         {
@@ -213,7 +215,7 @@ namespace Dnf.Communication
             pnlList.Dock = DockStyle.Left;
             pnlList.Size = new Size(200, pnlList.Height);
 
-            //생성된 Port, Unit Tree
+            //생성된 ProgramPort, Unit Tree
             Tree = new TreeView();
             Tree.Dock = DockStyle.Fill;
             Tree.Size = new Size(Tree.Width, 100);
@@ -368,8 +370,8 @@ namespace Dnf.Communication
         {
             Tree.Nodes[0].Nodes.Clear();    //Program Computer Node 하위항목 삭제
 
-            //Port
-            foreach (Port port in RuntimeData.Ports.Values)
+            //ProgramPort
+            foreach (ProgramPort port in RuntimeData.Ports.Values)
             {
                 TreeNode portNode = new TreeNode();
                 portNode.Name = port.PortName;
@@ -432,8 +434,8 @@ namespace Dnf.Communication
         {
             //Tree
             TreeImgList.Images.Add("Root", Dnf.Utils.Properties.Resources.BlueCircleSetting_16x16);     //Program Computer
-            TreeImgList.Images.Add("SerialPort", Dnf.Utils.Properties.Resources.Serial_Come_16x16);     //Serial Port
-            TreeImgList.Images.Add("LANPort", Dnf.Utils.Properties.Resources.LAN_Come_16x16);           //LAN Port
+            TreeImgList.Images.Add("SerialPort", Dnf.Utils.Properties.Resources.Serial_Come_16x16);     //Serial ProgramPort
+            TreeImgList.Images.Add("LANPort", Dnf.Utils.Properties.Resources.LAN_Come_16x16);           //LAN ProgramPort
             TreeImgList.Images.Add("DisConnect", Dnf.Utils.Properties.Resources.RedPower_16x16);        //빨강(미연결)
             TreeImgList.Images.Add("ConnectError", Dnf.Utils.Properties.Resources.YellowWarning_16x16); //노랑(연결 불량, 오류)
             TreeImgList.Images.Add("Connect", Dnf.Utils.Properties.Resources.GreenSync_16x16);          //초록(정상연결)
@@ -488,13 +490,13 @@ namespace Dnf.Communication
         #region Menu Function
 
         /// <summary>
-        /// Port 생성
+        /// ProgramPort 생성
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void CreatePort()
         {
-            //Port 생성
+            //ProgramPort 생성
             FrmPort frmPort = new FrmPort();
 
             if (frmPort.ShowDialog() == DialogResult.OK)
@@ -507,9 +509,9 @@ namespace Dnf.Communication
         {
             TreeNode selectedNode = this.Tree.SelectedNode;
 
-            if (selectedNode != null && selectedNode.Tag is Port == true)
+            if (selectedNode != null && selectedNode.Tag is ProgramPort == true)
             {
-                Port port = selectedNode.Tag as Port;
+                ProgramPort port = selectedNode.Tag as ProgramPort;
 
                 RuntimeData.Ports.Remove(port.PortName);
                 selectedNode.Remove();
@@ -517,13 +519,13 @@ namespace Dnf.Communication
         }
 
         /// <summary>
-        /// Port 수정
+        /// ProgramPort 수정
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void EditPort()
         {
-            //Port 수정
+            //ProgramPort 수정
             FrmPort frmPort = new FrmPort(SelectedPort);
 
             if (frmPort.ShowDialog() == DialogResult.OK)
@@ -558,13 +560,13 @@ namespace Dnf.Communication
             {
                 FrmUnit frmUnit = null;
 
-                if (type == "Port")
+                if (type == "ProgramPort")
                 {
-                    frmUnit = new FrmUnit(FrmEditType.New, node.Tag as Port);
+                    frmUnit = new FrmUnit(FrmEditType.New, node.Tag as ProgramPort);
                 }
                 else if (type == "Unit")
                 {
-                    frmUnit = new FrmUnit(FrmEditType.New, node.Parent.Tag as Port);
+                    frmUnit = new FrmUnit(FrmEditType.New, node.Parent.Tag as ProgramPort);
                 }
 
                 //정상적으로 진행되면 수정 Form 열기
@@ -588,7 +590,7 @@ namespace Dnf.Communication
 
             if(type == "Unit")
             {
-                FrmUnit frmUnit = new FrmUnit(FrmEditType.Edit, node.Parent.Tag as Port, node.Tag as Unit);
+                FrmUnit frmUnit = new FrmUnit(FrmEditType.Edit, node.Parent.Tag as ProgramPort, node.Tag as Unit);
 
                 if (frmUnit.ShowDialog() == DialogResult.OK)
                 {
@@ -634,7 +636,7 @@ namespace Dnf.Communication
                 TreeMenu_EditUnit.Visible = false;
                 TreeMenuLine2.Visible = false;
             }
-            //Port
+            //ProgramPort
             else if (nodeLvl == 1)
             {
                 //TreeMenu
@@ -645,7 +647,7 @@ namespace Dnf.Communication
                 TreeMenu_CreateUnit.Visible = true;
                 TreeMenu_EditUnit.Visible = false;
                 TreeMenuLine2.Visible = true;
-                if ((this.Tree.SelectedNode.Tag as Port).IsUserOpen == true)
+                if ((this.Tree.SelectedNode.Tag as ProgramPort).IsUserOpen == true)
                 {
                     TreeMenu_PortOpen.Visible = false;
                     TreeMenu_PortClose.Visible = true;
@@ -702,17 +704,17 @@ namespace Dnf.Communication
                 string type = node.Tag.GetType().Name;
                 DataTable dt = null;
 
-                if (type == "Custom_SerialPort" || type == "Custom_EthernetPort")
+                if (type == "ProgramPort")
                 {
-                    //선택된 Port 설정
-                    this.SelectedPort = e.Node.Tag as Port;
+                    //선택된 ProgramPort 설정
+                    this.SelectedPort = e.Node.Tag as ProgramPort;
 
                     //Porperty 변경
-                    if (type == "Custom_SerialPort")
+                    if (this.SelectedPort.PCPort is PortSerial)
                     {
                         dt = SerialPortProperty(this.SelectedPort);
                     }
-                    else if (type == "Custom_EthernetPort")
+                    else if (this.SelectedPort.PCPort is PortEthernet)
                     {
                         dt = EthernetPortProperty(this.SelectedPort);
                     }
@@ -743,8 +745,8 @@ namespace Dnf.Communication
                 }
                 else if (type == "Unit")
                 {
-                    //선택된 Unit, Port 설정
-                    this.SelectedPort = e.Node.Parent.Tag as Port;
+                    //선택된 Unit, ProgramPort 설정
+                    this.SelectedPort = e.Node.Parent.Tag as ProgramPort;
                     this.SelectedUnit = e.Node.Tag as Unit;
 
                     //Porperty 변경
@@ -777,11 +779,11 @@ namespace Dnf.Communication
             }
         }
 
-        private delegate void InvokerSetUI(Port port);
+        private delegate void InvokerSetUI(ProgramPort port);
         /// <summary>
         /// 그려진 UI 변경
         /// </summary>
-        private void SetUI(Port port)
+        private void SetUI(ProgramPort port)
         {
             if (this.InvokeRequired)
             {
@@ -808,7 +810,7 @@ namespace Dnf.Communication
         /// Node의 Tag Type 가져오기
         /// </summary>
         /// <param name="node">가져올 Node</param>
-        /// <returns>Success : Port, Unit / Error : string.Empty</returns>
+        /// <returns>Success : ProgramPort, Unit / Error : string.Empty</returns>
         private string GetNodeTagType(TreeNode node)
         {
             string type = string.Empty;
@@ -819,7 +821,7 @@ namespace Dnf.Communication
                 if (typeName == "Custom_SerialPort"
                     || typeName == "Custom_EthernetPort")
                 {
-                    return "Port";
+                    return "ProgramPort";
                 }
                 else if (typeName == "Unit")
                 {
@@ -870,13 +872,13 @@ namespace Dnf.Communication
         #endregion TabPage End
         #region Property
 
-        private DataTable SerialPortProperty(Port port)
+        private DataTable SerialPortProperty(ProgramPort port)
         {
             DataTable dt = new DataTable();
             dt.Columns.Add("P", typeof(string));
             dt.Columns.Add("V", typeof(string));
 
-            PortSerial serial = port.PortBase as PortSerial;
+            PortSerial serial = port.PCPort as PortSerial;
             dt.Rows.Add("PortName", serial.COMName);
             dt.Rows.Add("ProtocolType", port.ProtocolType);
             dt.Rows.Add("BaudRate", serial.BaudRate);
@@ -887,13 +889,13 @@ namespace Dnf.Communication
             return dt;
         }
 
-        private DataTable EthernetPortProperty(Port port)
+        private DataTable EthernetPortProperty(ProgramPort port)
         {
             DataTable dt = new DataTable();
             dt.Columns.Add("P", typeof(string));
             dt.Columns.Add("V", typeof(string));
 
-            PortEthernet ethernet = port.PortBase as PortEthernet;
+            PortEthernet ethernet = port.PCPort as PortEthernet;
             dt.Rows.Add("PortNo", ethernet.PortNo);
             dt.Rows.Add("IP", ethernet.IP);
 
@@ -926,7 +928,7 @@ namespace Dnf.Communication
                     foreach (TreeNode portNode in Tree.Nodes[0].Nodes)
                     {
                         if (portNode.Tag == null) continue;
-                        Port port = (Port)portNode.Tag;
+                        ProgramPort port = (ProgramPort)portNode.Tag;
 
                         //UI 변경
                         SetUI(port);
@@ -952,9 +954,9 @@ namespace Dnf.Communication
 
         private void TestFunction()
         {
-            //실행중인 Port 검사
+            //실행중인 ProgramPort 검사
             bool closeCheck = false;
-            foreach(Port port in RuntimeData.Ports.Values)
+            foreach(ProgramPort port in RuntimeData.Ports.Values)
             {
                 if(port.IsUserOpen == true)
                 {
@@ -964,7 +966,7 @@ namespace Dnf.Communication
                         continue;
                     }
 
-                    if(MessageBox.Show("실행중인 모든 Port가 종료되어야 합니다. 종료하시겠습니까?", "테스터기", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
+                    if(MessageBox.Show("실행중인 모든 ProgramPort가 종료되어야 합니다. 종료하시겠습니까?", "테스터기", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                     {
                         closeCheck = true;
                         port.Close();
@@ -979,7 +981,7 @@ namespace Dnf.Communication
 
             if (this.SelectedPort != null)
             {
-                OpenTabPage(new Frm_LogCommunication("Port Tester", "Port Data Tester기"));
+                OpenTabPage(new Frm_LogCommunication(this, "ProgramPort Tester", "ProgramPort Data Tester기"));
             }
         }
 

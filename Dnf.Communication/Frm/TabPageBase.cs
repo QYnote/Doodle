@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dnf.Communication.Frm
+namespace Dnf.Comm.Frm
 {
     public partial class TabPageBase : TabPage
     {
