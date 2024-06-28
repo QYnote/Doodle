@@ -68,6 +68,15 @@
     <Compile Include="Controls\ucNumeric.Designer.cs">
       <DependentUpon>ucNumeric.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\ProgressBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\ProgressBase.Designer.cs">
+      <DependentUpon>ProgressBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Progress_Bar.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
