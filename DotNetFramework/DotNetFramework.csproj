@@ -103,10 +103,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Dnf.Communication\Dnf.Comm.csproj">
-      <Project>{51e53d22-ad2c-4c18-99d5-6b6d73fdd404}</Project>
-      <Name>Dnf.Comm</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Dnf.Server\Dnf.Server.csproj">
       <Project>{63fee339-283b-4e4d-9664-5baf7e07a582}</Project>
       <Name>Dnf.Server</Name>

@@ -37,6 +37,8 @@ namespace Dnf.Comm
         private ToolStripButton IconMenu_Comm_CreatePort = new ToolStripButton();
         private ToolStripButton IconMenu_Comm_PortOpen = new ToolStripButton();
         private ToolStripButton IconMenu_Comm_PortClose = new ToolStripButton();
+        private ToolStripButton IconMenu_DataSender = new ToolStripButton();
+
         private ToolStripButton IconMenu_Test = new ToolStripButton();
 
         private StatusStrip StatusBar = new StatusStrip();   //상태 바
@@ -176,33 +178,54 @@ namespace Dnf.Comm
             IconMenu_Comm_CreatePort.Name = "IconMenu_Comm_CreatePort";
             IconMenu_Comm_PortOpen.Name = "IconMenu_Comm_PortOpen";
             IconMenu_Comm_PortClose.Name = "IconMenu_Comm_PortClose";
+            IconMenu_DataSender.Name = "IconMenu_DataSender";
             IconMenu_Test.Name = "IconMenu_Test";
+
 
             IconMenu_File_XmlSave.DisplayStyle = ToolStripItemDisplayStyle.Image;
             IconMenu_File_XmlLoad.DisplayStyle = ToolStripItemDisplayStyle.Image;
             IconMenu_Comm_CreatePort.DisplayStyle = ToolStripItemDisplayStyle.Image;
             IconMenu_Comm_PortOpen.DisplayStyle = ToolStripItemDisplayStyle.Image;
             IconMenu_Comm_PortClose.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            IconMenu_DataSender.DisplayStyle = ToolStripItemDisplayStyle.Image;
             IconMenu_Test.DisplayStyle = ToolStripItemDisplayStyle.Image;
 
             //IconMenusms ImageList 사용해서 가져오면 Image 깨짐
             IconMenu_Comm_CreatePort.Image = Dnf.Utils.Properties.Resources.Plus_00_32x32;
             IconMenu_Comm_PortOpen.Image = Dnf.Utils.Properties.Resources.Connect_Green_32x32;
             IconMenu_Comm_PortClose.Image = Dnf.Utils.Properties.Resources.Connect_Red_32x32;
+            IconMenu_DataSender.Image = Dnf.Utils.Properties.Resources.Test_32x32;
+            IconMenu_Test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
 
             IconMenu_Comm_PortClose.Visible = false;
 
-            IconMenu_Test.Image = Dnf.Utils.Properties.Resources.Test_32x32;
             IconMenu.Items.AddRange(new ToolStripItem[] {
                 IconMenu_Comm_CreatePort,
                 IconMenu_Comm_PortOpen,
                 IconMenu_Comm_PortClose,
-                IconMenu_Test });
+                IconMenu_DataSender,
+                IconMenu_Test
+            });
 
             IconMenu_Comm_CreatePort.Click += (sender, e) => { CreatePort(); };
             IconMenu_Comm_PortOpen.Click += (sender, e) => { ConnectPort(); };
             IconMenu_Comm_PortClose.Click += (sender, e) => { DisConnectPort(); };
-            IconMenu_Test.Click += (sender, e) => { TestFunction(); };
+            IconMenu_DataSender.Click += (sender, e) => { TestFunction(); };
+            IconMenu_Test.Click += (sender, e) => { 
+                base.ShowProgressForm(Utils.Views.ProgressFormType.ProgressBar);
+                base.SetProgressCaption("12345678901234567890123456789012345678901");
+                base.SetProgressDescriptioin("12345678901234567890123456789012345678901234567890123456");
+
+                for (int i = 0; i < 100; i++)
+                {
+                    base.SetProgressBarValue(i);
+
+                    Thread.Sleep(100);
+                }
+
+                base.CloseProgressForm();
+
+            };
         }
 
         /// <summary>
@@ -465,7 +488,7 @@ namespace Dnf.Comm
             IconMenu_Comm_CreatePort.ToolTipText = RuntimeData.String("F000202");
             IconMenu_Comm_PortOpen.ToolTipText   = RuntimeData.String("F000203");
             IconMenu_Comm_PortClose.ToolTipText  = RuntimeData.String("F000204");
-            IconMenu_Test.ToolTipText = "테스트";
+            IconMenu_DataSender.ToolTipText = "테스트";
 
             //TreeMenu
             TreeMenu_CreatePort.Text = RuntimeData.String("F000300");
