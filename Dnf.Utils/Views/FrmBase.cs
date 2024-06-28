@@ -27,14 +27,23 @@ namespace Dnf.Utils.Views
         private delegate void ProgressValueDelegate(int value);
         private delegate void ProgressStringDelegate(int value);
 
-
+        /// <summary>
+        /// 로딩화면 Form
+        /// </summary>
         private ProgressBase Progress { get; set; }
 
+        /// <summary>
+        /// Form 기본틀
+        /// </summary>
         public FrmBase()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// 실행한 Process Form 잠그고 로딩화면 열기
+        /// </summary>
+        /// <param name="Type">로딩화면 종류</param>
         public void ShowProgressForm(ProgressFormType Type)
         {
             this.Enabled = false;
@@ -47,7 +56,9 @@ namespace Dnf.Utils.Views
             this.Invoke(new Action(() => { this.Progress.Show(); this.Progress.Refresh(); }));
             
         }
-
+        /// <summary>
+        /// 로딩화면 닫기
+        /// </summary>
         public void CloseProgressForm()
         {
             if (this.InvokeRequired)
@@ -59,6 +70,10 @@ namespace Dnf.Utils.Views
 
             this.Enabled = true;
         }
+        /// <summary>
+        /// 로딩화면 진행도 입력
+        /// </summary>
+        /// <param name="value">진행도 값</param>
         public void SetProgressBarValue(int value)
         {
             if (this.InvokeRequired)
@@ -71,6 +86,10 @@ namespace Dnf.Utils.Views
                 }
             }
         }
+        /// <summary>
+        /// 로딩화면 제목 입력
+        /// </summary>
+        /// <param name="caption">제목 Text</param>
         public void SetProgressCaption(string caption)
         {
             if (this.InvokeRequired)
@@ -80,6 +99,10 @@ namespace Dnf.Utils.Views
                 this.Progress.SetCaption(caption);
             }
         }
+        /// <summary>
+        /// 로딩화면 설명 입력
+        /// </summary>
+        /// <param name="text">설명 Text</param>
         public void SetProgressDescriptioin(string text)
         {
             if (this.InvokeRequired)

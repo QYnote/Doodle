@@ -12,6 +12,9 @@ namespace Dnf.Utils.Views
 {
     internal abstract partial class ProgressBase : Form
     {
+        /// <summary>
+        /// Process 실행 시 로딩화면 표시용
+        /// </summary>
         internal ProgressBase()
         {
             InitializeComponent();
