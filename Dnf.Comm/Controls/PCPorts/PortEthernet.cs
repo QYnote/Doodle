@@ -77,7 +77,6 @@ namespace Dnf.Comm.Controls.PCPorts
                         SocketAsyncEventArgs asyncEvent = new SocketAsyncEventArgs();
                         asyncEvent.SetBuffer(new byte[MaxBufferSize], 0, MaxBufferSize);
                         asyncEvent.UserToken = this.clientSocket;
-                        asyncEvent.Completed -= AsyncEvent_Completed;
                         asyncEvent.Completed += AsyncEvent_Completed;
 
                         this.clientSocket.ReceiveAsync(asyncEvent);
@@ -116,6 +115,11 @@ namespace Dnf.Comm.Controls.PCPorts
                         this.ReadingBuffer.BytesAppend(buffer);
 
                     this.clientSocket.ReceiveAsync(e);
+                }
+                else
+                {
+                    //Server 닫힘 감지
+                    this.Close();
                 }
             }
         }

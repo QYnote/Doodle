@@ -17,7 +17,7 @@ namespace Dnf.Server.Server
         private TcpListener server = null;
         private List<TcpClient> clientList = new List<TcpClient>();
         /// <summary>Data Receive 처리 이벤트 / byte[] Data, int bytesLength / return : 보낸 Client에게 되보내줄 Data</summary>
-        internal ReceiveHandler ReceiveActiveEvent;
+        internal ReceiveHandler ReceiveActiveEvent { get; set; }
         /// <summary>
         /// Data Receive 처리 delegate
         /// </summary>
@@ -26,9 +26,8 @@ namespace Dnf.Server.Server
         /// <returns>보낸 Client에게 보내줄 Data</returns>
         internal delegate byte[] ReceiveHandler(byte[] data, int bytesLength);
 
-        internal TCPServer(TcpListener listener)
+        internal TCPServer(ServerSendType sendType, TcpListener listener):base(sendType)
         {
-            base.IsOpen = false;
             this.server = listener;
         }
 
@@ -65,8 +64,7 @@ namespace Dnf.Server.Server
                     //접속한 Client 데이터 Receive 처리해주는 Thread 생성
                     Thread clientThread = new Thread(() => ClientMethod(client));
                     clientThread.Start();
-                    IPEndPoint ep = client.Client.RemoteEndPoint as IPEndPoint;
-                    base.SendMsg?.Invoke(string.Format("Client Accepted / IP : {0}, Port : {1}", ep.Address.ToString(), ep.Port));
+                    base.SendMsg?.Invoke(string.Format("Client Accepted / IP : {0}, Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
                 }
                 catch(Exception ex)
                 {
@@ -91,19 +89,36 @@ namespace Dnf.Server.Server
 
             try
             {
-                //읽을때마다 새로 읽은 Data buffer에 덮어씌우기
-                while((bytesLength = stream.Read(bufferFull, 0, bufferFull.Length)) > 0)
+                if (base.SendType == ServerSendType.ReadWrite || base.SendType == ServerSendType.ReadOnly)
                 {
-                    //Data Receive에 따른 무언가 처리
-                    byte[] buffer = new byte[bytesLength];
-                    Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
+                    //읽을때마다 새로 읽은 Data buffer에 덮어씌우기
+                    while ((bytesLength = stream.Read(bufferFull, 0, bufferFull.Length)) > 0)
+                    {
+                        //Data Receive에 따른 무언가 처리
+                        byte[] buffer = new byte[bytesLength];
+                        Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
 
-                    returnBytes = this.ReceiveActiveEvent?.Invoke(buffer, bytesLength);
+                        returnBytes = this.ReceiveActiveEvent?.Invoke(buffer, bytesLength);
 
-                    //보낸 Client에게 되돌려주는 Data
-                    if (returnBytes != null)
-                    { 
-                        stream.Write(returnBytes, 0, returnBytes.Length);
+                        //보낸 Client에게 되돌려주는 Data
+                        if (returnBytes != null || returnBytes.Length != 0)
+                        {
+                            stream.Write(returnBytes, 0, returnBytes.Length);
+                        }
+                    }
+                }
+                else if(base.SendType == ServerSendType.WriteRead)
+                {
+                    while (true)
+                    {
+                        returnBytes = this.ReceiveActiveEvent?.Invoke(null, 0);
+
+                        if (returnBytes != null || returnBytes.Length != 0)
+                        {
+                            stream.Write(returnBytes, 0, returnBytes.Length);
+
+                            returnBytes = null;
+                        }
                     }
                 }
             }
@@ -113,10 +128,13 @@ namespace Dnf.Server.Server
             }
             finally
             {
-                IPEndPoint ep = client.Client.RemoteEndPoint as IPEndPoint;
-                client.Close();
-                this.clientList.Remove(client);
-                base.SendMsg?.Invoke(string.Format("Client Receive End / IP : {0}, Port : {1}", ep.Address.ToString(), ep.Port));
+                if (client.Connected == true)
+                {
+                    client.Client.Shutdown(SocketShutdown.Both);
+                    client.Close();
+                    this.clientList.Remove(client);
+                    base.SendMsg?.Invoke(string.Format("Client Receive End / IP : {0}, Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
+                }
             }
         }
 
@@ -126,7 +144,14 @@ namespace Dnf.Server.Server
             if (base.IsOpen == true)
             {
                 base.IsOpen = false;
+
                 this.server.Stop();
+                foreach(TcpClient client in this.clientList)
+                {
+                    client.Client.Shutdown(SocketShutdown.Both);
+                    client.Close();
+                }
+                this.clientList.Clear();
 
                 base.SendMsg?.Invoke("TCP Server Close");
             }

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net;
@@ -115,7 +116,7 @@ namespace Dnf.Server
 
             if (ServerType == "TCP Server")
             {
-                this.server = new TCPServer(new System.Net.Sockets.TcpListener(IPAddress.Parse("127.0.0.1"), 5000));
+                this.server = new TCPServer(ServerSendType.ReadWrite, new System.Net.Sockets.TcpListener(IPAddress.Parse("127.0.0.1"), 5000));
                 (this.server as TCPServer).ReceiveActiveEvent += DataReceive;  //Receive 이벤트 지정
                 this.server.SendMsg += (msg) => { UpdateUI("ServerLog", new object[] { msg }); };
             }
@@ -157,17 +158,20 @@ namespace Dnf.Server
                     //데이터 Log 기록
                     string str = string.Empty;
                     byte[] arr = obj[0] as byte[];
-                    foreach (byte b in arr)
+                    if (obj[0] != null)
                     {
-                        str += b + " ";
+                        foreach (byte b in arr)
+                        {
+                            str += string.Format("{0}({1})", b, b.ToString("X2")) + " ";
+                        }
+                        TxtLog.AppendText(string.Format("\r\nData Receive : {0}", str));
                     }
-                    TxtLog.AppendText(string.Format("\r\nData Receive : {0}", str));
 
                     str = string.Empty;
                     arr = obj[1] as byte[];
                     foreach (byte b in arr)
                     {
-                        str += b + " ";
+                        str += string.Format("{0}({1})", b, b.ToString("X2")) + " ";
                     }
                     TxtLog.AppendText(string.Format("\r\nData Send : {0}", str));
                 }
@@ -188,13 +192,41 @@ namespace Dnf.Server
         /// <returns>보낸 Client에게 보내줄 Data</returns>
         private byte[] DataReceive(byte[] readBytes, int bytesLength)
         {
-            byte[] writeBytes = new byte[] {1,3,5};
+            byte[] writeBytes;
 
-            StackBytes.BytesAppend(writeBytes);
+            if (this.server.SendType == ServerSendType.WriteRead)
+            {
+                SendSensorData(out writeBytes);
+            }
+            else
+            {
+                writeBytes = new byte[] { 1, 3, 5 };
+
+                StackBytes.BytesAppend(writeBytes);
+            }
 
             UpdateUI("ReceiveLog", new object[] { readBytes, writeBytes });
             return writeBytes;
         }
 
+        #region 센서 데이터 전송
+
+        Random rnd = new Random();
+        int DataLength = 512;
+
+        private void SendSensorData(out byte[] outData)
+        {
+            short[] data = new short[DataLength];
+            outData = new byte[data.Length * sizeof(short)];
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = (short)(short.MaxValue * ((i * (rnd.Next(90, 100) / 100)) / data.Length));
+            }
+
+            Buffer.BlockCopy(data, 0, outData, 0, outData.Length);
+        }
+
+        #endregion
     }
 }
