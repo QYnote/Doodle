@@ -163,6 +163,33 @@ namespace Dnf.Utils.Controls
             return true;
         }
 
+        /// <summary>
+        /// object의 public Property 복사
+        /// </summary>
+        /// <param name="source">복사 할 object</param>
+        /// <param name="target">복사 받을 object</param>
+        /// <param name="ignoreList">제외할 Property 명 리스트</param>
+        /// public만 복사됨
+        public static void CopyTo<T>(this T source, T target, string[] ignoreList = null)
+        {
+            PropertyInfo[] sourceProperties = source.GetType().GetRuntimeProperties().ToArray(); //복사 할 Property List
+            PropertyInfo[] targetProperties = target.GetType().GetRuntimeProperties().ToArray(); //복사 받을 Property List
+
+            foreach (PropertyInfo sp in sourceProperties)
+            {
+                //무시 Property 확인
+                if (ignoreList != null && ignoreList.Contains(sp.Name)) continue;
+
+                //아래항목과 일치하는 Property 추출
+                var rp = targetProperties.FirstOrDefault(
+                    o => o.Name == sp.Name                  //Property명 일치 확인
+                    && o.PropertyType == sp.PropertyType    //Property Type 일치 확인
+                    && o.GetSetMethod() != null);           //Set 가능여부 확인
+                if (rp == null) continue;
+
+                rp.SetValue(target, sp.GetValue(source, null), null);
+            }
+        }
 
         #endregion 수정 End
         #region 검사
