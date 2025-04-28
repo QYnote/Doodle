@@ -1,5 +1,5 @@
-﻿using Dnf.Utils.Views;
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -7,14 +7,14 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Dnf.Utils.Controls
 {
-    static public class UtilCustom
+    static public class QYUtils
     {
         #region 데이터 형태 변환
 
@@ -23,7 +23,7 @@ namespace Dnf.Utils.Controls
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        static public int ToInt32_Custom(this object obj)
+        static public int ToInt32(this object obj)
         {
             if (obj == null || obj == DBNull.Value || obj.ToString() == "")
                 return -1;
@@ -97,7 +97,7 @@ namespace Dnf.Utils.Controls
         /// <typeparam name="T">변경될 Enum</typeparam>
         /// <param name="str">변경할 string</param>
         /// <returns>Enum값</returns>
-        static public T StringToEnum<T>(this string str)
+        static public T ToEnum<T>(this string str)
         {
             return (T)Enum.Parse(typeof(T), str);
         }
@@ -154,13 +154,111 @@ namespace Dnf.Utils.Controls
         /// <returns>true : Success / false : Fail</returns>
         static public bool DictKeyChange<TKey, TValue>(IDictionary<TKey, TValue> dic, TKey bfKey, TKey afKey)
         {
-            if (dic.ContainsKey(afKey)) { return false; }
+            if (dic.ContainsKey(afKey) || !dic.ContainsKey(bfKey)) { return false; }
 
             TValue value = dic[bfKey];
             dic.Remove(bfKey);
             dic[afKey] = value;
 
             return true;
+        }
+
+        /// <summary>
+        /// List 항목 순서 변경
+        /// </summary>
+        /// <typeparam name="T">Array Type</typeparam>
+        /// <param name="list">변경할 List</param>
+        /// <param name="keyA">변경 Index A</param>
+        /// <param name="keyB">변경 Index B</param>
+        /// <returns></returns>
+        static public bool Swap<T>(this List<T> list, int keyA, int keyB)
+        {
+            if(keyA < 0 || keyB < 0
+                || list.Count - 1 < keyA || list.Count - 1 < keyB)
+                return false;
+
+            T temp = list[keyB];
+            list[keyB] = list[keyA];
+            list[keyA] = temp;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Array 항목 순서 변경
+        /// </summary>
+        /// <typeparam name="T">Array Type</typeparam>
+        /// <param name="ary">변경할 List</param>
+        /// <param name="keyA">변경 Index A</param>
+        /// <param name="keyB">변경 Index B</param>
+        /// <returns></returns>
+        static public bool Swap<T>(this T[] ary, int keyA, int keyB)
+        {
+            if (keyA < 0 || keyB < 0
+                || ary.Length - 1 < keyA || ary.Length - 1 < keyB)
+                return false;
+
+            T temp = ary[keyB];
+            ary[keyB] = ary[keyA];
+            ary[keyA] = temp;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 원본에 손상이 가지 않도록 복제품 생성
+        /// </summary>
+        /// <typeparam name="T">복사 Source Type</typeparam>
+        /// <param name="source">복사 원본</param>
+        /// <returns>복사 결과물</returns>
+        static public T CopyFrom<T>(this T source)
+        {
+            if (source == null) return default(T);
+
+            Type type = typeof(T);
+
+            //값, 문자열
+            if (type.IsValueType || type == typeof(string))
+                return source;
+
+            //리스트 인경우
+            else if (typeof(IList).IsAssignableFrom(type))
+            {
+                IList originList = (IList)source;
+                IList copyList = (IList)Activator.CreateInstance(type);
+
+                foreach (var item in originList)
+                {
+                    copyList.Add(CopyFrom(item));
+                }
+
+                return (T)copyList;
+            }
+
+            //Class 복사
+            else
+            {
+                object copy = Activator.CreateInstance(type);
+
+                //get;set; Property 복사
+                foreach (var info in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if(info.CanRead && info.CanWrite)
+                    {
+                        var value = info.GetValue(source, null);
+                        info.SetValue(copy, CopyFrom(value), null);
+                    }
+                }
+
+                //get;set; 없는 Property 복사
+                foreach (var info in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    var value = info.GetValue(source);
+                    info.SetValue(copy, CopyFrom(value));
+                }
+
+                return (T)copy;
+            }
         }
 
 
@@ -205,6 +303,9 @@ namespace Dnf.Utils.Controls
         }
 
         #endregion 검사 End
+        #region 생성
+
+        #endregion 생성
 
         #endregion 기능 End
 
