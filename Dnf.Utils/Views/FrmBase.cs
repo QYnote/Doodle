@@ -68,6 +68,7 @@ namespace Dnf.Utils.Views
             else
             {
                 this.Progress.Dispose();
+                this.Focus();
             }
 
             this.Enabled = true;
