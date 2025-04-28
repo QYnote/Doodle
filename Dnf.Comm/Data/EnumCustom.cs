@@ -22,15 +22,6 @@ namespace Dnf.Comm.Data
         ModBusTcpIp
     }
 
-    internal enum PortConnectionState
-    { 
-        /// <summary>Port 닫음</summary>
-        Close,
-        /// <summary>Port 염</summary>
-        Open
-    }
-
-
     internal enum UnitConnectionState
     {
         /// <summary>Port닫힌 미연결</summary>

@@ -153,6 +153,16 @@ namespace Dnf.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
+        public static System.Drawing.Bitmap Image_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Image_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
         public static System.Drawing.Bitmap LAN_Come_16x16 {
             get {
                 object obj = ResourceManager.GetObject("LAN_Come_16x16", resourceCulture);

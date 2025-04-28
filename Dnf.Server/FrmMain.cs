@@ -116,7 +116,7 @@ namespace Dnf.Server
 
             if (ServerType == "TCP Server")
             {
-                this.server = new TCPServer(ServerSendType.ReadWrite, new System.Net.Sockets.TcpListener(IPAddress.Parse("127.0.0.1"), 5000));
+                this.server = new TCPServer(ServerSendType.WriteRead, new System.Net.Sockets.TcpListener(IPAddress.Parse("127.0.0.1"), 5000));
                 (this.server as TCPServer).ReceiveActiveEvent += DataReceive;  //Receive 이벤트 지정
                 this.server.SendMsg += (msg) => { UpdateUI("ServerLog", new object[] { msg }); };
             }
@@ -147,6 +147,8 @@ namespace Dnf.Server
         }
 
         private delegate void UpdateUIdelegate(string type, object[] obj);
+        int MaxLogCnt = 1;
+        int curLogCnt = 0;
         private void UpdateUI(string type, object[] obj = null)
         {
             if (this.InvokeRequired)
@@ -203,9 +205,9 @@ namespace Dnf.Server
                 writeBytes = new byte[] { 1, 3, 5 };
 
                 StackBytes.BytesAppend(writeBytes);
+                UpdateUI("ReceiveLog", new object[] { readBytes, writeBytes });
             }
 
-            UpdateUI("ReceiveLog", new object[] { readBytes, writeBytes });
             return writeBytes;
         }
 
@@ -213,7 +215,10 @@ namespace Dnf.Server
 
         Random rnd = new Random();
         int DataLength = 512;
-
+        /// <summary>
+        /// 데이터 마구자비로 전송
+        /// </summary>
+        /// <param name="outData"></param>
         private void SendSensorData(out byte[] outData)
         {
             short[] data = new short[DataLength];
@@ -221,7 +226,7 @@ namespace Dnf.Server
 
             for (int i = 0; i < data.Length; i++)
             {
-                data[i] = (short)(short.MaxValue * ((i * (rnd.Next(90, 100) / 100)) / data.Length));
+                data[i] = (short)((i * (short.MaxValue * (rnd.Next(90, 100) / (float)100)) / (float)data.Length));
             }
 
             Buffer.BlockCopy(data, 0, outData, 0, outData.Length);

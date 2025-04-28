@@ -118,7 +118,7 @@ namespace Dnf.Comm.Data
                         {
                             if(protocolNode.InnerText == "1")
                             {
-                                protocolList.Add(protocolNode.Name.StringToEnum<uProtocolType>());
+                                protocolList.Add(protocolNode.Name.ToEnum<uProtocolType>());
                             }
                         }
 

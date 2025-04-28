@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Dnf.DrawImage.Controls.ProgramPort;
 
-namespace Dnf.Comm.Controls
+namespace Dnf.DrawImage.Controls
 {
     /// <summary>
     /// 프로그램 - Client 사이의 Port
     /// </summary>
     public abstract class IOPortBase
     {
+        public delegate void LogDelegate(string msg);
+        public LogDelegate LogHandler { get; set; }
+
         internal abstract string PortName { get; }
         /// <summary>
         /// Port 연결 상태

@@ -50,7 +50,7 @@ namespace Dnf.Comm.Frm
                 SupportProtocol = new Dictionary<uProtocolType, bool>();
 
                 //지원 Protocol 기본틀
-                foreach (uProtocolType protocol in UtilCustom.EnumToItems<uProtocolType>())
+                foreach (uProtocolType protocol in QYUtils.EnumToItems<uProtocolType>())
                 {
                     SupportProtocol.Add(protocol, false);
                 }
@@ -271,7 +271,7 @@ namespace Dnf.Comm.Frm
             CLbxSupportProtocol.CheckOnClick = true;    //항목 선택 시 Check 바로 변경
             CLbxSupportProtocol.IntegralHeight = false; //Size 조절 시 Item Hight 영향 false
             CLbxSupportProtocol.MinimumSize = new Size(160 + (marginValue * 2), 50);
-            CLbxSupportProtocol.Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());
+            CLbxSupportProtocol.Items.AddRange(QYUtils.EnumToItems<uProtocolType>());
 
             this.Controls.Add(TxtUnitType);
             this.Controls.Add(LblUnitType);
@@ -363,8 +363,8 @@ namespace Dnf.Comm.Frm
             colRW.SortMode = DataGridViewColumnSortMode.NotSortable;
 
             //숫자만 입력하게 하기
-            UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrDec.Name);
-            UtilCustom.ColumnOnlyNumeric(gvRegistry, colAddrHex.Name, "Hex");
+            QYUtils.ColumnOnlyNumeric(gvRegistry, colAddrDec.Name);
+            QYUtils.ColumnOnlyNumeric(gvRegistry, colAddrHex.Name, "Hex");
 
             gvRegistry.Columns.AddRange(colAddrDec, colAddrHex, colName, colValueType, colDefaultValue, colRW, colErase);
 
@@ -1252,7 +1252,7 @@ namespace Dnf.Comm.Frm
             if (CellValueChangedFlag == false) return;
 
             DataGridViewRow dr = gvRegistry.CurrentRow;
-            uProtocolType protocol = Convert.ToString(CboProtocol.Value).StringToEnum<uProtocolType>();
+            uProtocolType protocol = Convert.ToString(CboProtocol.Value).ToEnum<uProtocolType>();
             int addr = Convert.ToInt32(dr.Cells[colAddrDec.Index].Value);
             RegistrySubItem subItem = SelectedModel.RegistryMap[protocol][addr].RegSubItem;
 
@@ -1325,7 +1325,7 @@ namespace Dnf.Comm.Frm
                     /* 지원하는 형식이 추가, 삭제, 순서변경 등을 고려하여
                      * ListNode를 만들고 하위로 Item들을 두어 1,0으로 판단하도록 개발*/
                     XmlNode xmlProtocolTypeList = xdoc.CreateElement("SupportProtocol");
-                    foreach (uProtocolType protocol in UtilCustom.EnumToItems<uProtocolType>())
+                    foreach (uProtocolType protocol in QYUtils.EnumToItems<uProtocolType>())
                     {
                         XmlNode xmlProtocolType = xdoc.CreateElement("Protocol");
                         XmlAttribute attrProtocolName = xdoc.CreateAttribute("Name");
@@ -1503,7 +1503,7 @@ namespace Dnf.Comm.Frm
                             //지원 통신Protocol
                             foreach (XmlNode nodeProtocol in ModelNode.SelectSingleNode("SupportProtocol").ChildNodes)
                             {
-                                uProtocolType protocolType = nodeProtocol.Attributes["Name"].Value.StringToEnum<uProtocolType>();
+                                uProtocolType protocolType = nodeProtocol.Attributes["Name"].Value.ToEnum<uProtocolType>();
                                 bool enable = nodeProtocol.Attributes["Enable"].Value == 1.ToString() ? true : false;
 
                                 model.SupportProtocol[protocolType] = enable;
@@ -1608,7 +1608,7 @@ namespace Dnf.Comm.Frm
             if (saveFileDialog.ShowDialog() != DialogResult.OK) return;
             string savePath = saveFileDialog.FileName;
 
-            if (UtilCustom.CheckFileOpend(savePath) == true) return;
+            if (QYUtils.CheckFileOpend(savePath) == true) return;
 
 
             Excel.Application excelApp = new Excel.Application();

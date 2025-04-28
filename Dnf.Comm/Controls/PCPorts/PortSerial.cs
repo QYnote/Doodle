@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Dnf.Comm.Controls.PCPorts
 {
-    public class PortSerial : PCPortBase
+    public class PortSerial : IOPortBase
     {
         internal PortSerial(string COMName, string BaudRate, int DataBits, Parity Parity, StopBits StopBits)
         {
@@ -79,13 +79,13 @@ namespace Dnf.Comm.Controls.PCPorts
                 }
                 catch
                 {
-                    UtilCustom.DebugWrite("[ERROR]Port Open Fail");
+                    QYUtils.DebugWrite("[ERROR]Port Open Fail");
                     return false;
                 }
             }
             else
             {
-                UtilCustom.DebugWrite("[Alart]Port Already Open");
+                QYUtils.DebugWrite("[Alart]Port Already Open");
             }
             return true;
         }
@@ -101,7 +101,7 @@ namespace Dnf.Comm.Controls.PCPorts
             }
             else
             {
-                UtilCustom.DebugWrite("[Alart]Port Already Close");
+                QYUtils.DebugWrite("[Alart]Port Already Close");
 
                 return false;
             }

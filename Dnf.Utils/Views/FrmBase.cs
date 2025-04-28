@@ -27,6 +27,8 @@ namespace Dnf.Utils.Views
         private delegate void ProgressValueDelegate(int value);
         private delegate void ProgressStringDelegate(int value);
 
+        public delegate void UpdateUIDelegate(string type, params object[] obj);
+
         /// <summary>
         /// 로딩화면 Form
         /// </summary>

@@ -91,7 +91,7 @@ namespace Dnf.Comm.Controls
         /// <summary>
         /// 프로그램 - Client 사이의 Port
         /// </summary>
-        internal PCPortBase PCPort { get; set; }
+        internal IOPortBase PCPort { get; set; }
         /// <summary>
         /// Data 송,수신 처리할 Background Thread
         /// </summary>

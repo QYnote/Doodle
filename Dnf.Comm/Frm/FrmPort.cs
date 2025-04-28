@@ -136,10 +136,10 @@ namespace Dnf.Comm.Frm
 
             //Items
             (cboPortName.ctrl as ComboBox).Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());
-            (cboProtocolType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());
+            (cboProtocolType.ctrl as ComboBox).Items.AddRange(QYUtils.EnumToItems<uProtocolType>());
             (cboBaudRate.ctrl as ComboBox).Items.AddRange(EnumCustom.BaudRate);
-            (cboStopBit.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<StopBits>());
-            (cboParity.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<Parity>());
+            (cboStopBit.ctrl as ComboBox).Items.AddRange(QYUtils.EnumToItems<StopBits>());
+            (cboParity.ctrl as ComboBox).Items.AddRange(QYUtils.EnumToItems<Parity>());
 
             (numDataBits.ctrl as ucNumeric).MaxValue = 8;
             (numDataBits.ctrl as ucNumeric).MinValue = 7;
@@ -147,7 +147,7 @@ namespace Dnf.Comm.Frm
             (txtPortNo.ctrl as MaskedTextBox).ValidatingType = typeof(short);
             (txtPortNo.ctrl as MaskedTextBox).Mask = "####";
 
-            (txtIPaddr.ctrl as TextBox).KeyPress += UtilCustom.TextBox_IP;
+            (txtIPaddr.ctrl as TextBox).KeyPress += QYUtils.TextBox_IP;
 
             cboPortName.Dock = DockStyle.Top;
             cboProtocolType.Dock = DockStyle.Top;
@@ -171,7 +171,7 @@ namespace Dnf.Comm.Frm
 
             (cboProtocolType.ctrl as ComboBox).SelectedValueChanged += (sender, e) => { SetVisible(); };
 
-            Label splitLine1 = UtilCustom.CreateSplitLine(DockStyle.Top);
+            Label splitLine1 = QYUtils.CreateSplitLine(DockStyle.Top);
 
             pnlControlBox.Controls.Add(splitLine1);
             pnlControlBox.Controls.Add(cboPortName);
@@ -412,7 +412,7 @@ namespace Dnf.Comm.Frm
                 }
 
 
-                UtilCustom.DictKeyChange(RuntimeData.Ports, BfPortName, this.frmPort.PortName);
+                QYUtils.DictKeyChange(RuntimeData.Ports, BfPortName, this.frmPort.PortName);
                 this.DialogResult = DialogResult.OK;
             }
         }

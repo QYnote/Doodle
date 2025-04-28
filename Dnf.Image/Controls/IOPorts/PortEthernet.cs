@@ -1,4 +1,5 @@
-﻿using Dnf.Utils.Controls;
+﻿using Dnf.DrawImage.Controls;
+using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Comm.Controls.PCPorts
+namespace Dnf.Comm.Controls.IOPorts
 {
     internal class PortEthernet : IOPortBase
     {
@@ -84,13 +85,13 @@ namespace Dnf.Comm.Controls.PCPorts
                 }
                 catch
                 {
-                    QYUtils.DebugWrite("[ERROR]Port Open Fail");
+                    base.LogHandler?.Invoke("[ERROR]Port Open Fail");
                     return false;
                 }
             }
             else
             {
-                QYUtils.DebugWrite("[Alart]Port Already Open");
+                base.LogHandler?.Invoke("[Alart]Port Already Open");
             }
 
             return true;
@@ -109,7 +110,7 @@ namespace Dnf.Comm.Controls.PCPorts
                     byte[] buffer = new byte[e.BytesTransferred];
                     Buffer.BlockCopy(e.Buffer, 0, buffer, 0, buffer.Length);
 
-                    if (this.ReadingBuffer == null)
+                    if (this.ReadingBuffer == null || this.ReadingBuffer.Length == 0)
                         this.ReadingBuffer = buffer;
                     else
                         this.ReadingBuffer.BytesAppend(buffer);
@@ -120,6 +121,8 @@ namespace Dnf.Comm.Controls.PCPorts
                 {
                     //Server 닫힘 감지
                     this.Close();
+
+                    base.LogHandler?.Invoke("[Alart]Server Closed");
                 }
             }
         }
@@ -135,7 +138,7 @@ namespace Dnf.Comm.Controls.PCPorts
             }
             else
             {
-                QYUtils.DebugWrite("[Alart]Port Already Close");
+                base.LogHandler?.Invoke("[Alart]Port Already Close");
 
                 return false;
             }
@@ -145,8 +148,8 @@ namespace Dnf.Comm.Controls.PCPorts
         /// <summary>
         /// Port Data 읽어서 PortClass의 ReadingData에 쌓기
         /// </summary>
-        /// <param name="buffer">담아갈 byte Array</param>
-        internal override byte[] Read(byte[] buffer)
+        /// <param name="buffer">기존 읽었던 Buffer</param>
+        internal override byte[] Read(byte[] buffer = null)
         {
             //읽은 Buffer 없으면 기존꺼 return
             if (this.ReadingBuffer == null || this.ReadingBuffer.Length == 0)
@@ -158,7 +161,7 @@ namespace Dnf.Comm.Controls.PCPorts
             else
                 returnBuffer = buffer.BytesAppend(this.ReadingBuffer);
 
-            this.ReadingBuffer = null;
+            this.ReadingBuffer = new byte[0];
 
             return returnBuffer;
         }

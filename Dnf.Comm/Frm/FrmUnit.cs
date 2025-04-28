@@ -129,7 +129,7 @@ namespace Dnf.Comm.Frm
             txtUnitName.Name = "txtUnitName";
 
             //Items
-            (cboProtocolType.ctrl as ComboBox).Items.AddRange(UtilCustom.EnumToItems<uProtocolType>());;
+            (cboProtocolType.ctrl as ComboBox).Items.AddRange(QYUtils.EnumToItems<uProtocolType>());;
             object[] UnitTypeArr = ucXML.GetUnitTypeList();
             (cboUnitType.ctrl as ComboBox).Items.AddRange(UnitTypeArr);
             object[] UnitModelArr = null;
@@ -159,7 +159,7 @@ namespace Dnf.Comm.Frm
             txtUnitName.LblWidth = portLabelWidth;
             BtnNew.Height = 30;
 
-            Label splitLine1 = UtilCustom.CreateSplitLine(DockStyle.Top);
+            Label splitLine1 = QYUtils.CreateSplitLine(DockStyle.Top);
 
             pnlControlBox.Controls.Add(splitLine1);
             pnlControlBox.Controls.Add(numUnitAddr);
@@ -396,7 +396,7 @@ namespace Dnf.Comm.Frm
                 int maxAddr = 1;
                 foreach (DataRow row in dt.Rows)
                 {
-                    int addr = row["SlaveAddr"].ToInt32_Custom();
+                    int addr = row["SlaveAddr"].ToInt32();
                     if (maxAddr <= addr) { maxAddr = addr + 1; continue; }
                 }
 
@@ -406,7 +406,7 @@ namespace Dnf.Comm.Frm
             string unitType = cboUnitType.Value.ToString();
             string unitModel = cboUnitModel.Value.ToString();
 
-            dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32_Custom(), unitType, unitModel);
+            dr["Unit"] = new Unit(BasePort, dr["SlaveAddr"].ToInt32(), unitType, unitModel);
 
             dt.Rows.Add(dr);
 
@@ -494,7 +494,7 @@ namespace Dnf.Comm.Frm
                     {
                         if (drComp != dr)
                         {
-                            if (drComp["SlaveAddr"].ToInt32_Custom() == afAddr)
+                            if (drComp["SlaveAddr"].ToInt32() == afAddr)
                             {
                                 MessageBox.Show(RuntimeData.String("F020001"));
                                 useAddr = false;
@@ -536,7 +536,7 @@ namespace Dnf.Comm.Frm
                     uProtocolType[] supportProtocolList = ucXML.GetSupportProtocolList(type.ToString(), model.ToString());
 
                     /*모델정보 Dictionary -> Type검색 -> Model 검색 -> 지원 Protocol 검색 -> 지원여부값 추출*/
-                    bool chkSupport = supportProtocolList.Contains(protocol.ToString().StringToEnum<uProtocolType>());
+                    bool chkSupport = supportProtocolList.Contains(protocol.ToString().ToEnum<uProtocolType>());
                     if (!chkSupport)
                     {
                         EditFlag = false;
@@ -570,7 +570,7 @@ namespace Dnf.Comm.Frm
             foreach (DataRow dr in dt.Rows)
             {
                 //Addr이 같은 DataRow 탐색
-                if (dr["SlaveAddr"].ToInt32_Custom() == drv.Cells["colSlaveAddr"].Value.ToInt32_Custom())
+                if (dr["SlaveAddr"].ToInt32() == drv.Cells["colSlaveAddr"].Value.ToInt32())
                 {
                     return dr;
                 }
