@@ -14,7 +14,7 @@ using System.Windows.Forms;
 
 namespace Dnf.DrawImage
 {
-    public partial class FrmMain_DrawImage : FrmBase
+    public partial class FrmMain_DrawImage : QYForm
     {
         private PictureBox PicImage { get; set; }
         private ProgramPort Port { get; set; }
@@ -102,19 +102,19 @@ namespace Dnf.DrawImage
             }
         }
 
-        private void UpdateUI(string type, params object[] args)
+        private void UpdateUI(params object[] args)
         {
             if(this.InvokeRequired)
-                this.Invoke(new UpdateUIDelegate(UpdateUI), type, args);
+                this.Invoke(new UpdateUIDelegate(UpdateUI), args);
             else
             {
-                if(type == "Image")
+                if((string)args[0] == "Image")
                 {
-                    this.PicImage.Image = args[0] as Image;
+                    this.PicImage.Image = args[1] as Image;
                 }
-                else if(type == "FPS")
+                else if((string)args[0] == "FPS")
                 {
-                    this.LblFPS.Text = string.Format("{0:F2} FPS", args[0]);
+                    this.LblFPS.Text = string.Format("{0:F2} FPS", args[1]);
                 }
             }
         }

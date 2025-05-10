@@ -21,13 +21,13 @@ namespace Dnf.Utils.Views
     /// <summary>
     /// 화면 열리기 전, 데이터 읽어오거나 하는 Progress Bar 기초기능 보관소
     /// </summary>
-    public partial class FrmBase : Form
+    public partial class QYForm : Form
     {
         private delegate void ProgressVoidDelegate();
         private delegate void ProgressValueDelegate(int value);
         private delegate void ProgressStringDelegate(int value);
 
-        public delegate void UpdateUIDelegate(string type, params object[] obj);
+        public delegate void UpdateUIDelegate(params object[] obj);
 
         /// <summary>
         /// 로딩화면 Form
@@ -37,7 +37,7 @@ namespace Dnf.Utils.Views
         /// <summary>
         /// Form 기본틀
         /// </summary>
-        public FrmBase()
+        public QYForm()
         {
             InitializeComponent();
         }

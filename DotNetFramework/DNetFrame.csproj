@@ -77,6 +77,12 @@
     <Compile Include="FrmSolution.Designer.cs">
       <DependentUpon>FrmSolution.cs</DependentUpon>
     </Compile>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -110,10 +116,6 @@
     <ProjectReference Include="..\Dnf.Image\Dnf.DrawImage.csproj">
       <Project>{39a9a8d6-f398-4ec4-835c-1d7da5f009a1}</Project>
       <Name>Dnf.DrawImage</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Dnf.Server\Dnf.Server.csproj">
-      <Project>{63fee339-283b-4e4d-9664-5baf7e07a582}</Project>
-      <Name>Dnf.Server</Name>
     </ProjectReference>
     <ProjectReference Include="..\Dnf.Utils\Dnf.Utils.csproj">
       <Project>{4C5EA9DD-25AA-4820-97D7-2575C955922A}</Project>

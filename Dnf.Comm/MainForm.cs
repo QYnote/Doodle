@@ -18,7 +18,7 @@ using Dnf.Comm.Frm;
 
 namespace Dnf.Comm
 {
-    public partial class MainForm : Dnf.Utils.Views.FrmBase
+    public partial class MainForm : Dnf.Utils.Views.QYForm
     {
         #region Control 모음
         internal MenuStrip TextMenu = new MenuStrip();   

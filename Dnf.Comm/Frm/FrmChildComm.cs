@@ -15,7 +15,7 @@ using System.Windows.Forms;
 
 namespace Dnf.Server
 {
-    public partial class FrmMain : Form
+    public partial class FrmChildComm : Form
     {
         #region Controls
 
@@ -35,7 +35,7 @@ namespace Dnf.Server
         private bool ServerUserOpen = false;
         internal string ServerType = "TCP Server";
 
-        public FrmMain()
+        public FrmChildComm()
         {
             InitializeComponent();
             InitContolBase();
@@ -77,7 +77,7 @@ namespace Dnf.Server
                 //new ToolStripSeparator(),
             });
 
-            TextMenu_Option_Settings.Click += (sender, e) => { new FrmSettings(this).ShowDialog(); };
+            TextMenu_Option_Settings.Click += (sender, e) => { new FrmChildCommSettings(this).ShowDialog(); };
         }
 
         private void InitIconMenu()

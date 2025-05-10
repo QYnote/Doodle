@@ -11,14 +11,14 @@ using System.Windows.Forms;
 
 namespace Dnf.Server
 {
-    public partial class FrmSettings : Form
+    public partial class FrmChildCommSettings : Form
     {
         ucControlBox CboServerType = new ucControlBox(CtrlType.ComboBox);
         Button BtnSave = new Button();
         Button BtnCancle = new Button();
-        FrmMain FrmMain = null;
+        FrmChildComm FrmMain = null;
 
-        public FrmSettings(FrmMain frm)
+        public FrmChildCommSettings(FrmChildComm frm)
         {
             FrmMain = frm;
 

@@ -50,11 +50,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Views\FrmBase.cs">
+    <Compile Include="Views\QYForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Views\FrmBase.Designer.cs">
-      <DependentUpon>FrmBase.cs</DependentUpon>
+    <Compile Include="Views\QYForm.Designer.cs">
+      <DependentUpon>QYForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ucControlBox.cs">
       <SubType>UserControl</SubType>

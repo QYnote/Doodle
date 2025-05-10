@@ -87,7 +87,7 @@ namespace DotNetFramework
             {
                 //Form 생성
                 if (btnName == BtnCommunication.Name) { frm = new Dnf.Comm.MainForm() { Name = BtnCommunication.Name }; }
-                else if (btnName == BtnServer.Name) { frm = new Dnf.Server.FrmMain() { Name = BtnServer.Name }; }
+                else if (btnName == BtnServer.Name) { frm = new Dnf.Server.FrmChildComm() { Name = BtnServer.Name }; }
                 else if (btnName == BtnSensorToImage.Name) { frm = new Dnf.DrawImage.FrmMain_DrawImage() { Name = BtnSensorToImage.Name }; }
                 else if (btnName == BtnTest.Name) 
                 { 
@@ -152,12 +152,12 @@ namespace DotNetFramework
             dicMat["딸기"].MaxWeekQty -= dicMat["딸기"].MaxWeekQty;
 
             //현재 가지고있는 재료 수
-            dicMat["레몬"].MaxWeekQty += 1;
-            dicMat["고기"].MaxWeekQty += 63;
+            dicMat["레몬"].MaxWeekQty += 1 + 30;
+            dicMat["고기"].MaxWeekQty += 64;
             dicMat["마늘"].MaxWeekQty += 3;
             dicMat["후추"].MaxWeekQty += 1;
-            dicMat["설탕"].MaxWeekQty += 68;
-            dicMat["딸기"].MaxWeekQty += 0;
+            dicMat["설탕"].MaxWeekQty += 8;
+            dicMat["딸기"].MaxWeekQty += 30;
 
             for (int i = 0; i < receipes.Length; i++)
             {

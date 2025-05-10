@@ -49,10 +49,24 @@
     <Compile Include="Controls\PCPortBase.cs" />
     <Compile Include="Controls\PCPorts\PortEthernet.cs" />
     <Compile Include="Controls\ProgramPort.cs" />
+    <Compile Include="Controls\Server\ServerBase.cs" />
+    <Compile Include="Controls\Server\TCPServer.cs" />
     <Compile Include="Data\EnumCustom.cs" />
     <Compile Include="Controls\PCPorts\PortSerial.cs" />
     <Compile Include="Controls\Protocols\ProtocolBase.cs" />
     <Compile Include="Data\ucXML.cs" />
+    <Compile Include="Frm\FrmChildComm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmChildComm.Designer.cs">
+      <DependentUpon>FrmChildComm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm\FrmChildCommSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmChildCommSettings.Designer.cs">
+      <DependentUpon>FrmChildCommSettings.cs</DependentUpon>
+    </Compile>
     <Compile Include="Frm\FrmPort.cs">
       <SubType>Form</SubType>
     </Compile>
