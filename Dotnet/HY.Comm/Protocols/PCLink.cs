@@ -17,6 +17,20 @@ namespace HY.Comm.Protocols
         private bool _isTH3500 = false;
         private bool _isTD3500 = false;
 
+        private readonly string WhoCmd = "#02#30#31#57#48#4F#0D#0A";
+        private byte[] TailBytes
+        {
+            get
+            {
+                if (this._isTH3500)
+                    //ETX + CR + LF
+                    return new byte[] { 0x03, 0x0D, 0x0A };
+                else
+                    //CR + LF
+                    return new byte[] { 0x0D, 0x0A };
+            }
+        }
+
         /// <summary>
         /// PCLink Protocol
         /// </summary>
@@ -57,48 +71,76 @@ namespace HY.Comm.Protocols
         {
             //Header 시작 위치 확인
             byte[] headerBytes;
+            int startIdx,
+                idxHandle = 0,
+                headerLen,
+                endStartIdx,
+                lastIdx;
 
             //Header
             if (this._isTD3500)
-                //STX[1] + Addr[3] + ','[1] + Cmd[3]
-                headerBytes = new byte[] { frame.ReqData[0], frame.ReqData[1], frame.ReqData[2], frame.ReqData[3], frame.ReqData[4], frame.ReqData[5], frame.ReqData[6], frame.ReqData[7] };
-            else if(this._isTH3500)
-                //STX[1] + Addr[3] + Cmd[3]
-                headerBytes = new byte[] { frame.ReqData[0], frame.ReqData[1], frame.ReqData[2], frame.ReqData[3], frame.ReqData[4], frame.ReqData[5], frame.ReqData[6] };
-            else
-                //기본값: STX[1] + Addr[2] + Cmd[3]
-                headerBytes = new byte[] { frame.ReqData[0], frame.ReqData[1], frame.ReqData[2], frame.ReqData[3], frame.ReqData[4], frame.ReqData[5] };
-
-            int startIdx = buffer.Find(headerBytes);
-            if (startIdx < 0) return;
-
-
-            //Byte Last Index 추출
-            byte[] endBytes;
-            if (this._isTH3500)
-                //ETX + CR + LF
-                endBytes = new byte[] { 0x03, 0x0D, 0x0A };
-            else
-                //CR + LF
-                endBytes = new byte[] { 0x0D, 0x0A };
-
-            int endStartIdx = buffer.Find(endBytes);
-            if (endStartIdx < 0) return;
-
-            int lastIdx = endStartIdx + endBytes.Length - 1;
-            if (this._isTH3500 && this._isSUM)
             {
-                //ETX[1] + CRLF[2] + ErrCode[2]
-                lastIdx = lastIdx + 2;
+                //STX[1] + Addr[3] + ','[1] + Cmd[3]
+                headerBytes = new byte[] { frame.ReqData[0], frame.ReqData[1], frame.ReqData[2], frame.ReqData[3], frame.ReqData[4] };
+                headerLen = headerBytes.Length + 4;
+            }
+            else if(this._isTH3500)
+            {
+                //STX[1] + Addr[3] + Cmd[3]
+                headerBytes = new byte[] { frame.ReqData[0], frame.ReqData[1], frame.ReqData[2], frame.ReqData[3] };
+                headerLen = headerBytes.Length + 3;
+            }
+            else
+            {
+                //기본값: STX[1] + Addr[2] + Cmd[3]
+                headerBytes = new byte[] { frame.ReqData[0], frame.ReqData[1], frame.ReqData[2] };
+                headerLen = headerBytes.Length + 3;
             }
 
-            if (buffer.Length < lastIdx + 1) return;
+            while (idxHandle < buffer.Length - 1)
+            {
+                startIdx = QYUtils.Find(buffer, headerBytes, idxHandle++);
+                if (startIdx < 0) continue;
 
+                //FuncCode
+                if (buffer.Length < startIdx + headerLen) continue;
 
-            //Data 추출
-            byte[] frameBytes = new byte[lastIdx - startIdx + 1];
-            Buffer.BlockCopy(buffer, startIdx, frameBytes, 0, frameBytes.Length);
-            frame.RcvData = frameBytes;
+                //Byte Last Index 추출
+                endStartIdx = buffer.Find(this.TailBytes, startIdx + 1);
+                if (endStartIdx < 0) continue;
+
+                lastIdx = endStartIdx + this.TailBytes.Length - 1;
+                if (this._isTH3500 && this._isSUM)
+                {
+                    //ETX[1] + CRLF[2] + ErrCode[2]
+                    lastIdx += base.ErrCodeLength;
+                }
+
+                if (buffer.Length < lastIdx + 1) continue;
+
+                //Data 추출
+                byte[] frameBytes = new byte[lastIdx - startIdx + 1];
+                Buffer.BlockCopy(buffer, startIdx, frameBytes, 0, frameBytes.Length);
+                frame.RcvData = frameBytes;
+
+                break;
+            }
+        }
+
+        public override bool FrameConfirm(CommData frame)
+        {
+            int cmdStartIdx = 3;
+            if (this._isTD3500) cmdStartIdx = 5;
+            else if(this._isTH3500) cmdStartIdx = 4;
+
+            if ((frame.ReqData[cmdStartIdx] == frame.RcvData[cmdStartIdx])
+                && (frame.ReqData[cmdStartIdx + 1] == frame.RcvData[cmdStartIdx + 1])
+                && (frame.ReqData[cmdStartIdx + 2] == frame.RcvData[cmdStartIdx + 2]))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

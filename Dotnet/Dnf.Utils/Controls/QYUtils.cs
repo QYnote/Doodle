@@ -299,14 +299,14 @@ namespace Dnf.Utils.Controls
         /// <param name="source">찾을 Array</param>
         /// <param name="pattern">검사할 Array</param>
         /// <returns></returns>
-        static public int Find(this byte[] source, byte[] pattern)
+        static public int Find(this byte[] source, byte[] pattern, int startIdx = 0)
         {
             if (source == null || pattern == null) return -1;
             if(source.Length == 0 || source.Length < pattern.Length) return -1;
 
             int idx = -1;
 
-            for (int i = 0; i <= source.Length - pattern.Length; i++)
+            for (int i = startIdx; i <= source.Length - pattern.Length; i++)
             {
                 bool isMatch = true;
 

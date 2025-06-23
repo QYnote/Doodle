@@ -39,7 +39,7 @@ namespace Dnf.Communication.Controls.PCPorts
         /// <summary>
         /// Data 읽기
         /// </summary>
-        /// <returns>기존 Data뒤에 추가로 읽은 Data가 붙여진 Data</returns>
+        /// <returns>PC Port에 담겨있던 Buffer</returns>
         public abstract byte[] Read();
         /// <summary>
         /// Data 쓰기

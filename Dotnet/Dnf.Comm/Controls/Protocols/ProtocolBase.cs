@@ -33,5 +33,11 @@ namespace Dnf.Comm.Controls.Protocols
         /// Data 적합성 여부 상관 없이 Data 길이나 Tail위치만 찾아 Response Frame을 추출
         /// </remarks>
         public abstract void DataExtract(CommData frame, byte[] buffer);
+        /// <summary>
+        /// 추출된 Data Protocol검사
+        /// </summary>
+        /// <param name="frame">검사할 통신 Data</param>
+        /// <returns>true: 정상 / false: NG</returns>
+        public abstract bool FrameConfirm(CommData frame);
     }
 }

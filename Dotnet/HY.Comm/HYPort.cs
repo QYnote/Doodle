@@ -175,12 +175,13 @@ namespace HY.Comm
                     this.IsRequesting = false;
 
                     //Protocol 검사
-                    int errorCode = GetErrorCode();
+                    byte errorCode = GetErrorCode();
 
                     switch (errorCode)
                     {
-                        case -1: this.CommLog?.Invoke("Receive Success", this._commData.RcvData); break;
-                        case 0: this.CommLog?.Invoke("ErrorCheck Dismatch", this._commData.RcvData); break;
+                        case 0xFF: this.CommLog?.Invoke("Receive Success", this._commData.RcvData); break;
+                        case 0x00: this.CommLog?.Invoke("ErrorCheck Dismatch", this._commData.RcvData); break;
+                        case 0x10: this.CommLog?.Invoke("Protocol NG", this._commData.RcvData); break;
                     }
                 }
             }
@@ -234,14 +235,23 @@ namespace HY.Comm
             return false;
         }
 
-        private int GetErrorCode()
+        private byte GetErrorCode()
         {
-            int errorCode = -1;
+            byte errorCode = 0xFF;
 
             if (this.ErrorCheck != null)
             {
                 if (this.ErrorCheck.FrameConfirm(this._commData.RcvData))
-                    errorCode = 0;
+                    errorCode = 0x00;
+            }
+
+            if (this.Protocol != null)
+            {
+                if(this.Protocol.FrameConfirm(this._commData) == false)
+                {
+                    //Protocol NG
+                    errorCode = 0x10;
+                }
             }
 
             return errorCode;

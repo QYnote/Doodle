@@ -177,6 +177,7 @@ namespace HY.Comm
                         break;
                     case "PCLink_STD":
                         this._port.Protocol = new PCLink(0);
+                        this._port.ErrorCheck = null;
                         break;
                     case "PCLink_SUM":
                         this._port.Protocol = new PCLink(1);
@@ -184,6 +185,7 @@ namespace HY.Comm
                         break;
                     case "PCLink_STD_TH300500":
                         this._port.Protocol = new PCLink(2);
+                        this._port.ErrorCheck = null;
                         break;
                     case "PCLink_SUM_TD300500":
                         this._port.Protocol = new PCLink(3);
@@ -352,7 +354,6 @@ namespace HY.Comm
             this.gvProtocolResult.Location = new Point(this.gvDataResult.Location.X + this.gvDataResult.Width + 3, this.gvDataResult.Location.Y);
             this.gvProtocolResult.Anchor = AnchorStyles.Left | AnchorStyles.Top;
             this.gvProtocolResult.Height = this.gvDataResult.Height;
-            this.gvProtocolResult.Width = 72 + 3;
             this.gvProtocolResult.DataSource = this._dtProtocolResult;
             this.gvProtocolResult.RowHeadersVisible = false;
             this.gvProtocolResult.AllowUserToAddRows = false;
@@ -366,9 +367,26 @@ namespace HY.Comm
             colErrorCheck.ReadOnly = true;
             colErrorCheck.Width = 72;
 
+            DataGridViewTextBoxColumn colProtocolErr = new DataGridViewTextBoxColumn();
+            colProtocolErr.DataPropertyName = "ProtocolErr";
+            colProtocolErr.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colProtocolErr.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colProtocolErr.HeaderText = "Protocol NG";
+            colProtocolErr.ReadOnly = true;
+            colProtocolErr.Width = 80;
+
             this.gvProtocolResult.Columns.Add(colErrorCheck);
+            this.gvProtocolResult.Columns.Add(colProtocolErr);
+
+            int gvWidth = 0;
+            foreach (DataGridViewColumn col in this.gvProtocolResult.Columns)
+            {
+                gvWidth += col.Width;
+            }
+            this.gvProtocolResult.Width = gvWidth + 3;
 
             this._dtProtocolResult.Columns.Add(new DataColumn("ErrChk", typeof(uint)) { DefaultValue = 0 });
+            this._dtProtocolResult.Columns.Add(new DataColumn("ProtocolErr", typeof(uint)) { DefaultValue = 0 });
 
             #endregion
             #region Log Grid
@@ -668,6 +686,10 @@ namespace HY.Comm
                             InsertData(type, data);
                             this._dtProtocolResult.Rows[0]["ErrChk"] = (uint)(this._dtProtocolResult.Rows[0]["ErrChk"]) + 1;
                             break;
+                        case "Protocol NG":
+                            InsertData(type, data);
+                            this._dtProtocolResult.Rows[0]["ProtocolErr"] = (uint)(this._dtProtocolResult.Rows[0]["ProtocolErr"]) + 1;
+                            break;
                         case "Stack Buff":
                             WriteBuffer(data);
                             break;
@@ -693,6 +715,7 @@ namespace HY.Comm
                 case "Receive Too Long":
                 case "Receive Success":
                 case "ErrorCheck Dismatch":
+                case "Protocol NG":
                     dr["Type"] = "Rcv";
                     break;
                 default: dr["Type"] = type; break;
@@ -730,6 +753,7 @@ namespace HY.Comm
                 || type == "Receive Stop"
                 || type == "Receive Too Long"
                 || type == "ErrorCheck Dismatch"
+                || type == "Protocol NG"
                 )
             {
                 //Error시 Type BackColor 지정
