@@ -47,8 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\PCPortBase.cs" />
+    <Compile Include="Controls\PCPorts\PCPortBase.cs" />
     <Compile Include="Controls\PCPorts\PortEthernet.cs" />
+    <Compile Include="Controls\PCPorts\QYSerialPort.cs" />
     <Compile Include="Controls\ProgramPort.cs" />
+    <Compile Include="Controls\Protocols\ErrorCheck.cs" />
+    <Compile Include="Controls\Protocols\Modbus.cs" />
     <Compile Include="Controls\Server\ServerBase.cs" />
     <Compile Include="Controls\Server\TCPServer.cs" />
     <Compile Include="Data\EnumCustom.cs" />

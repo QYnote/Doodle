@@ -107,9 +107,9 @@ namespace Dnf.Utils.Controls
         /// </summary>
         /// <typeparam name="T">변환할 Enum</typeparam>
         /// <returns>ItemList</returns>
-        static public object[] EnumToItems<T>()
+        static public object[] EnumToItems<Tenum>()
         {
-            return Enum.GetValues(typeof(T)).OfType<object>().ToArray();
+            return Enum.GetValues(typeof(Tenum)).OfType<object>().ToArray();
         }
 
         #endregion 데이터 형태 변환 End
@@ -291,6 +291,38 @@ namespace Dnf.Utils.Controls
                 MessageBox.Show("F000000");
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Array에서 Array 찾기
+        /// </summary>
+        /// <param name="source">찾을 Array</param>
+        /// <param name="pattern">검사할 Array</param>
+        /// <returns></returns>
+        static public int Find(this byte[] source, byte[] pattern)
+        {
+            if (source == null || pattern == null) return -1;
+            if(source.Length == 0 || source.Length < pattern.Length) return -1;
+
+            int idx = -1;
+
+            for (int i = 0; i <= source.Length - pattern.Length; i++)
+            {
+                bool isMatch = true;
+
+                for (int j = 0; j < pattern.Length; j++)
+                {
+                    if (source[i + j] != pattern[j])
+                    {
+                        isMatch = false;
+                        break;
+                    }
+                }
+
+                if (isMatch) return i;
+            }
+
+            return idx;
         }
 
         /// <summary>실행시킨 Class와 실행시킨 Method Name Debug로 뿌려주기</summary>

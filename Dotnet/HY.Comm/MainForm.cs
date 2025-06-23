@@ -1,0 +1,794 @@
+﻿using Dnf.Communication.Controls.PCPorts;
+using HY.Comm.Protocols;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace HY.Comm
+{
+    public delegate void BytesLogHandler(string type, params byte[] data);
+
+    public partial class MainForm : Form
+    {
+        #region UI Controls
+
+        private ComboBox cboPortList = new ComboBox();
+        private Button btnConnect = new Button();
+        private Label lblConnState = new Label();
+        private ComboBox cboProtocolList = new ComboBox();
+
+        private GroupBox gbxBaudRate = new GroupBox();
+        private GroupBox gbxParity = new GroupBox();
+        private GroupBox gbxStopBits = new GroupBox();
+        private GroupBox gbxDataBits = new GroupBox();
+
+        private DataGridView gvDataResult = new DataGridView();
+        private DataGridView gvProtocolResult = new DataGridView();
+        private DataGridView gvDataLog = new DataGridView();
+        private DataGridView gvBuffer = new DataGridView();
+
+        private CheckBox chkRewrite = new CheckBox();
+        private NumericUpDown numRewrite = new NumericUpDown();
+        private CheckBox chkRewriteInfi = new CheckBox();
+        private CheckBox chkAddErrChk = new CheckBox();
+
+        private TextBox txtWrite = new TextBox();
+        private Button btnSend = new Button();
+        private Label lblWriteTooltip = new Label();
+
+        #endregion UI Controls
+
+        private int[] _baudrateList = new int[] { 9600, 19200, 38400, 57600, 115200 };
+        private byte[] _databitsList = new byte[] { 7, 8 };
+        private DataTable _dtDataLog = new DataTable();
+        private DataTable _dtDataResult = new DataTable();
+        private DataTable _dtProtocolResult = new DataTable();
+        private DataTable _dtBuffer = new DataTable();
+        private HYPort _port = new HYPort(PortType.Serial);
+        private BackgroundWorker BgWorker = new BackgroundWorker();
+        private int _bufferColCount = 10;
+
+        private QYSerialPort Serial
+        {
+            get
+            {
+                if (this._port != null
+                    && this._port.PCPort is QYSerialPort)
+                    return this._port.PCPort as QYSerialPort;
+                else
+                    return null;
+            }
+        }
+
+        private byte[] _recycleData;
+        private int _maxReq = 0;
+        private int _curReq = 0;
+
+        public MainForm()
+        {
+            InitializeComponent();
+            InitUI();
+            this.BgWorker.WorkerSupportsCancellation = true;
+            this.BgWorker.DoWork += BgWorker_DoWork;
+
+            this.FormClosing += (s, e) =>
+            {
+                if (this._port.IsOpen)
+                {
+                    this._port.Close();
+                }
+            };
+        }
+
+        private void InitUI()
+        {
+            //Port 목록
+            this.cboPortList.Location = new Point(3, 3);
+            this.cboPortList.Width = 100;
+            this.cboPortList.Items.AddRange(SerialPort.GetPortNames());
+            this.cboPortList.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cboPortList.SelectedIndexChanged += (s, e) =>
+            {
+                if (this._port.IsOpen == false)
+                {
+                    this.Serial.PortName = this.cboPortList.SelectedItem.ToString();
+                }
+            };
+            if(this.cboPortList.Items.Count > 0) this.cboPortList.SelectedIndex = 0;
+
+            //Port 연결버튼
+            this.btnConnect.Width = this.cboPortList.Width - 23;
+            this.btnConnect.Location = new Point(this.cboPortList.Location.X, this.cboPortList.Location.Y + this.cboPortList.Height + 3);
+            this.btnConnect.Text = "Connect";
+            this.btnConnect.Click += (s, e) =>
+            {
+                if(this.btnConnect.Text == "Connect")
+                {
+                    if (this._port.IsOpen == false
+                        && this._port.Open())
+                    {
+                        this.cboPortList.Enabled = false;
+                        this.btnConnect.Text = "Disconnect";
+                        this.lblConnState.BackColor = Color.Green;
+                    }
+                }
+                else
+                {
+                    if (this._port.Close())
+                    {
+                        this.cboPortList.Enabled = true;
+                        this.btnConnect.Text = "Connect";
+                        this.lblConnState.BackColor = Color.Red;
+                    }
+                }
+            };
+
+            this.lblConnState.Location = new Point(this.btnConnect.Location.X + this.btnConnect.Width + 3, this.btnConnect.Location.Y + 2);
+            this.lblConnState.Height = 19;
+            this.lblConnState.Width = 19;
+            this.lblConnState.BackColor = Color.Red;
+
+            this.cboProtocolList.Location = new Point(this.btnConnect.Location.X, this.btnConnect.Location.Y + this.btnConnect.Height + 3);
+            this.cboProtocolList.Width = this.cboPortList.Width;
+            this.cboProtocolList.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cboProtocolList.DropDownWidth = (int)(this.cboProtocolList.CreateGraphics().MeasureString("PCLink_SUM_TD300500", this.cboProtocolList.Font).Width);
+            this.cboProtocolList.Items.AddRange(new string[] 
+            {
+                "None",
+                "ModbusRTU",
+                "ModbusRTU_EXP",
+                "ModbusAscii",
+                "ModbusAscii_EXP",
+                "PCLink_STD",
+                "PCLink_STD_TH300500",
+                "PCLink_SUM",
+                "PCLink_SUM_TD300500",
+                "PCLink_SUM_TH300500",
+            });
+            if (this.cboProtocolList.Items.Count > 0) this.cboProtocolList.SelectedIndex = 0;
+            this.cboProtocolList.SelectedIndexChanged += (s, e) =>
+            {
+                string item = (string)this.cboProtocolList.SelectedItem;
+
+                switch (item)
+                {
+                    case "ModbusRTU":
+                        this._port.Protocol = new HYModbus(0);
+                        this._port.ErrorCheck = new ModbusRTUErrorCheck();
+                        break;
+                    case "ModbusAscii":
+                        this._port.Protocol = new HYModbus(1);
+                        this._port.ErrorCheck = new ModbusAsciiErrorCheck();
+                        break;
+                    case "ModbusRTU_EXP":
+                        this._port.Protocol = new HYModbus(2);
+                        this._port.ErrorCheck = new ModbusRTUErrorCheck();
+                        break;
+                    case "ModbusAscii_EXP":
+                        this._port.Protocol = new HYModbus(3);
+                        this._port.ErrorCheck = new ModbusAsciiErrorCheck();
+                        break;
+                    case "PCLink_STD":
+                        this._port.Protocol = new PCLink(0);
+                        break;
+                    case "PCLink_SUM":
+                        this._port.Protocol = new PCLink(1);
+                        this._port.ErrorCheck = new PCLinkErrorCheck();
+                        break;
+                    case "PCLink_STD_TH300500":
+                        this._port.Protocol = new PCLink(2);
+                        break;
+                    case "PCLink_SUM_TD300500":
+                        this._port.Protocol = new PCLink(3);
+                        this._port.ErrorCheck = new PCLinkErrorCheck();
+                        break;
+                    case "PCLink_SUM_TH300500":
+                        this._port.Protocol = new PCLink(4);
+                        this._port.ErrorCheck = new PCLinkTHErrorCheck();
+                        break;
+                    default:
+                        this._port.Protocol = null;
+                        this._port.ErrorCheck = null;
+                        break;
+                }
+
+                if (this._port.Protocol != null)
+                    this._port.ProtocolName = item;
+            };
+
+            #region Serial Port 설정
+
+            //BaudRate
+            this.gbxBaudRate.Location = new Point(this.cboPortList.Location.X + this.cboPortList.Width + 3, this.cboPortList.Location.Y);
+            this.gbxBaudRate.Width = 80;
+            this.gbxBaudRate.Text = "Baudrate";
+            foreach (var baudrate in this._baudrateList)
+            {
+                RadioButton rdo = CreateRdo(baudrate);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    this.Serial.BaudRate = baudrate;
+                };
+
+                this.gbxBaudRate.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbxBaudRate.Height = this.gbxBaudRate.Controls.Count * (18 + 3) + 6;
+            (this.gbxBaudRate.Controls[this.gbxBaudRate.Controls.Count - 1] as RadioButton).Checked = true;
+
+            //Parity
+            this.gbxParity.Location = new Point(this.gbxBaudRate.Location.X + this.gbxBaudRate.Width + 3, this.gbxBaudRate.Location.Y);
+            this.gbxParity.AutoSize = false;
+            this.gbxParity.Text = "Parity";
+            foreach (Parity parity in Dnf.Utils.Controls.QYUtils.EnumToItems<Parity>())
+            {
+                RadioButton rdo = CreateRdo(parity);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    this.Serial.Parity = parity;
+                };
+
+                this.gbxParity.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbxParity.Size = this.gbxBaudRate.Size;
+            (this.gbxParity.Controls[this.gbxParity.Controls.Count - 1] as RadioButton).Checked = true;
+
+            //StopBits
+            this.gbxStopBits.Location = new Point(this.gbxParity.Location.X + this.gbxParity.Width + 3, this.gbxParity.Location.Y);
+            this.gbxStopBits.AutoSize = false;
+            this.gbxStopBits.Text = "StopBits";
+            foreach (StopBits stopbit in Dnf.Utils.Controls.QYUtils.EnumToItems<StopBits>())
+            {
+                if (stopbit == StopBits.None
+                    || stopbit == StopBits.OnePointFive
+                    ) continue;
+
+                RadioButton rdo = CreateRdo(stopbit);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    this.Serial.StopBits = stopbit;
+                };
+
+                this.gbxStopBits.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbxStopBits.Size = this.gbxBaudRate.Size;
+            (this.gbxStopBits.Controls[this.gbxStopBits.Controls.Count - 1] as RadioButton).Checked = true;
+
+            //DataBits
+            this.gbxDataBits.Location = new Point(this.gbxStopBits.Location.X + this.gbxStopBits.Width + 3, this.gbxStopBits.Location.Y);
+            this.gbxDataBits.AutoSize = false;
+            this.gbxDataBits.Text = "DataBits";
+            foreach (var databit in this._databitsList)
+            {
+                RadioButton rdo = CreateRdo(databit);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    this.Serial.DataBits = databit;
+                };
+
+                this.gbxDataBits.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbxDataBits.Size = this.gbxBaudRate.Size;
+            (this.gbxDataBits.Controls[this.gbxDataBits.Controls.Count - 1] as RadioButton).Checked = true;
+
+            #endregion Serial Port 설정
+            #region 통신 결과
+
+            //Comm Result
+            this.gvDataResult.Location = new Point(this.cboPortList.Location.X, this.gbxBaudRate.Location.Y + this.gbxBaudRate.Height + 3);
+            this.gvDataResult.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+            this.gvDataResult.Height = 47;
+            this.gvDataResult.Width = 270 + 3;
+            this.gvDataResult.DataSource = this._dtDataResult;
+            this.gvDataResult.RowHeadersVisible = false;
+            this.gvDataResult.AllowUserToAddRows = false;
+            this.gvDataResult.ReadOnly = true;
+
+            DataGridViewTextBoxColumn colTry = new DataGridViewTextBoxColumn();
+            colTry.DataPropertyName = "TryCount";
+            colTry.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colTry.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colTry.HeaderText = "시도수";
+            colTry.ReadOnly = true;
+            colTry.Width = 50;
+
+            DataGridViewTextBoxColumn colSuccess = new DataGridViewTextBoxColumn();
+            colSuccess.DataPropertyName = "Success";
+            colSuccess.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colSuccess.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colSuccess.HeaderText = "성공";
+            colSuccess.ReadOnly = true;
+            colSuccess.Width = 50;
+
+            DataGridViewTextBoxColumn colNoneReceive = new DataGridViewTextBoxColumn();
+            colNoneReceive.DataPropertyName = "None Receive";
+            colNoneReceive.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colNoneReceive.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colNoneReceive.HeaderText = "무응답";
+            colNoneReceive.ReadOnly = true;
+            colNoneReceive.Width = 50;
+
+            DataGridViewTextBoxColumn colReceiveStop = new DataGridViewTextBoxColumn();
+            colReceiveStop.DataPropertyName = "Receive Stop";
+            colReceiveStop.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colReceiveStop.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colReceiveStop.HeaderText = "응답멈춤";
+            colReceiveStop.ReadOnly = true;
+            colReceiveStop.Width = 60;
+
+            DataGridViewTextBoxColumn colReceiveLong = new DataGridViewTextBoxColumn();
+            colReceiveLong.DataPropertyName = "Receive Too Long";
+            colReceiveLong.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colReceiveLong.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colReceiveLong.HeaderText = "무한응답";
+            colReceiveLong.ReadOnly = true;
+            colReceiveLong.Width = 60;
+
+            this.gvDataResult.Columns.Add(colTry);
+            this.gvDataResult.Columns.Add(colSuccess);
+            this.gvDataResult.Columns.Add(colNoneReceive);
+            this.gvDataResult.Columns.Add(colReceiveStop);
+            this.gvDataResult.Columns.Add(colReceiveLong);
+
+            this._dtDataResult.Columns.Add(new DataColumn("TryCount", typeof(uint)) { DefaultValue = 0 });
+            this._dtDataResult.Columns.Add(new DataColumn("Success", typeof(uint)) { DefaultValue = 0 });
+            this._dtDataResult.Columns.Add(new DataColumn("None Receive", typeof(uint)) { DefaultValue = 0 });
+            this._dtDataResult.Columns.Add(new DataColumn("Receive Stop", typeof(uint)) { DefaultValue = 0 });
+            this._dtDataResult.Columns.Add(new DataColumn("Receive Too Long", typeof(uint)) { DefaultValue = 0 });
+
+            #endregion 통신 결과
+            #region Protocol 결과
+
+            this.gvProtocolResult.Location = new Point(this.gvDataResult.Location.X + this.gvDataResult.Width + 3, this.gvDataResult.Location.Y);
+            this.gvProtocolResult.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+            this.gvProtocolResult.Height = this.gvDataResult.Height;
+            this.gvProtocolResult.Width = 72 + 3;
+            this.gvProtocolResult.DataSource = this._dtProtocolResult;
+            this.gvProtocolResult.RowHeadersVisible = false;
+            this.gvProtocolResult.AllowUserToAddRows = false;
+            this.gvProtocolResult.ReadOnly = true;
+
+            DataGridViewTextBoxColumn colErrorCheck = new DataGridViewTextBoxColumn();
+            colErrorCheck.DataPropertyName = "ErrChk";
+            colErrorCheck.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colErrorCheck.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colErrorCheck.HeaderText = "무결성검사";
+            colErrorCheck.ReadOnly = true;
+            colErrorCheck.Width = 72;
+
+            this.gvProtocolResult.Columns.Add(colErrorCheck);
+
+            this._dtProtocolResult.Columns.Add(new DataColumn("ErrChk", typeof(uint)) { DefaultValue = 0 });
+
+            #endregion
+            #region Log Grid
+
+            this._bufferColCount = 10;
+
+            //Request, Receive Log GridView
+            this.gvDataLog.Location = new Point(this.gvDataResult.Location.X, this.gvDataResult.Location.Y + this.gvDataResult.Height + 3);
+            this.gvDataLog.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
+            this.gvDataLog.AutoSize = false;
+            this.gvDataLog.DataSource = this._dtDataLog;
+            this.gvDataLog.Height = this.ClientSize.Height - this.gvDataLog.Location.Y - 2;
+            this.gvDataLog.Width = this.ClientSize.Width - ((this._bufferColCount * 25) + this.gvDataLog.Location.X + 8);
+            this.gvDataLog.RowHeadersVisible = false;
+            this.gvDataLog.AllowUserToAddRows = false;
+            this.gvDataLog.AllowUserToResizeColumns = false;
+            this.gvDataLog.AllowUserToResizeRows = false;
+
+            this.gvBuffer.Location = new Point(this.gvDataLog.Location.X + this.gvDataLog.Width + 3, this.gvDataLog.Location.Y);
+            this.gvBuffer.Anchor = AnchorStyles.Right | AnchorStyles.Top;
+            this.gvBuffer.AutoSize = false;
+            this.gvBuffer.DataSource = this._dtBuffer;
+            this.gvBuffer.Width = this.ClientSize.Width - this.gvBuffer.Location.X - 2;
+            this.gvBuffer.Height = 140;
+            this.gvBuffer.RowHeadersVisible = false;
+            this.gvBuffer.AllowUserToAddRows = false;
+            this.gvBuffer.AllowUserToResizeColumns = false;
+            this.gvBuffer.AllowUserToResizeRows = false;
+
+            for (int i = 0; i < this._bufferColCount; i++)
+            {
+                string fieldName = string.Format("col{0}", i);
+                DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
+                col.DataPropertyName = fieldName;
+                col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                col.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                col.HeaderText = (i + 1).ToString();
+                col.ReadOnly = true;
+                col.Width = 25;
+
+                this.gvBuffer.Columns.Add(col);
+
+                this._dtBuffer.Columns.Add(new DataColumn(fieldName, typeof(string)) { DefaultValue = string.Empty });
+            }
+
+            #endregion Log Grid
+            #region 반복 설정
+            //반복전송 체크박스
+            this.chkRewrite.Location = new Point(this.gbxDataBits.Location.X + this.gbxDataBits.Width + 3, this.gbxDataBits.Location.Y);
+            this.chkRewrite.Width = 80;
+            this.chkRewrite.Text = "반복 전송";
+            this.chkRewrite.CheckAlign = ContentAlignment.MiddleRight;
+            this.chkRewrite.Checked = false;
+            this.chkRewrite.CheckedChanged += (s, e) => {
+                this.numRewrite.Enabled = this.chkRewrite.Checked;
+                this.chkRewriteInfi.Enabled = this.chkRewrite.Checked;
+            };
+
+            //반복전송 횟수 TextBox
+            this.numRewrite.Location = new Point(this.chkRewrite.Location.X + this.chkRewrite.Size.Width + 3, this.chkRewrite.Location.Y + 3);
+            this.numRewrite.Width = 60;
+            this.numRewrite.Minimum = 2;
+            this.numRewrite.Enabled = false;
+            this.numRewrite.Value = 100;
+
+            Label lblRewriteUnit = new Label();
+            lblRewriteUnit.Location = new Point(this.numRewrite.Location.X + this.numRewrite.Size.Width + 3, this.numRewrite.Location.Y);
+            lblRewriteUnit.Width = 20;
+            lblRewriteUnit.Text = "회";
+            lblRewriteUnit.TextAlign = ContentAlignment.MiddleLeft;
+
+            //반복전송 무한 체크박스
+            this.chkRewriteInfi.Location = new Point(this.chkRewrite.Location.X, this.chkRewrite.Location.Y + this.chkRewrite.Height + 3);
+            this.chkRewriteInfi.Width = 80;
+            this.chkRewriteInfi.Text = "무한반복";
+            this.chkRewriteInfi.CheckAlign = ContentAlignment.MiddleRight;
+            this.chkRewriteInfi.Checked = false;
+            this.chkRewriteInfi.Enabled = false;
+            this.chkRewriteInfi.CheckedChanged += (s, e) => {
+                this.numRewrite.Enabled = !this.chkRewriteInfi.Checked;
+            };
+
+            #endregion 반복 설정
+
+            this.chkAddErrChk.Location = new Point(lblRewriteUnit.Location.X + lblRewriteUnit.Width + 3, lblRewriteUnit.Location.Y);
+            this.chkAddErrChk.Width = 115;
+            this.chkAddErrChk.Text = "ErrorCheck 생성";
+            this.chkAddErrChk.CheckAlign = ContentAlignment.MiddleRight;
+            this.chkAddErrChk.Checked = false;
+            this.chkAddErrChk.CheckedChanged += (s, e) => {
+                this._port.CreErrCheck = this.chkAddErrChk.Checked;
+            };
+
+            //전송 Write 텍스트 Box
+            this.txtWrite.Location = new Point(this.gbxDataBits.Location.X + this.gbxDataBits.Width + 3, this.gbxDataBits.Location.Y + this.gbxDataBits.Height - this.txtWrite.Height);
+            this.txtWrite.Width = this.ClientSize.Width - (this.txtWrite.Location.X + 60 + 3);
+            this.txtWrite.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            //TextBox데이터 전송 버튼
+            this.btnSend.Location = new Point(this.txtWrite.Location.X + this.txtWrite.Width + 3, this.txtWrite.Location.Y - 1);
+            this.btnSend.Width = 60;
+            this.btnSend.Text = "Write";
+            this.btnSend.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.btnSend.Click += (s, e) => { WriteData(); };
+
+            //TextBox 작성요령 설명
+            this.lblWriteTooltip.Location = new Point(this.txtWrite.Location.X, this.txtWrite.Location.Y - this.lblWriteTooltip.Height);
+            this.lblWriteTooltip.Text = "10진수: @000, 16진수: #00  ex)입력값: 30 - 10진수:@030 / 16진수:#26";
+            this.lblWriteTooltip.Width = 400;
+
+
+            this.Controls.Add(this.cboPortList);
+            this.Controls.Add(this.btnConnect);
+            this.Controls.Add(this.lblConnState);
+            this.Controls.Add(this.cboProtocolList);
+            this.Controls.Add(this.gbxBaudRate);
+            this.Controls.Add(this.gbxParity);
+            this.Controls.Add(this.gbxStopBits);
+            this.Controls.Add(this.gbxDataBits);
+            this.Controls.Add(this.gvDataResult);
+            this.Controls.Add(this.gvProtocolResult);
+            this.Controls.Add(this.gvDataLog);
+            this.Controls.Add(this.gvBuffer);
+            this.Controls.Add(this.chkRewrite);
+            this.Controls.Add(this.numRewrite);
+            this.Controls.Add(lblRewriteUnit);
+            this.Controls.Add(this.chkRewriteInfi);
+            this.Controls.Add(this.chkAddErrChk);
+            this.Controls.Add(this.txtWrite);
+            this.Controls.Add(this.btnSend);
+            this.Controls.Add(this.lblWriteTooltip);
+            this.Controls.Add(this.txtWrite);
+            this.Controls.Add(this.btnSend);
+            this.Controls.Add(this.lblWriteTooltip);
+
+            this._port.CommLog += (title, data) =>
+            {
+                WriteLog(title, data);
+            };
+            this._port.StackBuff += (title, data) =>
+            {
+                WriteLog(title, data);
+            };
+        }
+
+        private void InitDataLogGrid()
+        {
+            this._dtDataResult.Rows.Clear();
+            this._dtProtocolResult.Rows.Clear();
+            this._dtDataLog.Rows.Clear();
+            this._dtDataLog.Columns.Clear();
+            this.gvDataLog.Columns.Clear();
+
+            DataGridViewTextBoxColumn colType = new DataGridViewTextBoxColumn();
+            colType.Name = "Type";
+            colType.DataPropertyName = "Type";
+            colType.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colType.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colType.HeaderText = "Type";
+            colType.ReadOnly = true;
+            colType.Width = 40;
+
+            DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
+            colTime.DataPropertyName = "Time";
+            colTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colTime.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colTime.HeaderText = "Time";
+            colTime.ReadOnly = true;
+            colTime.Width = 130;
+
+            this.gvDataLog.Columns.Add(colType);
+            this.gvDataLog.Columns.Add(colTime);
+
+            this._dtDataLog.Columns.Add(new DataColumn("Type", typeof(string)) { DefaultValue = string.Empty });
+            this._dtDataLog.Columns.Add(new DataColumn("Time", typeof(string)));
+
+            this._dtDataResult.Rows.Add();
+            this._dtProtocolResult.Rows.Add();
+            this.gvDataResult.ClearSelection();
+            this.gvProtocolResult.ClearSelection();
+
+            this.gvDataResult.EndEdit();
+            this.gvDataLog.EndEdit();
+        }
+
+        private RadioButton CreateRdo(object data)
+        {
+            RadioButton rdo = new RadioButton();
+            rdo.AutoSize = false;
+            rdo.Height = 18;
+            rdo.Width = (int)this.CreateGraphics().MeasureString(data.ToString(), rdo.Font).Width;
+            rdo.Dock = DockStyle.Top;
+            rdo.Text = data.ToString();
+            rdo.Checked = false;
+
+            return rdo;
+        }
+
+        private void WriteData()
+        {
+            if (this.BgWorker.IsBusy)
+                this.BgWorker.CancelAsync();
+            InitDataLogGrid();
+
+            int handle = 0;
+            string splitStr;
+            byte b = 0;
+            List<byte> bytes = new List<byte>();
+
+            while (handle < this.txtWrite.TextLength)
+            {
+                char c = this.txtWrite.Text[handle];
+                int len;
+                bool boolean = false;
+                if (c == '@') len = 3;
+                else if (c == '#') len = 2;
+                else
+                {
+                    if (++handle > this.txtWrite.TextLength)
+                        break;
+                    else
+                        continue;
+                }
+
+                if (++handle + len > this.txtWrite.TextLength)
+                    break;
+
+                splitStr = this.txtWrite.Text.Substring(handle, len);
+                if(c == '@')
+                    boolean = byte.TryParse(splitStr, out b);
+                else if(c == '#')
+                    boolean = byte.TryParse(splitStr,
+                        System.Globalization.NumberStyles.HexNumber,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out b);
+
+                if (boolean)
+                {
+                    bytes.Add(b);
+                    handle += len;
+                }
+            }
+
+            this._recycleData = bytes.ToArray();
+
+            this._port.IsRequesting = false;
+            this._curReq = 0;
+            if (this.chkRewrite.Checked)
+            {
+                if (this.chkRewriteInfi.Checked)
+                    this._maxReq = int.MaxValue;
+                else
+                    this._maxReq = (int)this.numRewrite.Value;
+            }
+            else
+            {
+                this._maxReq = 1;
+            }
+
+            if(this.BgWorker.IsBusy == false)
+                this.BgWorker.RunWorkerAsync();
+        }
+
+        private void RequestData(byte[] data)
+        {
+            if (data == null || data.Length == 0) return;
+
+            this._port.Write(data);
+            this._curReq++;
+            this._dtDataResult.Rows[0]["TryCount"] = (uint)(this._dtDataResult.Rows[0]["TryCount"]) + 1;
+        }
+
+        private void WriteLog(string type, params byte[] data)
+        {
+            try
+            {
+                if (this.InvokeRequired)
+                    this.Invoke(new BytesLogHandler(WriteLog), type, data);
+                else
+                {
+                    switch (type)
+                    {
+                        case "After Write":
+                            InsertData(type, data);
+                            break;
+                        case "None Receive":
+                        case "Receive Stop":
+                        case "Receive Too Long":
+                            InsertData(type, data);
+                            this._dtDataResult.Rows[0][type] = (uint)(this._dtDataResult.Rows[0][type]) + 1;
+                            break;
+                        case "Receive Success":
+                            InsertData(type, data);
+                            this._dtDataResult.Rows[0]["Success"] = (uint)(this._dtDataResult.Rows[0]["Success"]) + 1;
+                            break;
+                        case "ErrorCheck Dismatch":
+                            InsertData(type, data);
+                            this._dtProtocolResult.Rows[0]["ErrChk"] = (uint)(this._dtProtocolResult.Rows[0]["ErrChk"]) + 1;
+                            break;
+                        case "Stack Buff":
+                            WriteBuffer(data);
+                            break;
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        private void InsertData(string type, byte[] data)
+        {
+            DataRow dr = this._dtDataLog.NewRow();
+            switch (type)
+            {
+                case "After Write":
+                    dr["Type"] = "Req";
+                    break;
+                case "None Receive":
+                case "Receive Stop":
+                case "Receive Too Long":
+                case "Receive Success":
+                case "ErrorCheck Dismatch":
+                    dr["Type"] = "Rcv";
+                    break;
+                default: dr["Type"] = type; break;
+            }
+            dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+
+            if (data != null)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    string colName = string.Format("Col{0}", i);
+
+                    //데이터 길이만큼 Column 추가
+                    if (this._dtDataLog.Columns.Contains(colName) == false)
+                    {
+                        DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
+                        col.DataPropertyName = colName;
+                        col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                        col.Width = 25;
+                        col.HeaderText = (i + 1).ToString();
+                        col.ReadOnly = true;
+
+                        this.gvDataLog.Columns.Add(col);
+
+                        this._dtDataLog.Columns.Add(new DataColumn(colName, typeof(string)) { DefaultValue = string.Empty });
+                    }
+
+                    dr[colName] = data[i].ToString("X2");
+                }
+            }
+
+            this._dtDataLog.Rows.Add(dr);
+
+            if (type == "None Receive"
+                || type == "Receive Stop"
+                || type == "Receive Too Long"
+                || type == "ErrorCheck Dismatch"
+                )
+            {
+                //Error시 Type BackColor 지정
+                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+            }
+        }
+
+        private void WriteBuffer(byte[] data)
+        {
+            this._dtBuffer.Clear();
+            if (data == null) return;
+
+            DataRow dr = null;
+            for (int i = 0; i < data.Length; i++)
+            {
+                string fieldName = string.Format("col{0}", i % this._bufferColCount);
+
+                if (i % this._bufferColCount == 0)
+                {
+                    dr = this._dtBuffer.NewRow();
+
+                    this._dtBuffer.Rows.Add(dr);
+                }
+
+                dr[fieldName] = data[i].ToString("X2");
+            }
+        }
+
+        private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (true)
+            {
+                if (this.BgWorker.CancellationPending)
+                    break;
+                else
+                {
+                    try
+                    {
+                        if (this._port.IsRequesting)
+                        {
+                            this._port.Read();
+                        }
+                        else
+                        {
+                            if (this._maxReq <= this._curReq)
+                                break;
+
+                            RequestData(this._recycleData);
+                        }
+
+                        System.Threading.Thread.Sleep(200);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+        }
+
+    }
+}

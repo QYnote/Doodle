@@ -1,0 +1,51 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dnf.Communication.Controls.PCPorts
+{
+    public enum PortType
+    {
+        Serial,
+        Ethernet,
+    }
+
+    public abstract class PCPortBase
+    {
+        public PortType PortType { get; }
+
+        public PCPortBase(PortType type)
+        {
+            this.PortType = type;
+        }
+
+        public abstract string PortName { get; set; }
+        /// <summary>
+        /// Port Open 상태
+        /// </summary>
+        public abstract bool IsOpen { get; }
+        /// <summary>
+        /// Port 열기
+        /// </summary>
+        /// <returns>true: 열기성공 / false: 열기실패</returns>
+        public abstract bool Open();
+        /// <summary>
+        /// Port 닫기
+        /// </summary>
+        /// <returns>true: 닫기성공 / false: 닫기실패</returns>
+        public abstract bool Close();
+        /// <summary>
+        /// Data 읽기
+        /// </summary>
+        /// <returns>기존 Data뒤에 추가로 읽은 Data가 붙여진 Data</returns>
+        public abstract byte[] Read();
+        /// <summary>
+        /// Data 쓰기
+        /// </summary>
+        /// <param name="bytes">전송할 Byte Array</param>
+        /// <returns>true: 전송성공 / false: 전송실패</returns>
+        public abstract bool Write(byte[] bytes);
+    }
+}
