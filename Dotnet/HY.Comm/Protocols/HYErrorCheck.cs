@@ -219,12 +219,8 @@ namespace HY.Comm.Protocols
         {
             byte[] chkCd;
             int sum = 0;
-            bool hasTail = false;
-            if (bytes[bytes.Length - 2] == 0x0D
-                && bytes[bytes.Length - 1] == 0x0A)
-                hasTail = true;
 
-            for (int i = 1; i < bytes.Length - (hasTail ? base.CheckLen : 0); i++)
+            for (int i = 1; i < bytes.Length; i++)
             {
                 sum += bytes[i];
             }
