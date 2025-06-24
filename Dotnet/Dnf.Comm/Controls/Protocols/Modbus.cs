@@ -99,8 +99,23 @@ namespace Dnf.Communication.Controls.Protocols
                 readCount = (frame.ReqData[4] << 8) + frame.ReqData[5];
 
             for (int i = 0; i < readCount; i++)
-                //Data = (담당Byte >> Bit위치) & 1 == 1
+                //Data = (bool)((담당Byte >> Bit위치) & 1 == 1)
                 dic[startAddr + i + 1] = ((frame.RcvData[3 + (i / 8)] >> (i % 8)) & 1) == 1;
+
+            return dic;
+        }
+
+        private Dictionary<int, object> ReadHoldingRegister(CommData frame)
+        {
+            //Req : Addr[1] + Cmd[1] + StartAddr[2] + ReadAddrCount[2]
+            //Rcv : Addr[1] + Cmd[1] + ByteCount[1] + Data[ByteCount] Hi/Lo
+            Dictionary<int, object> dic = new Dictionary<int, object>();
+
+            int startAddr = (frame.ReqData[2] << 8) + frame.ReqData[3],
+                readCount = frame.RcvData[2];
+
+            for (int i = 0; i < readCount; i += 2)
+                dic[startAddr + 1 + (i / 2)] = (Int16)((frame.RcvData[3 + i] << 8) + frame.RcvData[3 + i + 1]);
 
             return dic;
         }
