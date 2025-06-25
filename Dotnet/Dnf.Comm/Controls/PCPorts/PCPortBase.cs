@@ -45,7 +45,6 @@ namespace Dnf.Communication.Controls.PCPorts
         /// Data 쓰기
         /// </summary>
         /// <param name="bytes">전송할 Byte Array</param>
-        /// <returns>true: 전송성공 / false: 전송실패</returns>
-        public abstract bool Write(byte[] bytes);
+        public abstract void Write(byte[] bytes);
     }
 }

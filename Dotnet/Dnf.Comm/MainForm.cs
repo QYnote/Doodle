@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Dnf.Comm.Controls;
-using Dnf.Comm.Controls.PCPorts;
 using Dnf.Comm.Data;
 using Dnf.Comm.Frm;
 
@@ -732,15 +731,6 @@ namespace Dnf.Comm
                     //선택된 ProgramPort 설정
                     this.SelectedPort = e.Node.Tag as ProgramPort;
 
-                    //Porperty 변경
-                    if (this.SelectedPort.PCPort is PortSerial)
-                    {
-                        dt = SerialPortProperty(this.SelectedPort);
-                    }
-                    else if (this.SelectedPort.PCPort is PortEthernet)
-                    {
-                        dt = EthernetPortProperty(this.SelectedPort);
-                    }
 
                     if (dt != null)
                     {
@@ -901,14 +891,6 @@ namespace Dnf.Comm
             dt.Columns.Add("P", typeof(string));
             dt.Columns.Add("V", typeof(string));
 
-            PortSerial serial = port.PCPort as PortSerial;
-            dt.Rows.Add("PortName", serial.COMName);
-            dt.Rows.Add("ProtocolType", port.ProtocolType);
-            dt.Rows.Add("BaudRate", serial.BaudRate);
-            dt.Rows.Add("DataBits", serial.DataBits);
-            dt.Rows.Add("Parity", serial.Parity);
-            dt.Rows.Add("StopBit", serial.StopBit);
-
             return dt;
         }
 
@@ -917,10 +899,6 @@ namespace Dnf.Comm
             DataTable dt = new DataTable();
             dt.Columns.Add("P", typeof(string));
             dt.Columns.Add("V", typeof(string));
-
-            PortEthernet ethernet = port.PCPort as PortEthernet;
-            dt.Rows.Add("PortNo", ethernet.PortNo);
-            dt.Rows.Add("IP", ethernet.IP);
 
             return dt;
         }

@@ -135,23 +135,19 @@ namespace Dnf.Communication.Controls.PCPorts
 
             return readBytes;
         }
-        public override bool Write(byte[] bytes)
+        public override void Write(byte[] bytes)
         {
             try
             {
                 if (this.IsOpen)
                 {
                     this._serialPort.Write(bytes, 0, bytes.Length);
-
-                    return true;
                 }
             }
             catch
             {
                 Debug.WriteLine("[Error]Port Write Fail");
             }
-
-            return false;
         }
     }
 }

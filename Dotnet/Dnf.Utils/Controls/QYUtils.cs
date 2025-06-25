@@ -335,9 +335,6 @@ namespace Dnf.Utils.Controls
         }
 
         #endregion 검사 End
-        #region 생성
-
-        #endregion 생성
 
         #endregion 기능 End
 

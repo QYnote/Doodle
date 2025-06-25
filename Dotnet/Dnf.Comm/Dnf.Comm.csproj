@@ -46,9 +46,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls\PCPortBase.cs" />
     <Compile Include="Controls\PCPorts\PCPortBase.cs" />
-    <Compile Include="Controls\PCPorts\PortEthernet.cs" />
+    <Compile Include="Controls\PCPorts\QYEthernet.cs" />
     <Compile Include="Controls\PCPorts\QYSerialPort.cs" />
     <Compile Include="Controls\ProgramPort.cs" />
     <Compile Include="Controls\Protocols\ErrorCheck.cs" />
@@ -56,7 +55,6 @@
     <Compile Include="Controls\Server\ServerBase.cs" />
     <Compile Include="Controls\Server\TCPServer.cs" />
     <Compile Include="Data\EnumCustom.cs" />
-    <Compile Include="Controls\PCPorts\PortSerial.cs" />
     <Compile Include="Controls\Protocols\ProtocolBase.cs" />
     <Compile Include="Data\ucXML.cs" />
     <Compile Include="Frm\FrmChildComm.cs">
@@ -107,7 +105,6 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Protocols\ModbusRTU.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controls\Unit.cs" />
     <Compile Include="RuntimeData.cs" />
