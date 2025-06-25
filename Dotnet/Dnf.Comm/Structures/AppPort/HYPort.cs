@@ -1,18 +1,17 @@
-﻿using Dnf.Communication.Controls.PCPorts;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Dnf.Comm.Structures.PCPorts;
+using Dnf.Comm.Structures.Protocols;
 using Dnf.Utils.Controls;
-using Dnf.Comm.Controls.Protocols;
-using Dnf.Communication.Controls.Protocols;
 
-namespace HY.Comm
+namespace Dnf.Comm.Structures.AppPort
 {
 
-    internal class HYPort
+    public class HYPort
     {
         public delegate void ReadWriteHandler(string title, byte[] data);
         public event ReadWriteHandler CommLog;

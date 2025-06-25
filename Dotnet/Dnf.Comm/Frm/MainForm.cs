@@ -1,5 +1,6 @@
-﻿using Dnf.Communication.Controls.PCPorts;
-using HY.Comm.Protocols;
+﻿using Dnf.Comm.Structures.AppPort;
+using Dnf.Comm.Structures.HYNux;
+using Dnf.Comm.Structures.PCPorts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace HY.Comm
+namespace Dnf.Comm.Frm
 {
     public delegate void BytesLogHandler(string type, params byte[] data);
     public delegate void UIUpdateHandler(string cmd);

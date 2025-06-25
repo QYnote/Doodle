@@ -121,10 +121,6 @@
       <Project>{4C5EA9DD-25AA-4820-97D7-2575C955922A}</Project>
       <Name>Dnf.Utils</Name>
     </ProjectReference>
-    <ProjectReference Include="..\HY.Comm\HY.Comm.csproj">
-      <Project>{207d61cf-2046-497f-881b-25c7e83d4537}</Project>
-      <Name>HY.Comm</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">

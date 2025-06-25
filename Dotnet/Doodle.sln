@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.Comm", "Dnf.Comm\Dnf.Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnf.DrawImage", "Dnf.Image\Dnf.DrawImage.csproj", "{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HY.Comm", "HY.Comm\HY.Comm.csproj", "{207D61CF-2046-497F-881B-25C7E83D4537}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +32,6 @@ Global
 		{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{207D61CF-2046-497F-881B-25C7E83D4537}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{207D61CF-2046-497F-881B-25C7E83D4537}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{207D61CF-2046-497F-881B-25C7E83D4537}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{207D61CF-2046-497F-881B-25C7E83D4537}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

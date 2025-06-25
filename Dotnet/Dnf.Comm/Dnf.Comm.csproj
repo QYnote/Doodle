@@ -46,67 +46,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls\PCPorts\PCPortBase.cs" />
-    <Compile Include="Controls\PCPorts\QYEthernet.cs" />
-    <Compile Include="Controls\PCPorts\QYSerialPort.cs" />
-    <Compile Include="Controls\ProgramPort.cs" />
-    <Compile Include="Controls\Protocols\ErrorCheck.cs" />
-    <Compile Include="Controls\Protocols\Modbus.cs" />
-    <Compile Include="Controls\Server\ServerBase.cs" />
-    <Compile Include="Controls\Server\TCPServer.cs" />
-    <Compile Include="Data\EnumCustom.cs" />
-    <Compile Include="Controls\Protocols\ProtocolBase.cs" />
-    <Compile Include="Data\ucXML.cs" />
-    <Compile Include="Frm\FrmChildComm.cs">
+    <Compile Include="Structures\HYnux\HYErrorCheck.cs" />
+    <Compile Include="Structures\HYnux\HYModbus.cs" />
+    <Compile Include="Structures\HYnux\PCLink.cs" />
+    <Compile Include="Structures\AppPort\HYPort.cs" />
+    <Compile Include="Structures\PCPorts\PCPortBase.cs" />
+    <Compile Include="Structures\PCPorts\QYEthernet.cs" />
+    <Compile Include="Structures\PCPorts\QYSerialPort.cs" />
+    <Compile Include="Structures\Protocols\ErrorCheck.cs" />
+    <Compile Include="Structures\Protocols\Modbus.cs" />
+    <Compile Include="Structures\Server\ServerBase.cs" />
+    <Compile Include="Structures\Server\TCPServer.cs" />
+    <Compile Include="Structures\Protocols\ProtocolBase.cs" />
+    <Compile Include="Frm\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Frm\FrmChildComm.Designer.cs">
-      <DependentUpon>FrmChildComm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Frm\FrmChildCommSettings.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Frm\FrmChildCommSettings.Designer.cs">
-      <DependentUpon>FrmChildCommSettings.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Frm\FrmPort.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Frm\FrmPort.Designer.cs">
-      <DependentUpon>FrmPort.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Frm\FrmUnit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Frm\FrmUnit.Designer.cs">
-      <DependentUpon>FrmUnit.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Frm\Frm_LogCommunication.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Frm\Frm_LogCommunication.Designer.cs">
-      <DependentUpon>Frm_LogCommunication.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Frm\Frm_UnitSetting.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Frm\Frm_UnitSetting.Designer.cs">
-      <DependentUpon>Frm_UnitSetting.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Frm\TabPageBase.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Frm\TabPageBase.Designer.cs">
-      <DependentUpon>TabPageBase.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MainForm.Designer.cs">
+    <Compile Include="Frm\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Controls\Unit.cs" />
     <Compile Include="RuntimeData.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -117,12 +75,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="Microsoft.Office.Core">
@@ -153,7 +105,14 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Frm\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
     <ItemGroup>

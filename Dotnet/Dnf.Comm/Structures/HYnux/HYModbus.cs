@@ -1,5 +1,4 @@
-﻿using Dnf.Comm.Controls.Protocols;
-using Dnf.Communication.Controls.Protocols;
+﻿using Dnf.Comm.Structures.Protocols;
 using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HY.Comm.Protocols
+namespace Dnf.Comm.Structures.HYNux
 {
     internal class HYModbus : Modbus
     {

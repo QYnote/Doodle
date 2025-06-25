@@ -1,12 +1,11 @@
-﻿using Dnf.Communication.Controls.Protocols;
-using Dnf.Utils.Controls;
+﻿using Dnf.Comm.Structures.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HY.Comm.Protocols
+namespace Dnf.Comm.Structures.HYNux
 {
     internal class ModbusRTUErrorCheck : ErrorCheck
     {

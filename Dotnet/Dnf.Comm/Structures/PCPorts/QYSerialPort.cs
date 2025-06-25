@@ -1,5 +1,4 @@
-﻿using Dnf.Utils.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication.Controls.PCPorts
+namespace Dnf.Comm.Structures.PCPorts
 {
     public class QYSerialPort : PCPortBase
     {

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Dnf.Utils.Controls;
 
-namespace Dnf.Communication.Controls.PCPorts
+namespace Dnf.Comm.Structures.PCPorts
 {
     public class QYEthernet : PCPortBase
     {

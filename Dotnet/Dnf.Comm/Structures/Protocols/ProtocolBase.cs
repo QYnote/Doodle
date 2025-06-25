@@ -1,18 +1,11 @@
-﻿using Dnf.Communication.Controls.Protocols;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Comm.Controls.Protocols
+namespace Dnf.Comm.Structures.Protocols
 {
-    internal abstract class ProtocolBase
-    {
-        internal abstract void DataExtract(CommFrame frame, byte[] buffer);
-    }
-
-
     public class CommData
     {
         public byte[] ReqData { get; set; }

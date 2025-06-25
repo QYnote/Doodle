@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication.Controls.Protocols
+namespace Dnf.Comm.Structures.Protocols
 {
     public abstract class ErrorCheck
     {

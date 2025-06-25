@@ -1,4 +1,4 @@
-﻿namespace HY.Comm
+﻿namespace Dnf.Comm.Frm
 {
     partial class MainForm
     {

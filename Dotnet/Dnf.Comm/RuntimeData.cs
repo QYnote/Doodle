@@ -1,5 +1,4 @@
-﻿using Dnf.Comm.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -13,7 +12,6 @@ namespace Dnf.Comm
     internal static class RuntimeData
     {
         internal readonly static string DataPath = string.Format("{0}Data\\", AppDomain.CurrentDomain.BaseDirectory);   //일단 만들어둔 Default Path
-        internal static Dictionary<string, ProgramPort> Ports = new Dictionary<string, ProgramPort>();  //만들어진 Port
         internal static string LangType = "Ko";
         private static Dictionary<string, string> dicTextList = new Dictionary<string, string>();
 

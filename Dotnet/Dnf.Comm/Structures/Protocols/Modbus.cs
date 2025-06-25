@@ -1,14 +1,12 @@
-﻿using Dnf.Comm.Controls.Protocols;
-using Dnf.Utils.Controls;
+﻿using Dnf.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ExplorerBar;
 
-namespace Dnf.Communication.Controls.Protocols
+namespace Dnf.Comm.Structures.Protocols
 {
     /// <summary>
     /// Modbus Protocol

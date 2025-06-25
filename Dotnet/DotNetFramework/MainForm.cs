@@ -95,9 +95,7 @@ namespace DotNetFramework
             if (!isOpen)
             {
                 //Form 생성
-                if (btnName == btnCommunication.Name) { frm = new Dnf.Comm.MainForm() { Name = btnCommunication.Name }; }
-                else if (btnName == btnCommTester.Name) { frm = new HY.Comm.MainForm() { Name = btnCommTester.Name }; }
-                else if (btnName == btnServer.Name) { frm = new Dnf.Server.FrmChildComm() { Name = btnServer.Name }; }
+                if (btnName == btnCommTester.Name) { frm = new Dnf.Comm.Frm.MainForm() { Name = btnCommTester.Name }; }
                 else if (btnName == btnSensorToImage.Name) { frm = new Dnf.DrawImage.FrmMain_DrawImage() { Name = btnSensorToImage.Name }; }
                 else if (btnName == btnTest.Name)
                 {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Communication.Controls.PCPorts
+namespace Dnf.Comm.Structures.PCPorts
 {
     public enum PortType
     {
