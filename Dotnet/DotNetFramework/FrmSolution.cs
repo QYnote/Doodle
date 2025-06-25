@@ -16,9 +16,7 @@ namespace DotNetFramework
 {
     public partial class FrmSolution : Form
     {
-        private ToolStripButton btnCommunication;
         private ToolStripButton btnCommTester;
-        private ToolStripButton btnServer;
         private ToolStripButton btnSensorToImage;
         private ToolStripButton btnTest;
 
@@ -43,36 +41,24 @@ namespace DotNetFramework
             TopMenu.ImageScalingSize = new Size(32, 32);
             TopMenu.ItemClicked += (sender, e) => { MdiOpen(e.ClickedItem.Name); };
 
-            this.btnCommunication = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
-            this.btnCommunication.Name = "Communication";
-            this.btnCommunication.Image = Dnf.Utils.Properties.Resources.Connect_32x32;
-            this.btnCommunication.ToolTipText = "통신";
-
             this.btnCommTester = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
             this.btnCommTester.Name = "CommTester";
             this.btnCommTester.Image = Dnf.Utils.Properties.Resources.Connect_32x32;
             this.btnCommTester.ToolTipText = "통신테스터기";
 
-            this.btnServer = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
-            this.btnCommunication.Name = "Serer";
-            this.btnServer.Image = Dnf.Utils.Properties.Resources.Server_32x32;
-            this.btnServer.ToolTipText = "서버";
-
             this.btnSensorToImage = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
-            this.btnCommunication.Name = "SensorToImage";
+            this.btnSensorToImage.Name = "SensorToImage";
             this.btnSensorToImage.Image = Dnf.Utils.Properties.Resources.Image_32x32;
             this.btnSensorToImage.ToolTipText = "센서이미지화";
 
             this.btnTest = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
-            this.btnCommunication.Name = "Test";
+            this.btnTest.Name = "Test";
             this.btnTest.Image = Dnf.Utils.Properties.Resources.Test_32x32;
             this.btnTest.ToolTipText = "테스트";
 
             //메뉴 추가
             TopMenu.Items.AddRange(new ToolStripItem[] {
-                this.btnCommunication,
                 this.btnCommTester,
-                this.btnServer,
                 this.btnSensorToImage,
                 this.btnTest
             });

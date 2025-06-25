@@ -46,9 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Structures\HYnux\HYErrorCheck.cs" />
-    <Compile Include="Structures\HYnux\HYModbus.cs" />
-    <Compile Include="Structures\HYnux\PCLink.cs" />
+    <Compile Include="Structures\CustomStruct\HYnux\HYErrorCheck.cs" />
+    <Compile Include="Structures\CustomStruct\HYnux\HYModbus.cs" />
+    <Compile Include="Structures\CustomStruct\HYnux\PCLink.cs" />
     <Compile Include="Structures\AppPort\HYPort.cs" />
     <Compile Include="Structures\PCPorts\PCPortBase.cs" />
     <Compile Include="Structures\PCPorts\QYEthernet.cs" />

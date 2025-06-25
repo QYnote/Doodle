@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dnf.Comm.Structures.HYNux
+namespace Dnf.Comm.Structures.CustomStruct.HYNux
 {
     /// <summary>
     /// PCLink Protocol

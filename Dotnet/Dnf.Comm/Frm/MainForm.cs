@@ -1,5 +1,5 @@
 ﻿using Dnf.Comm.Structures.AppPort;
-using Dnf.Comm.Structures.HYNux;
+using Dnf.Comm.Structures.CustomStruct.HYNux;
 using Dnf.Comm.Structures.PCPorts;
 using System;
 using System.Collections.Generic;
