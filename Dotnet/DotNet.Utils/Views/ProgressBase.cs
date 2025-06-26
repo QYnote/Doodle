@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dotnet.Utils.Views
+namespace DotNet.Utils.Views
 {
     internal abstract partial class ProgressBase : Form
     {

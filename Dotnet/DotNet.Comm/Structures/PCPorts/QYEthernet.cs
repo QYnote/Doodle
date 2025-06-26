@@ -6,9 +6,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using Dotnet.Utils.Controls;
+using DotNet.Utils.Controls;
 
-namespace Dotnet.Comm.Structures.PCPorts
+namespace DotNet.Comm.Structures.PCPorts
 {
     public class QYEthernet : PCPortBase
     {

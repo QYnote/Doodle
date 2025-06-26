@@ -1,11 +1,11 @@
-﻿using Dotnet.Comm.Structures.Protocols;
+﻿using DotNet.Comm.Structures.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dotnet.Comm.Structures.CustomStruct.HYNux
+namespace DotNet.Comm.Structures.CustomStruct.HYNux
 {
     internal class ModbusRTUErrorCheck : ErrorCheck
     {

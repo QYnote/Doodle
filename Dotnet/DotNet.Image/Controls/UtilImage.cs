@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dotnet.DrawImage.Controls
+namespace DotNet.DrawImage.Controls
 {
     public static class UtilImage
     {

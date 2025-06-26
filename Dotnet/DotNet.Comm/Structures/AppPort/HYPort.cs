@@ -4,11 +4,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Dotnet.Comm.Structures.PCPorts;
-using Dotnet.Comm.Structures.Protocols;
-using Dotnet.Utils.Controls;
+using DotNet.Comm.Structures.PCPorts;
+using DotNet.Comm.Structures.Protocols;
+using DotNet.Utils.Controls;
 
-namespace Dotnet.Comm.Structures.AppPort
+namespace DotNet.Comm.Structures.AppPort
 {
 
     public class HYPort

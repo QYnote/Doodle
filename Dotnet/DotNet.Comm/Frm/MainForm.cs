@@ -1,6 +1,6 @@
-﻿using Dotnet.Comm.Structures.AppPort;
-using Dotnet.Comm.Structures.CustomStruct.HYNux;
-using Dotnet.Comm.Structures.PCPorts;
+﻿using DotNet.Comm.Structures.AppPort;
+using DotNet.Comm.Structures.CustomStruct.HYNux;
+using DotNet.Comm.Structures.PCPorts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dotnet.Comm.Frm
+namespace DotNet.Comm.Frm
 {
 
     public partial class MainForm : Form
@@ -170,7 +170,7 @@ namespace Dotnet.Comm.Frm
             this.gbxParity.Location = new Point(this.gbxBaudRate.Location.X + this.gbxBaudRate.Width + 3, this.gbxBaudRate.Location.Y);
             this.gbxParity.AutoSize = false;
             this.gbxParity.Text = "Parity";
-            foreach (Parity parity in Dotnet.Utils.Controls.QYUtils.EnumToItems<Parity>())
+            foreach (Parity parity in DotNet.Utils.Controls.QYUtils.EnumToItems<Parity>())
             {
                 RadioButton rdo = CreateRdo(parity);
                 rdo.CheckedChanged += (s, e) =>
@@ -188,7 +188,7 @@ namespace Dotnet.Comm.Frm
             this.gbxStopBits.Location = new Point(this.gbxParity.Location.X + this.gbxParity.Width + 3, this.gbxParity.Location.Y);
             this.gbxStopBits.AutoSize = false;
             this.gbxStopBits.Text = "StopBits";
-            foreach (StopBits stopbit in Dotnet.Utils.Controls.QYUtils.EnumToItems<StopBits>())
+            foreach (StopBits stopbit in DotNet.Utils.Controls.QYUtils.EnumToItems<StopBits>())
             {
                 if (stopbit == StopBits.None
                     || stopbit == StopBits.OnePointFive

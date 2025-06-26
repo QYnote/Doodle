@@ -1,4 +1,4 @@
-﻿namespace Dotnet.Utils.Controls
+﻿namespace DotNet.Utils.Controls
 {
     partial class ucNumeric
     {

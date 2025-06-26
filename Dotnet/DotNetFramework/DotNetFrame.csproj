@@ -77,6 +77,12 @@
     <Compile Include="FrmSolution.Designer.cs">
       <DependentUpon>FrmSolution.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm\FrmDataBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmDataBase.Designer.cs">
+      <DependentUpon>FrmDataBase.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -103,9 +109,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DotNet.Comm\DotNet.Comm.csproj">
+      <Project>{51e53d22-ad2c-4c18-99d5-6b6d73fdd404}</Project>
+      <Name>DotNet.Comm</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DotNet.Database\DotNet.Database.csproj">
       <Project>{3d7e0865-c3b5-4260-ae2a-f1d7c5099a52}</Project>
       <Name>DotNet.Database</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DotNet.Utils\DotNet.Utils.csproj">
+      <Project>{4c5ea9dd-25aa-4820-97d7-2575c955922a}</Project>
+      <Name>DotNet.Utils</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

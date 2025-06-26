@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Dotnet.DrawImage.Properties
+namespace DotNet.DrawImage.Properties
 {
 
 

@@ -1,4 +1,4 @@
-﻿namespace Dotnet.DrawImage
+﻿namespace DotNet.DrawImage
 {
     partial class FrmMain_DrawImage
     {

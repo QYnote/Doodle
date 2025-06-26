@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Dotnet.DrawImage.Controls.ProgramPort;
+using static DotNet.DrawImage.Controls.ProgramPort;
 
-namespace Dotnet.DrawImage.Controls
+namespace DotNet.DrawImage.Controls
 {
     /// <summary>
     /// 프로그램 - Client 사이의 Port

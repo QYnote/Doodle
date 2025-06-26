@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dotnet.Server.Server
+namespace DotNet.Server.Server
 {
     internal enum ServerSendType
     {

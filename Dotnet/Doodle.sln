@@ -6,11 +6,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetFrame", "DotNetFramew
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNet.Database", "DotNet.Database\DotNet.Database.csproj", "{3D7E0865-C3B5-4260-AE2A-F1D7C5099A52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet.Comm", "DotNet.Comm\Dotnet.Comm.csproj", "{51E53D22-AD2C-4C18-99D5-6B6D73FDD404}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNet.Comm", "DotNet.Comm\DotNet.Comm.csproj", "{51E53D22-AD2C-4C18-99D5-6B6D73FDD404}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNet.Utils", "DotNet.Utils\DotNet.Utils.csproj", "{4C5EA9DD-25AA-4820-97D7-2575C955922A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet.DrawImage", "DotNet.Image\Dotnet.DrawImage.csproj", "{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNet.DrawImage", "DotNet.Image\DotNet.DrawImage.csproj", "{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

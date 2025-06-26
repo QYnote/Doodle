@@ -1,12 +1,12 @@
-﻿using Dotnet.Comm.Structures.Protocols;
-using Dotnet.Utils.Controls;
+﻿using DotNet.Comm.Structures.Protocols;
+using DotNet.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dotnet.Comm.Structures.CustomStruct.HYNux
+namespace DotNet.Comm.Structures.CustomStruct.HYNux
 {
     internal class HYModbus : Modbus
     {

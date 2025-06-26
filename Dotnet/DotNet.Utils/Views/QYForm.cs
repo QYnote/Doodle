@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dotnet.Utils.Views
+namespace DotNet.Utils.Views
 {
     public enum ProgressFormType
     {

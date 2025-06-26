@@ -1,6 +1,6 @@
-﻿namespace DotNet.Utils.Views
+﻿namespace DotNetFramework.Frm
 {
-    partial class QYForm
+    partial class FrmDataBase
     {
         /// <summary>
         /// Required designer variable.
@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "FrmBase";
+            this.Text = "FrmDataBase";
         }
 
         #endregion

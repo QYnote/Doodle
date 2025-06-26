@@ -1,4 +1,4 @@
-﻿using Dotnet.Utils.Controls;
+﻿using DotNet.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dotnet.Comm.Structures.Protocols
+namespace DotNet.Comm.Structures.Protocols
 {
     /// <summary>
     /// Modbus Protocol

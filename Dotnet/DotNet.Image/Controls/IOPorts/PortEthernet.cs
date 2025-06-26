@@ -1,5 +1,5 @@
-﻿using Dotnet.DrawImage.Controls;
-using Dotnet.Utils.Controls;
+﻿using DotNet.DrawImage.Controls;
+using DotNet.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dotnet.Comm.Controls.IOPorts
+namespace DotNet.Comm.Controls.IOPorts
 {
     internal class PortEthernet : IOPortBase
     {

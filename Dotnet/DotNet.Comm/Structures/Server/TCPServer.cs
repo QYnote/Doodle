@@ -1,4 +1,4 @@
-﻿using Dotnet.Utils.Controls;
+﻿using DotNet.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dotnet.Server.Server
+namespace DotNet.Server.Server
 {
     internal class TCPServer : ServerBase
     {

@@ -1,7 +1,7 @@
 ﻿
-using Dotnet.Comm.Controls.IOPorts;
-using Dotnet.DrawImage.Controls;
-using Dotnet.Utils.Controls;
+using DotNet.Comm.Controls.IOPorts;
+using DotNet.DrawImage.Controls;
+using DotNet.Utils.Controls;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms.VisualStyles;
 
-namespace Dotnet.DrawImage.Controls
+namespace DotNet.DrawImage.Controls
 {
     internal class ProgramPort
     {

@@ -68,12 +68,6 @@
     <Compile Include="RuntimeData.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Dnf.Utils\DotNet.Utils.csproj">
-      <Project>{4c5ea9dd-25aa-4820-97d7-2575c955922a}</Project>
-      <Name>DotNet.Utils</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -112,6 +106,12 @@
     <EmbeddedResource Include="Frm\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DotNet.Utils\DotNet.Utils.csproj">
+      <Project>{4c5ea9dd-25aa-4820-97d7-2575c955922a}</Project>
+      <Name>DotNet.Utils</Name>
+    </ProjectReference>
   </ItemGroup>
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">

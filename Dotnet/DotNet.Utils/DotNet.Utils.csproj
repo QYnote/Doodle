@@ -7,8 +7,8 @@
     <ProjectGuid>{4C5EA9DD-25AA-4820-97D7-2575C955922A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Dnf.Utils</RootNamespace>
-    <AssemblyName>Dnf.Utils</AssemblyName>
+    <RootNamespace>DotNet.Utils</RootNamespace>
+    <AssemblyName>DotNet.Utils</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -92,6 +92,7 @@
     <None Include="Resources\Connect_32x32.png" />
     <None Include="Resources\empty_16x16.png" />
     <None Include="Resources\Erase_16x16.png" />
+    <None Include="Resources\Comm_32x32.png" />
     <Content Include="Resources\Connect_Green_32x32.png" />
     <Content Include="Resources\Connect_Red_32x32.png" />
     <Content Include="Resources\GreenSync_16x16.png" />
@@ -103,6 +104,7 @@
     <None Include="Resources\TreeChild_16x16.png" />
     <None Include="Resources\Test_32x32.png" />
     <None Include="Resources\Server_32x32.png" />
+    <None Include="Resources\Stop_00_32x32.png" />
     <Content Include="Resources\YellowWarning_16x16.png" />
   </ItemGroup>
   <ItemGroup>

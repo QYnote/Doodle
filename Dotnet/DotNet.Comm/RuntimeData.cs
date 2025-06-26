@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Dotnet.Comm
+namespace DotNet.Comm
 {
     //프로그램 실행동안 가질 데이터
     internal static class RuntimeData

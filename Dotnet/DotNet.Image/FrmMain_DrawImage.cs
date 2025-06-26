@@ -1,5 +1,5 @@
-﻿using Dotnet.DrawImage.Controls;
-using Dotnet.Utils.Views;
+﻿using DotNet.DrawImage.Controls;
+using DotNet.Utils.Views;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dotnet.DrawImage
+namespace DotNet.DrawImage
 {
     public partial class FrmMain_DrawImage : QYForm
     {

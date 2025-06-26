@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Dotnet.Utils.Properties {
+namespace DotNet.Utils.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Dotnet.Utils.Properties {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Dotnet.Utils.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DotNet.Utils.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -86,6 +86,16 @@ namespace Dotnet.Utils.Properties {
         public static System.Drawing.Bitmap Close_16x16 {
             get {
                 object obj = ResourceManager.GetObject("Close_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Comm_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Comm_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -206,6 +216,16 @@ namespace Dotnet.Utils.Properties {
         public static System.Drawing.Bitmap Server_32x32 {
             get {
                 object obj = ResourceManager.GetObject("Server_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Stop_00_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Stop_00_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

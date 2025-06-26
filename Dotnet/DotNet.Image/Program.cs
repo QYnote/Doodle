@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Dotnet.DrawImage
+namespace DotNet.DrawImage
 {
     internal static class Program
     {

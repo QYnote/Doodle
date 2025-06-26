@@ -1,4 +1,4 @@
-﻿namespace Dotnet.Utils.Views
+﻿namespace DotNet.Utils.Views
 {
     partial class ProgressBase
     {

@@ -1,4 +1,4 @@
-﻿namespace Dotnet.Comm.Frm
+﻿namespace DotNet.Comm.Frm
 {
     partial class MainForm
     {
