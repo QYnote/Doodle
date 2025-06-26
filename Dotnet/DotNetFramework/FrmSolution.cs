@@ -1,4 +1,4 @@
-﻿using Dnf.Utils.Controls;
+﻿using Dotnet.Utils.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,6 +18,7 @@ namespace DotNetFramework
     {
         private ToolStripButton btnCommTester;
         private ToolStripButton btnSensorToImage;
+        private ToolStripButton btnDataBase = new ToolStripButton();
         private ToolStripButton btnTest;
 
         public FrmSolution()
@@ -43,23 +44,29 @@ namespace DotNetFramework
 
             this.btnCommTester = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
             this.btnCommTester.Name = "CommTester";
-            this.btnCommTester.Image = Dnf.Utils.Properties.Resources.Connect_32x32;
+            this.btnCommTester.Image = Dotnet.Utils.Properties.Resources.Connect_32x32;
             this.btnCommTester.ToolTipText = "통신테스터기";
 
             this.btnSensorToImage = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
             this.btnSensorToImage.Name = "SensorToImage";
-            this.btnSensorToImage.Image = Dnf.Utils.Properties.Resources.Image_32x32;
+            this.btnSensorToImage.Image = Dotnet.Utils.Properties.Resources.Image_32x32;
             this.btnSensorToImage.ToolTipText = "센서이미지화";
+
+            this.btnDataBase.Name = "DataBase";
+            this.btnDataBase.Image = Dotnet.Utils.Properties.Resources.Server_32x32;
+            this.btnDataBase.ToolTipText = "Database";
+            this.btnDataBase.DisplayStyle = ToolStripItemDisplayStyle.Image;
 
             this.btnTest = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
             this.btnTest.Name = "Test";
-            this.btnTest.Image = Dnf.Utils.Properties.Resources.Test_32x32;
+            this.btnTest.Image = Dotnet.Utils.Properties.Resources.Test_32x32;
             this.btnTest.ToolTipText = "테스트";
 
             //메뉴 추가
             TopMenu.Items.AddRange(new ToolStripItem[] {
                 this.btnCommTester,
                 this.btnSensorToImage,
+                this.btnDataBase,
                 this.btnTest
             });
 
@@ -85,8 +92,8 @@ namespace DotNetFramework
             if (!isOpen)
             {
                 //Form 생성
-                if (btnName == btnCommTester.Name) { frm = new Dnf.Comm.Frm.MainForm() { Name = btnCommTester.Name }; }
-                else if (btnName == btnSensorToImage.Name) { frm = new Dnf.DrawImage.FrmMain_DrawImage() { Name = btnSensorToImage.Name }; }
+                if (btnName == btnCommTester.Name) { frm = new Dotnet.Comm.Frm.MainForm() { Name = btnCommTester.Name }; }
+                else if (btnName == btnSensorToImage.Name) { frm = new Dotnet.DrawImage.FrmMain_DrawImage() { Name = btnSensorToImage.Name }; }
                 else if (btnName == btnTest.Name)
                 {
                     frm = null;
