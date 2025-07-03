@@ -302,7 +302,7 @@ namespace DotNet.Utils.Controls
         static public int Find(this byte[] source, byte[] pattern, int startIdx = 0)
         {
             if (source == null || pattern == null) return -1;
-            if(source.Length == 0 || source.Length < pattern.Length) return -1;
+            if (source.Length == 0 || source.Length < pattern.Length) return -1;
 
             int idx = -1;
 

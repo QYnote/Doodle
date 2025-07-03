@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlServerCe;
 using System.Data.Sql;
 using System.Diagnostics;
+using DotNet.Utils;
 
 namespace DotNet.Database
 {
@@ -12,9 +13,6 @@ namespace DotNet.Database
     /// </summary>
     public class SQLCe : DBCommon
     {
-        public delegate void LogHandler(string log);
-        public event LogHandler Log;
-
         private SqlCeConnection _conn = null;
         private SqlCeTransaction _transaction = null;
 
@@ -44,8 +42,8 @@ namespace DotNet.Database
         /// <param name="password">DB Password</param>
         public SQLCe(string filePath, string password)
         {
-            this._filePath = filePath;
-            this._password = password;
+            base._filePath = filePath;
+            base._password = password;
             this._conn = GetConnection();
         }
         /// <summary>
@@ -109,7 +107,7 @@ namespace DotNet.Database
             }
             catch (Exception ex)
             {
-                this.Log?.Invoke(string.Format("Query Error: {0}\r\nLog:{1}", query, ex.Message));
+                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
             }
             finally
             {
@@ -143,13 +141,23 @@ namespace DotNet.Database
                 cmd = new SqlCeCommand(query, this.GetConnection());
                 if (this._transaction != null) cmd.Transaction = this._transaction;
 
-                cmd.CommandText = query;
-                cmd.ExecuteNonQuery();
+                string[] queryAry = query.Split(';');
+
+                for (int i = 0; i < queryAry.Length; i++)
+                {
+                    queryAry[i] = queryAry[i].Trim();
+                    if (queryAry[i] == string.Empty) continue;
+
+                    cmd.CommandText = queryAry[i];
+                    cmd.ExecuteNonQuery();
+                }
+
+                result = true;
             }
             catch (Exception ex)
             {
                 result = false;
-                this.Log?.Invoke(string.Format("Query Error: {0}\r\nLog:{1}", query, ex.Message));
+                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
             }
             finally
             {
@@ -186,11 +194,13 @@ namespace DotNet.Database
                     cmd.Parameters.Add(param);
 
                 cmd.ExecuteNonQuery();
+
+                result = true;
             }
             catch (Exception ex)
             {
                 result = false;
-                this.Log?.Invoke(string.Format("Query Error: {0}\r\nLog:{1}", query, ex.Message));
+                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
             }
             finally
             {
@@ -232,9 +242,16 @@ namespace DotNet.Database
                     this._transaction.Rollback();
                 }
 
-                this._transaction.Connection.Dispose();
                 this._transaction.Dispose();
             }
+        }
+
+        public string GetTableColumnInfoQuery(string tableName)
+        {
+            return string.Format(
+                "SELECT * " +
+                  "FROM INFORMATION_SCHEMA.COLUMNS " +
+                 "WHERE TABLE_NAME = '{0}';", tableName);
         }
     }
 }

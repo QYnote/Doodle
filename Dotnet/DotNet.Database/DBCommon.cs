@@ -11,6 +11,9 @@ namespace DotNet.Database
 
     public abstract class DBCommon
     {
+        public delegate void DBLoghandler(string errorMessage);
+        public event DBLoghandler LogEvent;
+
         protected string _filePath = string.Empty;
         protected string _password = string.Empty;
 
@@ -25,5 +28,10 @@ namespace DotNet.Database
         public abstract void BeginTransaction();
 
         public abstract void EndTransaction(bool result);
+
+        protected void RunLogEvent(string log)
+        {
+            this.LogEvent?.Invoke(log);
+        }
     }
 }

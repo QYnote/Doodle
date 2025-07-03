@@ -52,5 +52,11 @@
   <ItemGroup>
     <Content Include="Resources\SqlServerCe\System.Data.SqlServerCe.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DotNet.Utils\DotNet.Utils.csproj">
+      <Project>{4c5ea9dd-25aa-4820-97d7-2575c955922a}</Project>
+      <Name>DotNet.Utils</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
