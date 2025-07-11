@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Comm.Structures.PCPorts
+namespace DotNet.Comm.Structures.ClientPorts
 {
     public class QYSerialPort : PCPortBase
     {
@@ -77,12 +77,12 @@ namespace DotNet.Comm.Structures.PCPorts
                 }
                 catch
                 {
-                    Debug.WriteLine("[Error]Port Open Fail");
+                    base.LogRun("[Error]Port Open Fail");
                 }
             }
             else
             {
-                Debug.WriteLine("[Alart]Port already Open");
+                base.LogRun("[Alart]Port already Open");
             }
 
             return false;
@@ -100,12 +100,12 @@ namespace DotNet.Comm.Structures.PCPorts
                 }
                 catch
                 {
-                    Debug.WriteLine("[Error]Port Close Fail");
+                    base.LogRun("[Error]Port Close Fail");
                 }
             }
             else
             {
-                Debug.WriteLine("[Alart]Port already Close");
+                base.LogRun("[Alart]Port already Close");
             }
 
             return false;
@@ -115,37 +115,23 @@ namespace DotNet.Comm.Structures.PCPorts
         {
             byte[] readBytes = null;
 
-            try
+            if (this.IsOpen)
             {
-                if (this.IsOpen)
+                if (this._serialPort.BytesToRead > 0)
                 {
-                    if(this._serialPort.BytesToRead > 0)
-                    {
-                        readBytes = new byte[this._serialPort.BytesToRead];
+                    readBytes = new byte[this._serialPort.BytesToRead];
 
-                        this._serialPort.Read(readBytes, 0, readBytes.Length);
-                    }
+                    this._serialPort.Read(readBytes, 0, readBytes.Length);
                 }
-            }
-            catch
-            {
-                Debug.WriteLine("[Error]Port Read Fail");
             }
 
             return readBytes;
         }
         public override void Write(byte[] bytes)
         {
-            try
+            if (this.IsOpen)
             {
-                if (this.IsOpen)
-                {
-                    this._serialPort.Write(bytes, 0, bytes.Length);
-                }
-            }
-            catch
-            {
-                Debug.WriteLine("[Error]Port Write Fail");
+                this._serialPort.Write(bytes, 0, bytes.Length);
             }
         }
     }

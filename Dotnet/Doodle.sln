@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNet.Comm", "DotNet.Comm\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNet.Utils", "DotNet.Utils\DotNet.Utils.csproj", "{4C5EA9DD-25AA-4820-97D7-2575C955922A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNet.DrawImage", "DotNet.Image\DotNet.DrawImage.csproj", "{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +32,6 @@ Global
 		{4C5EA9DD-25AA-4820-97D7-2575C955922A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C5EA9DD-25AA-4820-97D7-2575C955922A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C5EA9DD-25AA-4820-97D7-2575C955922A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{39A9A8D6-F398-4EC4-835C-1D7DA5F009A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,23 +4,38 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Comm.Structures.PCPorts
+namespace DotNet.Comm.Structures.ClientPorts
 {
+    /// <summary>Port 종류</summary>
     public enum PortType
     {
         Serial,
         Ethernet,
     }
 
+    public delegate void PCPortLogHandler(string msg);
+
     public abstract class PCPortBase
     {
+        /// <summary>
+        /// PCPort Log Event
+        /// </summary>
+        public event PCPortLogHandler Log;
+        /// <summary>Port 종류</summary>
         public PortType PortType { get; }
 
+        /// <summary>
+        /// PC Port 기본형태
+        /// </summary>
+        /// <param name="type">Port 종류</param>
         public PCPortBase(PortType type)
         {
             this.PortType = type;
         }
 
+        /// <summary>
+        /// Port명
+        /// </summary>
         public abstract string PortName { get; set; }
         /// <summary>
         /// Port Open 상태
@@ -46,5 +61,16 @@ namespace DotNet.Comm.Structures.PCPorts
         /// </summary>
         /// <param name="bytes">전송할 Byte Array</param>
         public abstract void Write(byte[] bytes);
+        /// <summary>
+        /// Log Event 실행
+        /// </summary>
+        /// <param name="msg">진행할 Log Message</param>
+        /// <remarks>
+        /// 상속 Class에서 Log 실행용
+        /// </remarks>
+        protected void LogRun(string msg)
+        {
+            this.Log?.Invoke(msg);
+        }
     }
 }

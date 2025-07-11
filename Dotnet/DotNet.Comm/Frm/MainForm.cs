@@ -1,6 +1,6 @@
 ﻿using DotNet.Comm.Structures.AppPort;
 using DotNet.Comm.Structures.CustomStruct.HYNux;
-using DotNet.Comm.Structures.PCPorts;
+using DotNet.Comm.Structures.ClientPorts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

@@ -94,7 +94,7 @@ namespace DotNetFramework
             {
                 //Form 생성
                 if (btnName == btnCommTester.Name) { frm = new DotNet.Comm.Frm.MainForm() { Name = btnCommTester.Name }; }
-                //else if (btnName == btnSensorToImage.Name) { frm = new DotNet.DrawImage.FrmMain_DrawImage() { Name = btnSensorToImage.Name }; }
+                else if (btnName == this.btnSensorToImage.Name) { frm = new FrmServer() { Name = this.btnSensorToImage.Name }; }
                 else if (btnName == this.btnDataBase.Name) { frm = new FrmDataBase() { Name = this.btnDataBase.Name }; }
                 else if (btnName == btnTest.Name)
                 {

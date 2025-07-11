@@ -50,13 +50,13 @@
     <Compile Include="Structures\CustomStruct\HYnux\HYModbus.cs" />
     <Compile Include="Structures\CustomStruct\HYnux\PCLink.cs" />
     <Compile Include="Structures\AppPort\HYPort.cs" />
-    <Compile Include="Structures\PCPorts\PCPortBase.cs" />
-    <Compile Include="Structures\PCPorts\QYEthernet.cs" />
-    <Compile Include="Structures\PCPorts\QYSerialPort.cs" />
+    <Compile Include="Structures\ClientPorts\PCPortBase.cs" />
+    <Compile Include="Structures\ClientPorts\QYEthernet.cs" />
+    <Compile Include="Structures\ClientPorts\QYSerialPort.cs" />
     <Compile Include="Structures\Protocols\ErrorCheck.cs" />
     <Compile Include="Structures\Protocols\Modbus.cs" />
-    <Compile Include="Structures\Server\ServerBase.cs" />
-    <Compile Include="Structures\Server\TCPServer.cs" />
+    <Compile Include="Structures\Servers\ServerBase.cs" />
+    <Compile Include="Structures\Servers\TCPServer.cs" />
     <Compile Include="Structures\Protocols\ProtocolBase.cs" />
     <Compile Include="Frm\MainForm.cs">
       <SubType>Form</SubType>

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Server.Server
+namespace DotNet.Server.Servers
 {
-    internal enum ServerSendType
+    public enum ServerSendType
     {
         /// <summary>읽기에따른 Write</summary>
         ReadWrite,
@@ -16,11 +16,15 @@ namespace DotNet.Server.Server
         ReadOnly
     }
 
-    internal abstract class ServerBase
+    public delegate void LogEventHandler(string msg);
+
+    public abstract class ServerBase
     {
+        public event LogEventHandler Log;
+
         /// <summary>서버 열림 여부, true : 열림 / false : 닫힘</summary>
-        internal bool IsOpen { get; set; }
-        internal ServerSendType SendType { get; set; }
+        public bool IsOpen { get; set; }
+        public ServerSendType SendType { get; set; }
 
         internal ServerBase(ServerSendType type)
         {
@@ -30,12 +34,14 @@ namespace DotNet.Server.Server
         }
 
         /// <summary>서버 열기</summary>
-        internal abstract void Open();
+        public abstract void Open();
 
         /// <summary>서버 닫기</summary>
-        internal abstract void Close();
+        public abstract void Close();
 
-        internal delegate void MsgDelegate(string msg);
-        internal MsgDelegate SendMsg;
+        protected void RunLog(string msg)
+        {
+            this.Log?.Invoke(msg);
+        }
     }
 }

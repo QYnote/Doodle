@@ -16,6 +16,8 @@ namespace DotNet.Utils.Controls
 {
     static public class QYUtils
     {
+        static public readonly string Regex_IP = @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$";
+
         #region 데이터 형태 변환
 
         /// <summary>
@@ -121,7 +123,7 @@ namespace DotNet.Utils.Controls
         /// <summary>
         /// Byte Array 합치기
         /// </summary>
-        /// <param name="frontBytes">앞에위치할 Byte Array</param>
+        /// <param name="baseBytes">앞에위치할 Byte Array</param>
         /// <param name="backBytes">뒤에 위치할 Byte Array</param>
         /// <returns></returns>
         static public byte[] BytesAppend(this byte[] baseBytes, byte[] backBytes)
@@ -341,61 +343,6 @@ namespace DotNet.Utils.Controls
         #region Event
 
         /// <summary>
-        /// DataGridView Column의 Value에 숫자만 입력하도록 하기
-        /// </summary>
-        /// <param name="gv">해당기능을 넣은 DataGridView</param>
-        /// <param name="colName">해당기능을 적용할 Column Name</param>
-        /// <param name="type">정수(Decimal): 기본값, 16진수(Hex)</param>
-        static public void ColumnOnlyNumeric(DataGridView gv, string colName, string type = "Dec")
-        {
-            gv.EditingControlShowing += (sender, e) =>
-            {
-                if (type == "Dec")
-                {
-                    e.Control.KeyPress -= new KeyPressEventHandler(SlaveAddr_KeyPress_Decimal);
-                    if (gv.CurrentCell.ColumnIndex == gv.Columns[colName].Index)
-                    {
-                        TextBox txt = e.Control as TextBox;
-                        if (txt != null)
-                        {
-                            txt.KeyPress += new KeyPressEventHandler(SlaveAddr_KeyPress_Decimal);
-                        }
-                    }
-                }
-                else if(type == "Hex")
-                {
-                    e.Control.KeyPress -= new KeyPressEventHandler(SlaveAddr_KeyPress_Hex);
-                    if (gv.CurrentCell.ColumnIndex == gv.Columns[colName].Index)
-                    {
-                        TextBox txt = e.Control as TextBox;
-                        if (txt != null)
-                        {
-                            txt.KeyPress += new KeyPressEventHandler(SlaveAddr_KeyPress_Hex);
-                        }
-                    }
-                }
-            };
-        }
-
-        /// <summary>
-        /// ColumnOnlyNumeric의 Key검사용 10진수
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        static private void SlaveAddr_KeyPress_Decimal(object sender, KeyPressEventArgs e)
-        {
-            /*작업내역
-             * IsControl : Ender, Backsapce같은 명령어 확인(이런건 먹어야하니까)
-             * IsDigit : 10진수 검사
-             * e.Handled : true - 막기, false - 가능
-             */
-            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
-            {
-                e.Handled = true;
-            }
-        }
-
-        /// <summary>
         /// ColumnOnlyNumeric의 Key검사용 16진수
         /// </summary>
         /// <param name="sender"></param>
@@ -429,43 +376,65 @@ namespace DotNet.Utils.Controls
         }
 
         /// <summary>
-        /// TextBox IP만 입력가능하도록 변경
+        /// .NET Winform TextBox IP만 입력가능하도록 변경
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         static public void TextBox_IP(object sender, KeyPressEventArgs e)
         {
-            TextBox textBox = sender as TextBox;
-            string[] DotSplit = textBox.Text.Split('.');
-
-            //제어값(BackSpace, Delete 등)
-            if (!char.IsControl(e.KeyChar))
+            //1. 숫자 or . 을 입력한 것인지 검사
+            //제어값 확인(Backspace, Delete 등)
+            if (char.IsControl(e.KeyChar))
+                return; //제어키면 그냥 진행시키기
+            else
             {
-                if (e.KeyChar == '.' && DotSplit.Length == 4)
+                //숫자 or . 인지 확인
+                if (!char.IsDigit(e.KeyChar) && !(e.KeyChar == '.'))
                 {
-                    //.을 입력했을떄 이미 4번째주소를 입력한 상태면 불가능
                     e.Handled = true;
+                    return;
                 }
-                else
-                {
-                    if (DotSplit[DotSplit.Length - 1].Length == 3)
-                    {
-                        //입력값이 3개이상 입력된 상태인지 점검
-                        if (e.KeyChar != '.')
-                        {
-                            //3개입력된 이후 .이 아니면 입력불가능
-                            e.Handled = true;
-                        }
-                    }
-                    else
-                    {
-                        //Only 숫자 or .만 입력가능
-                        if (!char.IsDigit(e.KeyChar) && !(e.KeyChar == '.'))
-                        {
-                            e.Handled = true;
-                        }
-                    }
-                }
+            }
+
+            //2. IP주소에 맞게 입력하는지 검사
+            TextBox txtbox = sender as TextBox;
+            string text = txtbox.Text + e.KeyChar;
+            int dotCnt = text.Count(c => c == '.'); //점 입력 개수
+            /*Regex문자 해석
+             * ^ : 시작문자
+             * ( : 그룹 시작
+             *   \d{1,2}    : 1 or 2자리 숫자
+             *  |1\d\d      : 100 ~ 199
+             *  |2[0-4]\d   : 200 ~ 249
+             *  |25[0-5]    : 250 ~ 255
+             * ) : 그룹 종료
+             * $ : 종료문자
+             */
+            string strRegex = "(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])";
+            string pattern = string.Empty;
+
+            //구분 점에따라 확인 문자열 변경
+            switch (dotCnt)
+            {
+                case 0:
+                    pattern = string.Format("^{0}$", strRegex);
+                    break;
+                case 1:
+                    if (e.KeyChar == '.') pattern = string.Format("^{0}.$", strRegex);
+                    else pattern = string.Format("^{0}.{0}$", strRegex);
+                    break;
+                case 2:
+                    if (e.KeyChar == '.') pattern = string.Format("^{0}.{0}.$", strRegex);
+                    else pattern = string.Format("^{0}.{0}.{0}$", strRegex);
+                    break;
+                case 3:
+                    if (e.KeyChar == '.') pattern = string.Format("^{0}.{0}.{0}.$", strRegex);
+                    else pattern = string.Format("^{0}.{0}.{0}.{0}$", strRegex);
+                    break;
+            }
+
+            if (pattern == string.Empty || System.Text.RegularExpressions.Regex.IsMatch(text, pattern) == false)
+            {
+                e.Handled = true;
+                return;
             }
         }
 

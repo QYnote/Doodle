@@ -1,5 +1,4 @@
-﻿using DotNet.Utils.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,44 +9,61 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DotNet.Server.Server
+namespace DotNet.Server.Servers
 {
-    internal class TCPServer : ServerBase
+    public class TCPServer : ServerBase
     {
-        private TcpListener server = null;
-        private List<TcpClient> clientList = new List<TcpClient>();
-        /// <summary>Data Receive 처리 이벤트 / byte[] Data, int bytesLength / return : 보낸 Client에게 되보내줄 Data</summary>
-        internal ReceiveHandler ReceiveActiveEvent { get; set; }
         /// <summary>
-        /// Data Receive 처리 delegate
+        /// Data Client에서 처리를 위한 이벤트 Handler
         /// </summary>
-        /// <param name="data">읽어들인 Bytes</param>
-        /// <param name="bytesLength">읽은 Bytes 길이</param>
-        /// <returns>보낸 Client에게 보내줄 Data</returns>
-        internal delegate byte[] ReceiveHandler(byte[] data, int bytesLength);
+        /// <param name="data">이벤트에서 사용할 Data</param>
+        /// <returns>Client에게 전송할 Data</returns>
+        public delegate byte[] ClientHandler(byte[] data);
+        /// <summary>
+        /// Data Receive 처리 이벤트
+        /// </summary>
+        /// <returns>Client에게 전송할 Data</returns>
+        public event ClientHandler ClientActiveEvent;
 
-        internal TCPServer(ServerSendType sendType, TcpListener listener):base(sendType)
+        private TcpListener _server = null;
+        private List<TcpClient> _clientList = new List<TcpClient>();
+
+        public int PortNo { get; set; } = 5000;
+        public string IP { get; set; } = IPAddress.Any.MapToIPv4().ToString();
+
+        #region 편의성 Property
+
+        public IPAddress IPAddress
         {
-            this.server = listener;
+            get
+            {
+                return IPAddress.Parse(this.IP);
+            }
         }
 
+        #endregion 편의성 Property
+
+        public TCPServer(ServerSendType sendType):base(sendType) { }
+
         /// <summary>서버 열기</summary>
-        internal override void Open()
+        public override void Open()
         {
             if (base.IsOpen == false)
             {
-                this.server.Start();
+                this._server = new TcpListener(this.IPAddress, this.PortNo);
+                this._server.Start();
 
                 base.IsOpen = true;
 
                 //접속 확인용 Thread를 생성하여 접속시도하는 client 확인
                 Thread ServerThread = new Thread(AcceptClient);
                 ServerThread.Start();
-                base.SendMsg?.Invoke("TCP Server Open");
+
+                base.RunLog(string.Format("TCP Server Open - IP : {0} / PortNo : {1}", this.IPAddress, this.PortNo));
             }
             else
             {
-                base.SendMsg?.Invoke("Already Open");
+                base.RunLog("Already Open");
             }
         }
 
@@ -58,19 +74,19 @@ namespace DotNet.Server.Server
             {
                 try
                 {
-                    TcpClient client = this.server.AcceptTcpClient();    //접속시도하는 Client 확인
-                    this.clientList.Add(client);
+                    TcpClient client = this._server.AcceptTcpClient();    //접속시도하는 Client 확인
+                    this._clientList.Add(client);
 
                     //접속한 Client 데이터 Receive 처리해주는 Thread 생성
                     Thread clientThread = new Thread(() => ClientMethod(client));
                     clientThread.Start();
-                    base.SendMsg?.Invoke(string.Format("Client Accepted / IP : {0}, Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
+                    base.RunLog(string.Format("Client Accepted - IP : {0} / Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
                 }
                 catch(Exception ex)
                 {
                     if (ex.HResult != -2147467259)
                     {
-                        base.SendMsg?.Invoke("Client Accept Error");
+                        base.RunLog("Client Accept Error");
                     }
                 }
             }
@@ -98,10 +114,10 @@ namespace DotNet.Server.Server
                         byte[] buffer = new byte[bytesLength];
                         Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
 
-                        returnBytes = this.ReceiveActiveEvent?.Invoke(buffer, bytesLength);
+                        returnBytes = this.ClientActiveEvent?.Invoke(buffer);
 
                         //보낸 Client에게 되돌려주는 Data
-                        if (returnBytes != null || returnBytes.Length != 0)
+                        if (returnBytes != null && returnBytes.Length != 0)
                         {
                             stream.Write(returnBytes, 0, returnBytes.Length);
                         }
@@ -111,9 +127,9 @@ namespace DotNet.Server.Server
                 {
                     while (true)
                     {
-                        returnBytes = this.ReceiveActiveEvent?.Invoke(null, 0);
+                        returnBytes = this.ClientActiveEvent?.Invoke(null);
 
-                        if (returnBytes != null || returnBytes.Length != 0)
+                        if (returnBytes != null && returnBytes.Length != 0)
                         {
                             stream.Write(returnBytes, 0, returnBytes.Length);
 
@@ -124,40 +140,47 @@ namespace DotNet.Server.Server
             }
             catch(Exception ex)
             {
-                base.SendMsg?.Invoke(string.Format("Error : {0}", ex.Message));
+                base.RunLog(string.Format("Error : {0}\r\nTrace:{1}", ex.Message, ex.StackTrace));
             }
             finally
             {
                 if (client.Connected == true)
                 {
+                    base.RunLog(string.Format("Client Receive End - IP : {0} / Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
                     client.Client.Shutdown(SocketShutdown.Both);
                     client.Close();
-                    this.clientList.Remove(client);
-                    base.SendMsg?.Invoke(string.Format("Client Receive End / IP : {0}, Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
+                    this._clientList.Remove(client);
                 }
             }
         }
 
         /// <summary>서버 닫기</summary>
-        internal override void Close()
+        public override void Close()
         {
-            if (base.IsOpen == true)
+            try
             {
-                base.IsOpen = false;
-
-                this.server.Stop();
-                foreach(TcpClient client in this.clientList)
+                if (base.IsOpen == true)
                 {
-                    client.Client.Shutdown(SocketShutdown.Both);
-                    client.Close();
-                }
-                this.clientList.Clear();
+                    base.IsOpen = false;
 
-                base.SendMsg?.Invoke("TCP Server Close");
+                    this._server.Stop();
+                    foreach (TcpClient client in this._clientList)
+                    {
+                        client.Client.Shutdown(SocketShutdown.Both);
+                        client.Close();
+                    }
+                    this._clientList.Clear();
+
+                    base.RunLog("TCP Server Close");
+                }
+                else
+                {
+                    base.RunLog("Already Close");
+                }
             }
-            else
+            catch
             {
-                base.SendMsg?.Invoke("Already Close");
+
             }
         }
     }
