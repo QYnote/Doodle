@@ -178,13 +178,23 @@ namespace DotNet.Comm.Structures.ClientPorts
             //비동기식 연결일 경우 바로 Close처리
             if (this.IsOpen)
             {
-                this._clientSocket.Shutdown(SocketShutdown.Both);
-                this._clientSocket.Close();      //Socket 닫기
+                try
+                {
+                    this._clientSocket.Shutdown(SocketShutdown.Both);
+                    this._clientSocket.Close();      //Socket 닫기
 
-                this._clientSocket = null;
-                this._readingData.Clear();
-                this._sw.Stop();
-                this._sw.Reset();
+                    this._readingData.Clear();
+                }
+                catch
+                {
+                    base.LogRun("[Error]Port Close Fail");
+                }
+                finally
+                {
+                    this._clientSocket = null;
+                    this._sw.Stop();
+                    this._sw.Reset();
+                }
             }
             else
             {

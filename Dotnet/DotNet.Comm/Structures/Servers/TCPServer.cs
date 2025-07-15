@@ -129,11 +129,46 @@ namespace DotNet.Server.Servers
                     {
                         returnBytes = this.ClientActiveEvent?.Invoke(null);
 
+                        //보낸 Client에게 되돌려주는 Data
                         if (returnBytes != null && returnBytes.Length != 0)
                         {
                             stream.Write(returnBytes, 0, returnBytes.Length);
 
                             returnBytes = null;
+                        }
+
+                        //Client의 Request 요청 처리
+                        byte[] receiveBytes = null;
+
+                        while (stream.DataAvailable)
+                        {
+                            bytesLength = stream.Read(bufferFull, 0, bufferFull.Length);
+                            if (bytesLength == 0) continue;
+
+                            //Data Receive에 따른 무언가 처리
+                            byte[] buffer = new byte[bytesLength];
+                            Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
+
+                            if (receiveBytes == null || receiveBytes.Length == 0)
+                                receiveBytes = buffer;
+                            else
+                            {
+                                byte[] temp = new byte[receiveBytes.Length + bytesLength];
+                                Buffer.BlockCopy(receiveBytes, 0, temp, 0, receiveBytes.Length);
+                                Buffer.BlockCopy(buffer, 0, temp, receiveBytes.Length, bytesLength);
+
+                                receiveBytes = temp;
+                            }
+
+                            returnBytes = this.ClientActiveEvent?.Invoke(receiveBytes);
+
+                            //보낸 Client에게 되돌려주는 Data
+                            if (returnBytes != null && returnBytes.Length != 0)
+                            {
+                                stream.Write(returnBytes, 0, returnBytes.Length);
+
+                                returnBytes = null;
+                            }
                         }
                     }
                 }

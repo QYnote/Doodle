@@ -11,14 +11,14 @@ namespace DotNet.Comm.Structures.CustomStruct.HYNux
     /// <summary>
     /// PCLink Protocol
     /// </summary>
-    internal class PCLink : ProtocolFrame
+    public class PCLink : ProtocolFrame
     {
         private bool _isSUM = false;
         private bool _isTH3500 = false;
         private bool _isTD3500 = false;
 
         private readonly string WhoCmd = "#02#30#31#57#48#4F#0D#0A";
-        private byte[] TailBytes
+        public byte[] TailBytes
         {
             get
             {
@@ -28,6 +28,14 @@ namespace DotNet.Comm.Structures.CustomStruct.HYNux
                 else
                     //CR + LF
                     return new byte[] { 0x0D, 0x0A };
+            }
+        }
+        public byte[] HeadBytes
+        {
+            get
+            {
+                //STX
+                return new byte[] { 0x02 };
             }
         }
 
@@ -44,7 +52,7 @@ namespace DotNet.Comm.Structures.CustomStruct.HYNux
         /// 4: PCLinkSUM_TH300500<br/>
         /// </para>
         /// </param>
-        internal PCLink(int customCode = 0)
+        public PCLink(int customCode = 0)
         {
             switch (customCode)
             {
