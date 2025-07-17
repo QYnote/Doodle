@@ -1,6 +1,6 @@
 ﻿namespace DotNet.Comm.Frm
 {
-    partial class MainForm
+    partial class FrmCommTester
     {
         /// <summary>
         /// 필수 디자이너 변수입니다.
@@ -36,7 +36,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Name = "MainForm";
-            this.Text = "Form1";
             this.ResumeLayout(false);
 
         }

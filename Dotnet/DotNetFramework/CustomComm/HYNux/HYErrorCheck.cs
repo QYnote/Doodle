@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Comm.Structures.CustomStruct.HYNux
+namespace DotNetFrame.CustomComm.HYNux
 {
     internal class ModbusRTUErrorCheck : ErrorCheck
     {

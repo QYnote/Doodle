@@ -71,6 +71,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomComm\HYNux\HYErrorCheck.cs" />
+    <Compile Include="CustomComm\HYNux\HYModbus.cs" />
+    <Compile Include="CustomComm\HYNux\HYPort.cs" />
+    <Compile Include="CustomComm\HYNux\PCLink.cs" />
+    <Compile Include="CustomComm\RuntimeData.cs" />
     <Compile Include="FrmSolution.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,8 +94,17 @@
     <Compile Include="Frm\FrmServer.Designer.cs">
       <DependentUpon>FrmServer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Frm\FrmCommTester.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmCommTester.Designer.cs">
+      <DependentUpon>FrmCommTester.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Frm\FrmCommTester.resx">
+      <DependentUpon>FrmCommTester.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

@@ -8,7 +8,7 @@ using DotNet.Comm.Structures.ClientPorts;
 using DotNet.Comm.Structures.Protocols;
 using DotNet.Utils.Controls;
 
-namespace DotNet.Comm.Structures.AppPort
+namespace DotNetFrame.CustomComm.HYNux
 {
 
     public class HYPort
@@ -143,7 +143,7 @@ namespace DotNet.Comm.Structures.AppPort
                 }
                 else
                 {
-                    this.Protocol.DataExtract(this._commData, this._stackBuffer);
+                    this._commData.RcvData = this.Protocol.DataExtract_Receive(this._commData.ReqData, this._stackBuffer);
                     if (this._commData.RcvData != null)
                         frameBytes = this._commData.RcvData;
                 }
@@ -246,7 +246,7 @@ namespace DotNet.Comm.Structures.AppPort
 
             if (this.Protocol != null)
             {
-                if(this.Protocol.FrameConfirm(this._commData) == false)
+                if(this.Protocol.ReceiveConfirm(this._commData.RcvData) == false)
                 {
                     //Protocol NG
                     errorCode = 0x10;

@@ -2,12 +2,10 @@
 using DotNetFramework.Frm;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.Remoting.Channels;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
@@ -93,8 +91,8 @@ namespace DotNetFramework
             if (!isOpen)
             {
                 //Form 생성
-                if (btnName == btnCommTester.Name) { frm = new DotNet.Comm.Frm.MainForm() { Name = btnCommTester.Name }; }
-                else if (btnName == this.btnSensorToImage.Name) { frm = new FrmServer() { Name = this.btnSensorToImage.Name }; }
+                if (btnName == this.btnCommTester.Name) { frm = new DotNet.Comm.Frm.FrmCommTester() { Name = this.btnCommTester.Name }; }
+                else if (btnName == this.btnSensorToImage.Name) { frm = new DotNetFrame.CustomComm.FrmServer() { Name = this.btnSensorToImage.Name }; }
                 else if (btnName == this.btnDataBase.Name) { frm = new FrmDataBase() { Name = this.btnDataBase.Name }; }
                 else if (btnName == btnTest.Name)
                 {

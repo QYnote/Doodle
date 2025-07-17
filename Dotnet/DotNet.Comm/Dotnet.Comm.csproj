@@ -46,10 +46,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Structures\CustomStruct\HYnux\HYErrorCheck.cs" />
-    <Compile Include="Structures\CustomStruct\HYnux\HYModbus.cs" />
-    <Compile Include="Structures\CustomStruct\HYnux\PCLink.cs" />
-    <Compile Include="Structures\AppPort\HYPort.cs" />
     <Compile Include="Structures\ClientPorts\PCPortBase.cs" />
     <Compile Include="Structures\ClientPorts\QYEthernet.cs" />
     <Compile Include="Structures\ClientPorts\QYSerialPort.cs" />
@@ -58,14 +54,7 @@
     <Compile Include="Structures\Servers\ServerBase.cs" />
     <Compile Include="Structures\Servers\TCPServer.cs" />
     <Compile Include="Structures\Protocols\ProtocolBase.cs" />
-    <Compile Include="Frm\MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Frm\MainForm.Designer.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RuntimeData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -101,11 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Frm\MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </EmbeddedResource>
+    <Folder Include="Frm\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DotNet.Utils\DotNet.Utils.csproj">

@@ -1,6 +1,5 @@
-﻿using DotNet.Comm.Structures.AppPort;
-using DotNet.Comm.Structures.CustomStruct.HYNux;
-using DotNet.Comm.Structures.ClientPorts;
+﻿using DotNet.Comm.Structures.ClientPorts;
+using DotNetFrame.CustomComm.HYNux;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,7 +14,7 @@ using System.Windows.Forms;
 namespace DotNet.Comm.Frm
 {
 
-    public partial class MainForm : Form
+    public partial class FrmCommTester : Form
     {
         public delegate void UIUpdateHandler(string cmd);
         public delegate void BytesLogHandler(string type, params byte[] data);
@@ -82,12 +81,13 @@ namespace DotNet.Comm.Frm
         private int _maxReq = 0;
         private int _curReq = 0;
 
-        public MainForm()
+        public FrmCommTester()
         {
             InitializeComponent();
             InitUI();
             this.BgWorker.WorkerSupportsCancellation = true;
             this.BgWorker.DoWork += BgWorker_DoWork;
+            this.Text = "CommTester";
 
             this.FormClosing += (s, e) =>
             {
@@ -257,39 +257,63 @@ namespace DotNet.Comm.Frm
                 switch (item)
                 {
                     case "ModbusRTU":
-                        this._port.Protocol = new HYModbus(0);
+                        this._port.Protocol = new HYModbus(true);
                         this._port.ErrorCheck = new ModbusRTUErrorCheck();
                         break;
                     case "ModbusAscii":
-                        this._port.Protocol = new HYModbus(1);
+                        this._port.Protocol = new HYModbus(true)
+                        {
+                            IsAscii = true
+                        };
                         this._port.ErrorCheck = new ModbusAsciiErrorCheck();
                         break;
                     case "ModbusRTU_EXP":
-                        this._port.Protocol = new HYModbus(2);
+                        this._port.Protocol = new HYModbus(true)
+                        {
+                            IsEXP = true,
+                        };
                         this._port.ErrorCheck = new ModbusRTUErrorCheck();
                         break;
                     case "ModbusAscii_EXP":
-                        this._port.Protocol = new HYModbus(3);
+                        this._port.Protocol = new HYModbus(true)
+                        {
+                            IsAscii = true,
+                            IsEXP = true,
+                        };
                         this._port.ErrorCheck = new ModbusAsciiErrorCheck();
                         break;
                     case "PCLink_STD":
-                        this._port.Protocol = new PCLink(0);
+                        this._port.Protocol = new PCLink(true);
                         this._port.ErrorCheck = null;
                         break;
                     case "PCLink_SUM":
-                        this._port.Protocol = new PCLink(1);
+                        this._port.Protocol = new PCLink(true)
+                        {
+                            _isSUM = true,
+                        };
                         this._port.ErrorCheck = new PCLinkErrorCheck();
                         break;
                     case "PCLink_STD_TH300500":
-                        this._port.Protocol = new PCLink(2);
+                        this._port.Protocol = new PCLink(true)
+                        {
+                            _isTH3500 = true,
+                        };
                         this._port.ErrorCheck = null;
                         break;
                     case "PCLink_SUM_TD300500":
-                        this._port.Protocol = new PCLink(3);
+                        this._port.Protocol = new PCLink(true)
+                        {
+                            _isSUM = true,
+                            _isTD3500 = true,
+                        };
                         this._port.ErrorCheck = new PCLinkErrorCheck();
                         break;
                     case "PCLink_SUM_TH300500":
-                        this._port.Protocol = new PCLink(4);
+                        this._port.Protocol = new PCLink(true)
+                        {
+                            _isSUM = true,
+                            _isTH3500 = true,
+                        };
                         this._port.ErrorCheck = new PCLinkTHErrorCheck();
                         break;
                     default:
