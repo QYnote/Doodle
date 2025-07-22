@@ -82,15 +82,8 @@ namespace DotNetFrame.CustomComm.HYNux
         /// <summary>
         /// PCLink Protocol
         /// </summary>
-        /// <param name="customCode">
-        /// Custom 번호
-        /// <para>
-        /// 0: PCLinkSTD<br/>
-        /// 1: PCLinkSUM<br/>
-        /// 2: PCLinkSTD_TH300500<br/>
-        /// 3: PCLinkSUM_TD300500<br/>
-        /// 4: PCLinkSUM_TH300500<br/>
-        /// </para>
+        /// <param name="isClient">
+        /// Request 요청자 여부
         /// </param>
         public PCLink(bool isClient) : base(isClient) { }
 
@@ -148,6 +141,7 @@ namespace DotNetFrame.CustomComm.HYNux
                 //Data 추출
                 byte[] frameBytes = new byte[lastIdx - startIdx + 1];
                 Buffer.BlockCopy(buffer, startIdx, frameBytes, 0, frameBytes.Length);
+
                 return frameBytes;
             }
 

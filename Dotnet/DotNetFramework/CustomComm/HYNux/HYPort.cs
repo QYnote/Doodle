@@ -10,7 +10,12 @@ using DotNet.Utils.Controls;
 
 namespace DotNetFrame.CustomComm.HYNux
 {
-
+    /// <summary>
+    /// HY Port
+    /// </summary>
+    /// <remarks>
+    /// 1Port - 1 Request ↔ 1Response 처리방식
+    /// </remarks>
     public class HYPort
     {
         public delegate void ReadWriteHandler(string title, byte[] data);
@@ -35,6 +40,7 @@ namespace DotNetFrame.CustomComm.HYNux
         /// </summary>
         private DateTime _recentReadTime;
         private byte[] _stackBuffer;
+        private PortType _type;
 
         public bool IsOpen
         {
@@ -56,6 +62,22 @@ namespace DotNetFrame.CustomComm.HYNux
         /// </remarks>
         public bool IsRequesting { get; set; } = false;
         public object PCPort { get { return this._port; } }
+        public PortType Type
+        {
+            get { return this._type; }
+            set
+            {
+                this._type = value;
+                if(value == PortType.Serial)
+                {
+                    this._port = new QYSerialPort();
+                }
+                else if(value == PortType.Ethernet)
+                {
+                    this._port = new QYEthernet(false);
+                }
+            }
+        }
         public ProtocolFrame Protocol { get; set; }
         public ErrorCheck ErrorCheck { get; set; }
         public bool CreErrCheck { get; set; } = false;
@@ -63,8 +85,7 @@ namespace DotNetFrame.CustomComm.HYNux
 
         public HYPort(PortType type)
         {
-            if (type == PortType.Serial)
-                this._port = new QYSerialPort();
+            this.Type = type;
 
             this._bgWorker.WorkerSupportsCancellation = true;
         }
@@ -134,53 +155,59 @@ namespace DotNetFrame.CustomComm.HYNux
                 this._recentReadTime = DateTime.Now;
                 this._curBufferLen = this._stackBuffer.Length;
 
-                //Protocol에 따라 추출된 Data Array
-                byte[] frameBytes = null;
                 if (this.Protocol == null)
                 {
-                    frameBytes = this._stackBuffer;
-                    this._commData.RcvData = frameBytes;
-                }
-                else
-                {
-                    this._commData.RcvData = this.Protocol.DataExtract_Receive(this._commData.ReqData, this._stackBuffer);
-                    if (this._commData.RcvData != null)
-                        frameBytes = this._commData.RcvData;
-                }
-
-                if (frameBytes != null && frameBytes.Length > 0)
-                {
-                    //추출된 Data 처리
-                    int startIdx = this._stackBuffer.Find(frameBytes);
-                    if (startIdx < 0) return;
-
-                    int lastIdx = startIdx + frameBytes.Length - 1;
-
-                    if (lastIdx < this._stackBuffer.Length - 1)
-                    {
-                        //남은 Data Array 앞으로 당기기
-                        byte[] remainByte = new byte[this._stackBuffer.Length - lastIdx - 1];
-                        Buffer.BlockCopy(this._stackBuffer, lastIdx + 1, remainByte, 0, remainByte.Length);
-                        this._stackBuffer = new byte[remainByte.Length];
-                        Buffer.BlockCopy(remainByte, 0, this._stackBuffer, 0, this._stackBuffer.Length);
-                    }
-                    else if(lastIdx == this._stackBuffer.Length - 1)
-                    {
-                        this._stackBuffer = null;
-                    }
+                    this.CommLog?.Invoke("Receive Success", this._stackBuffer);
 
                     this._recentBufferLen = 0;
                     this._curBufferLen = 0;
                     this.IsRequesting = false;
+                    this._stackBuffer = null;
+                }
+                else
+                {
+                    //Protocol에 따라 추출된 Data Array
+                    byte[] frameBytes = this.Protocol.DataExtract_Receive(this._commData.ReqData, this._stackBuffer);
 
-                    //Protocol 검사
-                    byte errorCode = GetErrorCode();
-
-                    switch (errorCode)
+                    if (frameBytes != null)
                     {
-                        case 0xFF: this.CommLog?.Invoke("Receive Success", this._commData.RcvData); break;
-                        case 0x00: this.CommLog?.Invoke("ErrorCheck Dismatch", this._commData.RcvData); break;
-                        case 0x10: this.CommLog?.Invoke("Protocol NG", this._commData.RcvData); break;
+                        //추출된 Data 처리
+                        this._commData.RcvData = frameBytes;
+                        Dictionary<int, object> dataList = new Dictionary<int, object>();
+                        if (this.Protocol != null)
+                            this.Protocol.GetData(dataList, this._commData.ReqData, this._commData.RcvData);
+
+                        //Protocol 검사
+                        byte errorCode = GetErrorCode(this._commData.RcvData);
+
+                        switch (errorCode)
+                        {
+                            case 0xFF: this.CommLog?.Invoke("Receive Success", this._commData.RcvData); break;
+                            case 0x00: this.CommLog?.Invoke("ErrorCheck Dismatch", this._commData.RcvData); break;
+                            case 0x10: this.CommLog?.Invoke("Protocol NG", this._commData.RcvData); break;
+                        }
+
+                        this._recentBufferLen = 0;
+                        this._curBufferLen = 0;
+                        this.IsRequesting = false;
+
+                        //남은 Data Array 앞으로 당기기
+                        int startIdx = this._stackBuffer.Find(this._commData.RcvData);
+                        if (startIdx < 0) return;
+
+                        int lastIdx = startIdx + this._commData.RcvData.Length - 1;
+
+                        if (lastIdx < this._stackBuffer.Length - 1)
+                        {
+                            byte[] remainByte = new byte[this._stackBuffer.Length - lastIdx - 1];
+                            Buffer.BlockCopy(this._stackBuffer, lastIdx + 1, remainByte, 0, remainByte.Length);
+                            this._stackBuffer = new byte[remainByte.Length];
+                            Buffer.BlockCopy(remainByte, 0, this._stackBuffer, 0, this._stackBuffer.Length);
+                        }
+                        else if (lastIdx == this._stackBuffer.Length - 1)
+                        {
+                            this._stackBuffer = null;
+                        }
                     }
                 }
             }
@@ -234,19 +261,19 @@ namespace DotNetFrame.CustomComm.HYNux
             return false;
         }
 
-        private byte GetErrorCode()
+        private byte GetErrorCode(byte[] rcvData)
         {
             byte errorCode = 0xFF;
 
             if (this.ErrorCheck != null)
             {
-                if (this.ErrorCheck.FrameConfirm(this._commData.RcvData))
+                if (this.ErrorCheck.FrameConfirm(rcvData))
                     errorCode = 0x00;
             }
 
             if (this.Protocol != null)
             {
-                if(this.Protocol.ReceiveConfirm(this._commData.RcvData) == false)
+                if(this.Protocol.ReceiveConfirm(rcvData) == false)
                 {
                     //Protocol NG
                     errorCode = 0x10;

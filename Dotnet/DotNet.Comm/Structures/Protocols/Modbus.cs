@@ -18,22 +18,29 @@ namespace DotNet.Comm.Structures.Protocols
 
         public override byte[] DataExtract_Receive(byte[] reqBytes, byte[] buffer)
         {
-            //Header : Addr[1] + Cmd[1]
+            if (reqBytes == null) return null;
             int startIdx,
                 idxHandle = 0,
                 headerLen = 2,
                 frameLen = 0;
             byte cmd;
+
+            //Header : Addr[1] + Cmd[1]
+            if (buffer.Length < 2) return null;
+
             while (idxHandle < buffer.Length - 1)
             {
                 //Header 시작위치 확인
                 //Cmd는 Error Code로 날라올 수 있기 때문에 Addr만 먼저 찾기
-                startIdx = QYUtils.Find(buffer, new byte[] { reqBytes[0] }, idxHandle++);
+                startIdx = Array.IndexOf(buffer, reqBytes[0], idxHandle++);
                 if (startIdx < 0) continue;
 
                 //FuncCode
                 if (buffer.Length < startIdx + headerLen) continue;
                 cmd = buffer[startIdx + headerLen - 1];
+
+                if (cmd >= 0x80 && (cmd - 0x80) != reqBytes[1])
+                    continue;
 
                 //기능코드별 Frame 추출
                 if (cmd == 0x01 || cmd == 0x02 || cmd == 0x03 || cmd == 0x04)
@@ -62,6 +69,7 @@ namespace DotNet.Comm.Structures.Protocols
                 //Data 추출
                 byte[] frameBytes = new byte[frameLen];
                 Buffer.BlockCopy(buffer, startIdx, frameBytes, 0, frameBytes.Length);
+
                 return frameBytes;
             }//End While
 
@@ -136,13 +144,13 @@ namespace DotNet.Comm.Structures.Protocols
             switch (cmd)
             {
                 case 0x01:
-                case 0x02: Get_ReadCoils(dic, reqBytes, rcvBytes); break;
+                case 0x02: this.Get_ReadCoils(dic, reqBytes, rcvBytes); break;
                 case 0x03:
-                case 0x04: Get_ReadHoldingRegister(dic, reqBytes, rcvBytes); break;
-                case 0x05: Get_WriteSingleCoils(dic, reqBytes); break;
-                case 0x06: Get_WriteSingleRegister(dic, reqBytes); break;
-                case 0x0F: Get_WriteMultipleCoils(dic, reqBytes); break;
-                case 0x10: Get_WriteMultipleRegister(dic, reqBytes); break;
+                case 0x04: this.Get_ReadHoldingRegister(dic, reqBytes, rcvBytes); break;
+                case 0x05: this.Get_WriteSingleCoils(dic, reqBytes); break;
+                case 0x06: this.Get_WriteSingleRegister(dic, reqBytes); break;
+                case 0x0F: this.Get_WriteMultipleCoils(dic, reqBytes); break;
+                case 0x10: this.Get_WriteMultipleRegister(dic, reqBytes); break;
             }
         }
         #region Command Get Process
@@ -163,7 +171,7 @@ namespace DotNet.Comm.Structures.Protocols
 
             for (int i = 0; i < readCount; i++)
                 //Data = (bool)((담당Byte >> Bit위치) & 1 == 1)
-                dic[startAddr + i + 1] = ((rcvBytes[3 + (i / 8)] >> (i % 8)) & 1) == 1;
+                dic[startAddr + i] = ((rcvBytes[3 + (i / 8)] >> (i % 8)) & 1) == 1;
         }
         /// <summary>
         /// 05(0x05) WriteSingleCoils Frame 읽기
@@ -193,7 +201,7 @@ namespace DotNet.Comm.Structures.Protocols
 
             for (int i = 0; i < readCount; i++)
                 //Data = (bool)((담당Byte >> Bit위치) & 1 == 1)
-                dic[startAddr + i + 1] = ((reqBytes[7 + (i / 8)] >> (i % 8)) & 1) == 1;
+                dic[startAddr + i] = ((reqBytes[7 + (i / 8)] >> (i % 8)) & 1) == 1;
         }
         /// <summary>
         /// 03(0x03), 04(0x04) ReadHoldingRegister Frame 읽기
@@ -210,7 +218,7 @@ namespace DotNet.Comm.Structures.Protocols
                 readCount = rcvBytes[2];
 
             for (int i = 0; i < readCount; i += 2)
-                dic[startAddr + 1 + (i / 2)] = (Int16)((rcvBytes[3 + i] << 8) + rcvBytes[3 + i + 1]);
+                dic[startAddr + (i / 2)] = (Int16)((rcvBytes[3 + i] << 8) + rcvBytes[3 + i + 1]);
         }
         /// <summary>
         /// 06(0x06) WriteSingleRegister Frame 읽기
@@ -237,7 +245,7 @@ namespace DotNet.Comm.Structures.Protocols
                 readCount = (reqBytes[4] << 8) + reqBytes[5];
 
             for (int i = 0; i < readCount; i += 2)
-                dic[startAddr + 1 + (i / 2)] = (Int16)((reqBytes[7 + i] << 8) + reqBytes[7 + i + 1]);
+                dic[startAddr + (i / 2)] = (Int16)((reqBytes[7 + i] << 8) + reqBytes[7 + i + 1]);
         }
 
         #endregion Command Get Process

@@ -13,19 +13,19 @@ namespace DotNetFrame.CustomComm.HYNux
     {
         public bool IsAscii { get; set; } = false;
         public bool IsEXP { get; set; } = false;
-        public bool IsEthernet { get; set; } = false;
+        public bool IsTCP { get; set; } = false;
 
         public HYModbus(bool isClient) : base(isClient) { }
 
-        public override byte[] DataExtract_Receive(byte[] rcvBytes, byte[] buffer)
+        public override byte[] DataExtract_Receive(byte[] reqBytes, byte[] buffer)
         {
             //CustomCode 미사용일 경우
             if (this.IsAscii == false
                 && this.IsEXP == false
-                && this.IsEthernet == false)
+                && this.IsTCP == false)
             {
                 //순수한 Modbus Protocol
-                return base.DataExtract_Receive(rcvBytes, buffer);
+                return base.DataExtract_Receive(reqBytes, buffer);
             }
             //Header 시작 위치 확인
             byte[] headerBytes;
@@ -35,18 +35,31 @@ namespace DotNetFrame.CustomComm.HYNux
                 frameLen;
             byte cmd;
 
+
             //Header
-            if (this.IsAscii)
+            if (this.IsAscii && this.IsTCP == false)
             {
-                int addIdx = this.IsEthernet ? 6 : 0;
                 //Ascii: ':'[1] + Addr[2] + Cmd[2]
-                headerBytes = new byte[] { rcvBytes[0 + addIdx], rcvBytes[1 + addIdx], rcvBytes[2 + addIdx] };
-                headerLen = headerBytes.Length + 2;
+                if (reqBytes.Length < 3) return null;
+
+                headerBytes = new byte[] { reqBytes[0], reqBytes[1], reqBytes[2] };
+                headerLen = headerBytes.Length;
+            }
+            else if(this.IsTCP && this.IsAscii == false)
+            {
+                //TCP: Transaction ID[2] + Protocol ID[2] + DataLength[2] + Addr[1] + Cmd[1]
+                if (reqBytes.Length < 8) return null;
+
+                headerBytes = new byte[] { reqBytes[6] };
+                headerLen = headerBytes.Length + 7;
+                idxHandle = 6;
             }
             else
             {
                 //기본: Addr[1] + Cmd[1]
-                headerBytes = new byte[] { rcvBytes[this.IsEthernet ? 6 : 0] };
+                if (reqBytes.Length < 2) return null;
+
+                headerBytes = new byte[] { reqBytes[0] };
                 headerLen = headerBytes.Length + 1;
             }
 
@@ -97,22 +110,27 @@ namespace DotNetFrame.CustomComm.HYNux
                             dataLenBytes[i] = Convert.ToByte(
                                 Encoding.ASCII.GetString(
                                     new byte[] {
-                                    buffer[startIdx + headerLen + (i * 2)],
-                                    buffer[startIdx + headerLen + (i * 2) + 1]
+                                    buffer[startIdx + headerLen + 2 + (i * 2)],
+                                    buffer[startIdx + headerLen + 2 + (i * 2) + 1]
                                     }
-                                )
+                                ),
+                                16
                             );
                         }
 
                         //Data 길이 추출
                         for (int i = 0; i < dataLenBytes.Length; i++)
-                            dataLen += dataLenBytes[i] << (8 * (dataLenBytes.Length - 1 - i));
+                            dataLen += dataLenBytes[i] << (8 * ((dataLenBytes.Length - 1) - i));
+
+                        //Error Code
+                        dataLen += base.ErrCodeLength;
 
                         //RTU → Ascii Length변환
                         dataLen *= 2;
                     }
 
-                    frameLen = headerLen + byteCountLen + dataLen + base.ErrCodeLength;
+                    //':' + Protocol Len
+                    frameLen = headerLen + byteCountLen + dataLen;
                 }
                 else if (cmd == 0x06 || cmd == 0x10)
                 {
@@ -156,7 +174,7 @@ namespace DotNetFrame.CustomComm.HYNux
             //CustomCode 미사용일 경우
             if(this.IsAscii == false
                 && this.IsEXP == false
-                && this.IsEthernet == false)
+                && this.IsTCP == false)
             {
                 //순수한 Modbus Protocol
                 return base.DataExtract_Request(addr, buffer);
@@ -173,7 +191,7 @@ namespace DotNetFrame.CustomComm.HYNux
             //Header
             if(this.IsAscii)
             {
-                int addIdx = this.IsEthernet ? 6 : 0;
+                int addIdx = this.IsTCP ? 6 : 0;
                 //Ascii: ':'[1] + Addr[2] + Cmd[2]
                 byte[] bAddr = Encoding.ASCII.GetBytes(addr.ToString("X2"));
                 headerBytes = new byte[3];
@@ -268,13 +286,27 @@ namespace DotNetFrame.CustomComm.HYNux
 
             if (this.IsAscii)
             {
-                byte[] tempReq = new byte[reqBytes.Length - 3];
+                byte[] tempReq = new byte[reqBytes.Length - 5];
                 Buffer.BlockCopy(reqBytes, 1, tempReq, 0, tempReq.Length);
-                reqBytes = Encoding.ASCII.GetBytes(Encoding.ASCII.GetString(tempReq));
 
-                byte[] tempRes = new byte[rcvBytes.Length - 3];
-                Buffer.BlockCopy(tempRes, 1, rcvBytes, 0, rcvBytes.Length);
-                rcvBytes = Encoding.ASCII.GetBytes(Encoding.ASCII.GetString(tempRes));
+                string reqStr = Encoding.ASCII.GetString(tempReq);
+                byte[] convReq = new byte[tempReq.Length / 2];
+                for (int i = 0; i < tempReq.Length; i += 2)
+                {
+                    convReq[(i / 2)] = Convert.ToByte(reqStr.Substring(i, 2), 16);
+                }
+                reqBytes = convReq;
+
+                byte[] tempRes = new byte[rcvBytes.Length - 5];
+                Buffer.BlockCopy(rcvBytes, 1, tempRes, 0, tempRes.Length);
+
+                string resStr = Encoding.ASCII.GetString(tempRes);
+                byte[] convRes = new byte[tempRes.Length / 2];
+                for (int i = 0; i < tempRes.Length; i += 2)
+                {
+                    convRes[(i / 2)] = Convert.ToByte(resStr.Substring(i, 2), 16);
+                }
+                rcvBytes = convRes;
             }
 
             if (this.IsEXP)
@@ -300,9 +332,6 @@ namespace DotNetFrame.CustomComm.HYNux
         
         protected override void Get_ReadCoils(Dictionary<int, object> dic, byte[] reqBytes, byte[] rcvBytes)
         {
-            if (this.IsEXP == false)
-                base.Get_ReadCoils(dic, reqBytes, rcvBytes);
-
             //Expend Process 처리
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + ReadAddrCount[2]
             //Res : Addr[1] + Cmd[1] + ByteCount[2] + Data[ByteCount]
@@ -315,9 +344,11 @@ namespace DotNetFrame.CustomComm.HYNux
         }
         protected override void Get_ReadHoldingRegister(Dictionary<int, object> dic, byte[] reqBytes, byte[] rcvBytes)
         {
-            if (this.IsEXP == false)
+            if(this.IsEXP == false)
+            {
                 base.Get_ReadHoldingRegister(dic, reqBytes, rcvBytes);
-
+                return;
+            }
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + ReadAddrCount[2]
             //Rcv : Addr[1] + Cmd[1] + ByteCount[2] + Data[ByteCount] Hi/Lo
 

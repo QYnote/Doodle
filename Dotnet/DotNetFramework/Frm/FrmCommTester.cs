@@ -1,4 +1,6 @@
 ﻿using DotNet.Comm.Structures.ClientPorts;
+using DotNet.Comm.Structures.Protocols;
+using DotNet.Utils.Controls;
 using DotNetFrame.CustomComm.HYNux;
 using System;
 using System.Collections.Generic;
@@ -21,36 +23,40 @@ namespace DotNet.Comm.Frm
 
         #region UI Controls
 
-        private GroupBox gbxPortSet = new GroupBox();
-        private GroupBox gbxProtocolSet = new GroupBox();
-        private GroupBox gbxCommSet = new GroupBox();
-        private GroupBox gbxLog = new GroupBox();
+        private SplitContainer pnlSplit = new SplitContainer();
 
+        private Panel pnlPortSet_Common = new Panel();
+        private GroupBox gbxPortSet = new GroupBox();
+        private ComboBox cboPortType = new ComboBox();
         private ComboBox cboPortList = new ComboBox();
+        private TextBox txtEthernetIP = new TextBox();
+        private NumericUpDown txtPortNo = new NumericUpDown();
         private Button btnConnect = new Button();
         private Label lblConnState = new Label();
-
         private GroupBox gbxBaudRate = new GroupBox();
         private GroupBox gbxParity = new GroupBox();
         private GroupBox gbxStopBits = new GroupBox();
         private GroupBox gbxDataBits = new GroupBox();
 
+        private GroupBox gbxProtocolSet = new GroupBox();
         private ComboBox cboProtocolList = new ComboBox();
+        private CheckBox chkAddErrChk = new CheckBox();
 
-        private DataGridView gvCommResult = new DataGridView();
-        private DataGridView gvProtocolResult = new DataGridView();
-        private DataGridView gvDataLog = new DataGridView();
-        private DataGridView gvBuffer = new DataGridView();
-
+        private GroupBox gbxCommSet = new GroupBox();
         private CheckBox chkRewrite = new CheckBox();
         private NumericUpDown numRewrite = new NumericUpDown();
         private CheckBox chkRewriteInfi = new CheckBox();
-        private CheckBox chkAddErrChk = new CheckBox();
-
         private TextBox txtWrite = new TextBox();
         private Button btnSend = new Button();
         private Label lblWriteTooltip = new Label();
 
+        private GroupBox gbxLog = new GroupBox();
+        private Panel pnlResult = new Panel();
+        private DataGridView gvCommResult = new DataGridView();
+        private DataGridView gvProtocolResult = new DataGridView();
+        private Panel pnlLog = new Panel();
+        private DataGridView gvDataLog = new DataGridView();
+        private DataGridView gvBuffer = new DataGridView();
         private TextBox txtLog = new TextBox();
 
         #endregion UI Controls
@@ -76,10 +82,23 @@ namespace DotNet.Comm.Frm
                     return null;
             }
         }
+        private QYEthernet Ethernet
+        {
+            get
+            {
+                if (this._port != null
+                    && this._port.PCPort is QYEthernet)
+                    return this._port.PCPort as QYEthernet;
+                else
+                    return null;
+            }
+        }
 
         private byte[] _recycleData;
         private int _maxReq = 0;
         private int _curReq = 0;
+
+        private bool _isInit = false;
 
         public FrmCommTester()
         {
@@ -88,6 +107,7 @@ namespace DotNet.Comm.Frm
             this.BgWorker.WorkerSupportsCancellation = true;
             this.BgWorker.DoWork += BgWorker_DoWork;
             this.Text = "CommTester";
+            this._isInit = true;
 
             this.FormClosing += (s, e) =>
             {
@@ -100,33 +120,191 @@ namespace DotNet.Comm.Frm
 
         private void InitUI()
         {
+            this.pnlSplit.Location = new Point(3, 3);
+            this.pnlSplit.Orientation = Orientation.Horizontal;
+            this.pnlSplit.Dock = DockStyle.Fill;
+            this.pnlSplit.Panel1.Padding = new Padding(3);
+            this.pnlSplit.Panel2.Padding = this.pnlSplit.Panel1.Padding;
+            this.pnlSplit.Panel1MinSize = 20;
+            this.pnlSplit.SplitterDistance = 20;
+
+            #region Port 설정
+            this.gbxPortSet.Dock = DockStyle.Left;
+            this.gbxPortSet.Padding = new Padding(3);
+            this.gbxPortSet.Width = 432;
+            this.gbxPortSet.Text = "Port Settings";
+
+            this.pnlPortSet_Common.Dock = DockStyle.Left;
+            this.pnlPortSet_Common.Width = 106;
+
+            this.cboPortType.Location = new Point(3, 8);
+            this.cboPortType.Width = this.pnlPortSet_Common.Width - 6;
+            this.cboPortType.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top;
+            this.cboPortType.Items.AddRange(new string[] { "Serial", "Ethernet" });
+            this.cboPortType.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cboPortType.SelectedIndex = 0;
+            this.cboPortType.SelectedIndexChanged += (s, e) =>
+            {
+                if (this._isInit == false) return;
+                string selectedItem = (string)this.cboPortType.SelectedItem;
+
+                if(selectedItem == "Serial")
+                {
+                    this._port = new HYPort(PortType.Serial);
+                    this.cboPortList.Visible = true;
+                    this.txtEthernetIP.Visible = false;
+                    this.txtPortNo.Visible = false;
+                    this.gbxBaudRate.Visible = true;
+                    this.gbxParity.Visible = true;
+                    this.gbxStopBits.Visible = true;
+                    this.gbxDataBits.Visible = true;
+                    this.gbxPortSet.Width = 432;
+                }
+                else if(selectedItem == "Ethernet")
+                {
+                    this._port = new HYPort(PortType.Ethernet);
+                    this.cboPortList.Visible = false;
+                    this.txtEthernetIP.Visible = true;
+                    this.txtPortNo.Visible = true;
+                    this.gbxBaudRate.Visible = false;
+                    this.gbxParity.Visible = false;
+                    this.gbxStopBits.Visible = false;
+                    this.gbxDataBits.Visible = false;
+                    this.gbxPortSet.Width = 112;
+                }
+
+                InitPort();
+            };
+
             #region Serial Port 설정
 
             //Port 목록
-            this.cboPortList.Location = new Point(3, 18);
-            this.cboPortList.Width = 100;
+            this.cboPortList.Location = new Point(this.cboPortType.Location.X, this.cboPortType.Location.Y + this.cboPortType.Height + 3);
+            this.cboPortList.Width = this.cboPortType.Width;
             this.cboPortList.Items.AddRange(SerialPort.GetPortNames());
             this.cboPortList.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cboPortList.SelectedIndexChanged += (s, e) =>
             {
+                if (this._isInit == false) return;
                 if (this._port.IsOpen == false)
                 {
-                    this.Serial.PortName = this.cboPortList.SelectedItem.ToString();
+                    this.Serial.PortName = (string)this.cboPortList.SelectedItem;
                 }
             };
-            if(this.cboPortList.Items.Count > 0) this.cboPortList.SelectedIndex = 0;
+
+            //BaudRate
+            this.gbxBaudRate.Dock = DockStyle.Left;
+            this.gbxBaudRate.Width = 80;
+            this.gbxBaudRate.Text = "Baudrate";
+            foreach (var baudrate in this._baudrateList)
+            {
+                RadioButton rdo = CreateRdo(baudrate);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    if (this._isInit == false) return;
+
+                    this.Serial.BaudRate = baudrate;
+                };
+
+                this.gbxBaudRate.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+
+            //Parity
+            this.gbxParity.Dock = DockStyle.Left;
+            this.gbxParity.AutoSize = false;
+            this.gbxParity.Text = "Parity";
+            foreach (Parity parity in DotNet.Utils.Controls.QYUtils.EnumToItems<Parity>())
+            {
+                RadioButton rdo = CreateRdo(parity);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    if (this._isInit == false) return;
+
+                    this.Serial.Parity = parity;
+                };
+
+                this.gbxParity.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbxParity.Size = this.gbxBaudRate.Size;
+
+            //StopBits
+            this.gbxStopBits.Dock = DockStyle.Left;
+            this.gbxStopBits.AutoSize = false;
+            this.gbxStopBits.Text = "StopBits";
+            foreach (StopBits stopbit in DotNet.Utils.Controls.QYUtils.EnumToItems<StopBits>())
+            {
+                if (stopbit == StopBits.None
+                    || stopbit == StopBits.OnePointFive
+                    ) continue;
+
+                RadioButton rdo = CreateRdo(stopbit);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    if (this._isInit == false) return;
+
+                    this.Serial.StopBits = stopbit;
+                };
+
+                this.gbxStopBits.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbxStopBits.Size = this.gbxBaudRate.Size;
+
+            //DataBits
+            this.gbxDataBits.Dock = DockStyle.Left;
+            this.gbxDataBits.AutoSize = false;
+            this.gbxDataBits.Text = "DataBits";
+            foreach (var databit in this._databitsList)
+            {
+                RadioButton rdo = CreateRdo(databit);
+                rdo.CheckedChanged += (s, e) =>
+                {
+                    if (this._isInit == false) return;
+
+                    this.Serial.DataBits = databit;
+                };
+
+                this.gbxDataBits.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbxDataBits.Size = this.gbxBaudRate.Size;
+
+            #endregion Serial Port 설정
+            #region Ethernet Port 설정
+
+            //IP Address
+            this.txtEthernetIP.Location = new Point(this.cboPortType.Location.X, this.cboPortType.Location.Y + this.cboPortType.Height + 3);
+            this.txtEthernetIP.Width = this.cboPortType.Width;
+            this.txtEthernetIP.TextAlign = HorizontalAlignment.Center;
+            this.txtEthernetIP.Text = "127.0.0.1";
+            this.txtEthernetIP.KeyPress += QYUtils.TextBox_IP;
+
+            //Port No
+            this.txtPortNo.Location = new Point(this.txtEthernetIP.Location.X, this.txtEthernetIP.Location.Y + this.txtEthernetIP.Height + 3);
+            this.txtPortNo.Width = this.txtEthernetIP.Width;
+            this.txtPortNo.DecimalPlaces = 0;
+            this.txtPortNo.TextAlign = HorizontalAlignment.Right;
+            this.txtPortNo.Minimum = 0;
+            this.txtPortNo.Maximum = int.MaxValue;
+            this.txtPortNo.Value = 5000;
+
+            #endregion
 
             //Port 연결버튼
+            this.btnConnect.Location = new Point(this.txtPortNo.Location.X, this.txtPortNo.Location.Y + this.txtPortNo.Height + 3);
             this.btnConnect.Width = this.cboPortList.Width - 23;
-            this.btnConnect.Location = new Point(this.cboPortList.Location.X, this.cboPortList.Location.Y + this.cboPortList.Height + 3);
             this.btnConnect.Text = "Connect";
             this.btnConnect.Click += (s, e) =>
             {
-                if(this.btnConnect.Text == "Connect")
+                if (this.btnConnect.Text == "Connect")
                 {
                     if (this._port.IsOpen == false
                         && this._port.Open())
                     {
+                        this.cboPortType.Enabled = false;
+                        this.txtEthernetIP.Enabled = false;
                         this.cboPortList.Enabled = false;
                         this.btnConnect.Text = "Disconnect";
                         this.lblConnState.BackColor = Color.Green;
@@ -136,6 +314,8 @@ namespace DotNet.Comm.Frm
                 {
                     if (this._port.Close())
                     {
+                        this.cboPortType.Enabled = true;
+                        this.txtEthernetIP.Enabled = true;
                         this.cboPortList.Enabled = true;
                         this.btnConnect.Text = "Connect";
                         this.lblConnState.BackColor = Color.Red;
@@ -148,101 +328,21 @@ namespace DotNet.Comm.Frm
             this.lblConnState.Width = 19;
             this.lblConnState.BackColor = Color.Red;
 
-            //BaudRate
-            this.gbxBaudRate.Location = new Point(this.cboPortList.Location.X + this.cboPortList.Width + 3, this.cboPortList.Location.Y - 8);
-            this.gbxBaudRate.Width = 80;
-            this.gbxBaudRate.Text = "Baudrate";
-            foreach (var baudrate in this._baudrateList)
-            {
-                RadioButton rdo = CreateRdo(baudrate);
-                rdo.CheckedChanged += (s, e) =>
-                {
-                    this.Serial.BaudRate = baudrate;
-                };
 
-                this.gbxBaudRate.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            this.gbxBaudRate.Height = this.gbxBaudRate.Controls.Count * (18 + 3) + 6;
-            (this.gbxBaudRate.Controls[this.gbxBaudRate.Controls.Count - 1] as RadioButton).Checked = true;
-
-            //Parity
-            this.gbxParity.Location = new Point(this.gbxBaudRate.Location.X + this.gbxBaudRate.Width + 3, this.gbxBaudRate.Location.Y);
-            this.gbxParity.AutoSize = false;
-            this.gbxParity.Text = "Parity";
-            foreach (Parity parity in DotNet.Utils.Controls.QYUtils.EnumToItems<Parity>())
-            {
-                RadioButton rdo = CreateRdo(parity);
-                rdo.CheckedChanged += (s, e) =>
-                {
-                    this.Serial.Parity = parity;
-                };
-
-                this.gbxParity.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            this.gbxParity.Size = this.gbxBaudRate.Size;
-            (this.gbxParity.Controls[this.gbxParity.Controls.Count - 1] as RadioButton).Checked = true;
-
-            //StopBits
-            this.gbxStopBits.Location = new Point(this.gbxParity.Location.X + this.gbxParity.Width + 3, this.gbxParity.Location.Y);
-            this.gbxStopBits.AutoSize = false;
-            this.gbxStopBits.Text = "StopBits";
-            foreach (StopBits stopbit in DotNet.Utils.Controls.QYUtils.EnumToItems<StopBits>())
-            {
-                if (stopbit == StopBits.None
-                    || stopbit == StopBits.OnePointFive
-                    ) continue;
-
-                RadioButton rdo = CreateRdo(stopbit);
-                rdo.CheckedChanged += (s, e) =>
-                {
-                    this.Serial.StopBits = stopbit;
-                };
-
-                this.gbxStopBits.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            this.gbxStopBits.Size = this.gbxBaudRate.Size;
-            (this.gbxStopBits.Controls[this.gbxStopBits.Controls.Count - 1] as RadioButton).Checked = true;
-
-            //DataBits
-            this.gbxDataBits.Location = new Point(this.gbxStopBits.Location.X + this.gbxStopBits.Width + 3, this.gbxStopBits.Location.Y);
-            this.gbxDataBits.AutoSize = false;
-            this.gbxDataBits.Text = "DataBits";
-            foreach (var databit in this._databitsList)
-            {
-                RadioButton rdo = CreateRdo(databit);
-                rdo.CheckedChanged += (s, e) =>
-                {
-                    this.Serial.DataBits = databit;
-                };
-
-                this.gbxDataBits.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            this.gbxDataBits.Size = this.gbxBaudRate.Size;
-            (this.gbxDataBits.Controls[this.gbxDataBits.Controls.Count - 1] as RadioButton).Checked = true;
-
-            this.gbxPortSet.Location = new Point(3, 3);
-            this.gbxPortSet.Width = this.gbxDataBits.Location.X + this.gbxDataBits.Width + 3;
-            this.gbxPortSet.Height = this.gbxDataBits.Location.Y + this.gbxDataBits.Height + 3;
-            this.gbxPortSet.Text = "Port Settings";
-
-            #endregion Serial Port 설정
+            #endregion Port 설정
             #region Protocol 설정
 
-            this.cboProtocolList.Location = new Point(3, 18);
+            this.cboProtocolList.Location = new Point(3, 26);
             this.cboProtocolList.Width = this.cboPortList.Width;
             this.cboProtocolList.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cboProtocolList.DropDownWidth = (int)(this.cboProtocolList.CreateGraphics().MeasureString("PCLink_SUM_TD300500", this.cboProtocolList.Font).Width);
             this.cboProtocolList.Items.AddRange(new string[]
             {
                 "None",
-                "ModbusRTU",
-                "ModbusRTU_EXP",
-                "ModbusAscii",
-                "ModbusAscii_EXP",
+                "HY_ModbusRTU",
+                "HY_ModbusRTU_EXP",
+                "HY_ModbusAscii",
+                "HY_ModbusAscii_EXP",
                 "PCLink_STD",
                 "PCLink_STD_TH300500",
                 "PCLink_SUM",
@@ -257,29 +357,22 @@ namespace DotNet.Comm.Frm
                 switch (item)
                 {
                     case "ModbusRTU":
+                        this._port.Protocol = new Modbus(true);
+                        break;
+                    case "HY_ModbusRTU":
                         this._port.Protocol = new HYModbus(true);
                         this._port.ErrorCheck = new ModbusRTUErrorCheck();
                         break;
-                    case "ModbusAscii":
-                        this._port.Protocol = new HYModbus(true)
-                        {
-                            IsAscii = true
-                        };
+                    case "HY_ModbusAscii":
+                        this._port.Protocol = new HYModbus(true) { IsAscii = true };
                         this._port.ErrorCheck = new ModbusAsciiErrorCheck();
                         break;
-                    case "ModbusRTU_EXP":
-                        this._port.Protocol = new HYModbus(true)
-                        {
-                            IsEXP = true,
-                        };
+                    case "HY_ModbusRTU_EXP":
+                        this._port.Protocol = new HYModbus(true) { IsEXP = true };
                         this._port.ErrorCheck = new ModbusRTUErrorCheck();
                         break;
-                    case "ModbusAscii_EXP":
-                        this._port.Protocol = new HYModbus(true)
-                        {
-                            IsAscii = true,
-                            IsEXP = true,
-                        };
+                    case "HY_ModbusAscii_EXP":
+                        this._port.Protocol = new HYModbus(true) { IsAscii = true, IsEXP = true };
                         this._port.ErrorCheck = new ModbusAsciiErrorCheck();
                         break;
                     case "PCLink_STD":
@@ -287,33 +380,19 @@ namespace DotNet.Comm.Frm
                         this._port.ErrorCheck = null;
                         break;
                     case "PCLink_SUM":
-                        this._port.Protocol = new PCLink(true)
-                        {
-                            _isSUM = true,
-                        };
+                        this._port.Protocol = new PCLink(true) { _isSUM = true };
                         this._port.ErrorCheck = new PCLinkErrorCheck();
                         break;
                     case "PCLink_STD_TH300500":
-                        this._port.Protocol = new PCLink(true)
-                        {
-                            _isTH3500 = true,
-                        };
+                        this._port.Protocol = new PCLink(true) { _isTH3500 = true };
                         this._port.ErrorCheck = null;
                         break;
                     case "PCLink_SUM_TD300500":
-                        this._port.Protocol = new PCLink(true)
-                        {
-                            _isSUM = true,
-                            _isTD3500 = true,
-                        };
+                        this._port.Protocol = new PCLink(true) { _isSUM = true, _isTD3500 = true };
                         this._port.ErrorCheck = new PCLinkErrorCheck();
                         break;
                     case "PCLink_SUM_TH300500":
-                        this._port.Protocol = new PCLink(true)
-                        {
-                            _isSUM = true,
-                            _isTH3500 = true,
-                        };
+                        this._port.Protocol = new PCLink(true) { _isSUM = true, _isTH3500 = true };
                         this._port.ErrorCheck = new PCLinkTHErrorCheck();
                         break;
                     default:
@@ -342,9 +421,8 @@ namespace DotNet.Comm.Frm
                 this._port.CreErrCheck = this.chkAddErrChk.Checked;
             };
 
-            this.gbxProtocolSet.Location = new Point(this.gbxPortSet.Location.X + this.gbxPortSet.Width + 3, this.gbxPortSet.Location.Y);
+            this.gbxProtocolSet.Dock = DockStyle.Left;
             this.gbxProtocolSet.Width = this.chkAddErrChk.Location.X + this.chkAddErrChk.Width + 3;
-            this.gbxProtocolSet.Height = this.gbxPortSet.Height;
             this.gbxProtocolSet.Text = "Protocol Settings";
 
             #endregion Protocol 설정
@@ -353,7 +431,7 @@ namespace DotNet.Comm.Frm
             #region 반복설정
             
             //반복전송 체크박스
-            this.chkRewrite.Location = new Point(3, 15);
+            this.chkRewrite.Location = new Point(3, 26);
             this.chkRewrite.Width = 80;
             this.chkRewrite.Text = "반복 전송";
             this.chkRewrite.CheckAlign = ContentAlignment.MiddleRight;
@@ -407,19 +485,20 @@ namespace DotNet.Comm.Frm
             this.txtWrite.Width = this.lblWriteTooltip.Width - (this.btnSend.Width + 3);
             this.txtWrite.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            this.gbxCommSet.Location = new Point(this.gbxProtocolSet.Location.X + this.gbxProtocolSet.Width + 3, this.gbxProtocolSet.Location.Y);
+            this.gbxCommSet.Dock = DockStyle.Left;
             this.gbxCommSet.Text = "Comm Settings";
             this.gbxCommSet.Width = this.btnSend.Location.X + this.btnSend.Width + 3;
-            this.gbxCommSet.Height = this.btnSend.Location.Y + this.btnSend.Height + 5;
 
             #endregion 전송 설정
 
             #region 통신 결과
 
+            this.pnlResult.Dock = DockStyle.Top;
+            this.pnlResult.Height = 47;
+            //this.pnlResult.BorderStyle = BorderStyle.FixedSingle;
+
             //Comm Result
-            this.gvCommResult.Location = new Point(3, 18);
-            this.gvCommResult.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-            this.gvCommResult.Height = 47;
+            this.gvCommResult.Dock = DockStyle.Left;
             this.gvCommResult.Width = 270 + 3;
             this.gvCommResult.DataSource = this._dtDataResult;
             this.gvCommResult.RowHeadersVisible = false;
@@ -481,9 +560,7 @@ namespace DotNet.Comm.Frm
             #endregion 통신 결과
             #region Protocol 결과
 
-            this.gvProtocolResult.Location = new Point(this.gvCommResult.Location.X + this.gvCommResult.Width + 3, this.gvCommResult.Location.Y);
-            this.gvProtocolResult.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-            this.gvProtocolResult.Height = this.gvCommResult.Height;
+            this.gvProtocolResult.Dock = DockStyle.Left;
             this.gvProtocolResult.DataSource = this._dtProtocolResult;
             this.gvProtocolResult.RowHeadersVisible = false;
             this.gvProtocolResult.AllowUserToAddRows = false;
@@ -522,16 +599,13 @@ namespace DotNet.Comm.Frm
             #endregion
             #region Log Grid
 
-            this.gbxLog.Location = new Point(this.gbxPortSet.Location.X, this.gbxPortSet.Location.Y + this.gbxPortSet.Height + 3);
-            this.gbxLog.Width = this.ClientSize.Width - 6;
-            this.gbxLog.Height = this.ClientSize.Height - (this.gbxLog.Location.Y + 2);
-            this.gbxLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            this.gbxLog.Dock = DockStyle.Fill;
 
+            this.pnlLog.Dock = DockStyle.Right;
+            this.pnlLog.Width = (this._bufferColCount * 38) - 2;
             this._bufferColCount = 15;
 
-            this.gvBuffer.Width = (this._bufferColCount * 25) + 3;
-            this.gvBuffer.Location = new Point(this.gbxLog.Width - (this.gvBuffer.Width + 4), this.gvCommResult.Location.Y + this.gvCommResult.Height + 3);
-            this.gvBuffer.Anchor = AnchorStyles.Right | AnchorStyles.Top;
+            this.gvBuffer.Dock = DockStyle.Top;
             this.gvBuffer.AutoSize = false;
             this.gvBuffer.DataSource = this._dtBuffer;
             this.gvBuffer.Height = 140;
@@ -541,8 +615,7 @@ namespace DotNet.Comm.Frm
             this.gvBuffer.AllowUserToResizeRows = false;
 
             //Request, Receive Log GridView
-            this.gvDataLog.Location = new Point(this.gvCommResult.Location.X, this.gvCommResult.Location.Y + this.gvCommResult.Height + 3);
-            this.gvDataLog.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
+            this.gvDataLog.Dock = DockStyle.Fill;
             this.gvDataLog.AutoSize = false;
             this.gvDataLog.DataSource = this._dtDataLog;
             this.gvDataLog.Width = this.gbxLog.Width - (this.gvBuffer.Width + 10);
@@ -570,12 +643,10 @@ namespace DotNet.Comm.Frm
             }
 
             //Text Log
-            this.txtLog.Location = new Point(this.gvBuffer.Location.X, this.gvBuffer.Location.Y + this.gvBuffer.Height + 3);
+            this.txtLog.Dock = DockStyle.Fill;
             this.txtLog.AutoSize = false;   
-            this.txtLog.Width = this.gvBuffer.Width;
-            this.txtLog.Height = this.gbxLog.ClientSize.Height - (this.txtLog.Location.Y + 5);
             this.txtLog.BorderStyle = BorderStyle.FixedSingle;
-            this.txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            //this.txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             this.txtLog.Multiline = true;
             this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = ScrollBars.Vertical;
@@ -586,17 +657,22 @@ namespace DotNet.Comm.Frm
             #endregion Log Grid
 
 
-            this.Controls.Add(this.gbxPortSet);
-            this.Controls.Add(this.gbxProtocolSet);
-            this.Controls.Add(this.gbxCommSet);
-            this.Controls.Add(this.gbxLog);
-            this.gbxPortSet.Controls.Add(this.cboPortList);
-            this.gbxPortSet.Controls.Add(this.btnConnect);
-            this.gbxPortSet.Controls.Add(this.lblConnState);
+            this.Controls.Add(this.pnlSplit);
+            this.pnlSplit.Panel1.Controls.Add(this.gbxPortSet);
+            this.gbxPortSet.Controls.Add(this.pnlPortSet_Common);
+            this.pnlPortSet_Common.Controls.Add(this.cboPortType);
+            this.pnlPortSet_Common.Controls.Add(this.cboPortList);
+            this.pnlPortSet_Common.Controls.Add(this.txtEthernetIP);
+            this.pnlPortSet_Common.Controls.Add(this.txtPortNo);
+            this.pnlPortSet_Common.Controls.Add(this.btnConnect);
+            this.pnlPortSet_Common.Controls.Add(this.lblConnState);
             this.gbxPortSet.Controls.Add(this.gbxBaudRate);
             this.gbxPortSet.Controls.Add(this.gbxParity);
             this.gbxPortSet.Controls.Add(this.gbxStopBits);
             this.gbxPortSet.Controls.Add(this.gbxDataBits);
+            this.pnlSplit.Panel1.Controls.Add(this.gbxProtocolSet);
+            this.pnlSplit.Panel1.Controls.Add(this.gbxCommSet);
+            this.pnlSplit.Panel2.Controls.Add(this.gbxLog);
             this.gbxProtocolSet.Controls.Add(this.cboProtocolList);
             this.gbxProtocolSet.Controls.Add(this.chkAddErrChk);
             this.gbxCommSet.Controls.Add(this.chkRewrite);
@@ -607,17 +683,46 @@ namespace DotNet.Comm.Frm
             this.gbxCommSet.Controls.Add(this.btnSend);
             this.gbxCommSet.Controls.Add(this.lblWriteTooltip);
             this.gbxCommSet.Controls.Add(this.txtWrite);
-            this.gbxLog.Controls.Add(this.gvCommResult);
-            this.gbxLog.Controls.Add(this.gvProtocolResult);
+            this.gbxLog.Controls.Add(this.pnlResult);
+            this.pnlResult.Controls.Add(this.gvCommResult);
+            this.pnlResult.Controls.Add(this.gvProtocolResult);
             this.gbxLog.Controls.Add(this.gvDataLog);
-            this.gbxLog.Controls.Add(this.gvBuffer);
-            this.gbxLog.Controls.Add(this.txtLog);
+            this.gbxLog.Controls.Add(this.pnlLog);
+            this.pnlLog.Controls.Add(this.gvBuffer);
+            this.pnlLog.Controls.Add(this.txtLog);
 
-            this._port.CommLog += (title, data) =>
+            this.pnlPortSet_Common.BringToFront();
+            this.gbxBaudRate.BringToFront();
+            this.gbxParity.BringToFront();
+            this.gbxStopBits.BringToFront();
+            this.gbxDataBits.BringToFront();
+
+            this.gbxPortSet.BringToFront();
+            this.gbxProtocolSet.BringToFront();
+            this.gbxCommSet.BringToFront();
+
+            this.gvCommResult.BringToFront();
+            this.gvProtocolResult.BringToFront();
+
+            this.pnlResult.BringToFront();
+            this.pnlLog.BringToFront();
+            this.gvDataLog.BringToFront();
+            this.gvBuffer.BringToFront();
+            this.txtLog.BringToFront();
+
+            InitPort();
+
+            this.txtEthernetIP.Visible = false;
+            this.txtPortNo.Visible = false;
+        }
+
+        private void AddLogEvent(HYPort port)
+        {
+            port.CommLog += (title, data) =>
             {
                 WriteLog(title, data);
             };
-            this._port.StackBuff += (title, data) =>
+            port.StackBuff += (title, data) =>
             {
                 WriteLog(title, data);
             };
@@ -664,6 +769,61 @@ namespace DotNet.Comm.Frm
             this.gvDataLog.EndEdit();
         }
 
+        private void InitPort()
+        {
+            AddLogEvent(this._port);
+            if (this._port.Type == PortType.Serial)
+            {
+                this.Serial.PortName = (string)this.cboPortList.Items[0];
+                this.Serial.BaudRate = (int)this._baudrateList[0];
+                this.Serial.Parity = (Parity)QYUtils.EnumToItems<Parity>()[0];
+                this.Serial.StopBits = (StopBits)QYUtils.EnumToItems<StopBits>()[0];
+                this.Serial.DataBits = (int)this._databitsList[1];
+
+                this.cboPortList.SelectedIndex = 0;
+                foreach (RadioButton rdo in this.gbxBaudRate.Controls)
+                {
+                    if((int)rdo.Tag == this.Serial.BaudRate)
+                    {
+                        rdo.Checked = true;
+                        break;
+                    }
+                }
+                foreach (RadioButton rdo in this.gbxParity.Controls)
+                {
+                    if ((Parity)rdo.Tag == this.Serial.Parity)
+                    {
+                        rdo.Checked = true;
+                        break;
+                    }
+                }
+                foreach (RadioButton rdo in this.gbxStopBits.Controls)
+                {
+                    if ((StopBits)rdo.Tag == this.Serial.StopBits)
+                    {
+                        rdo.Checked = true;
+                        break;
+                    }
+                }
+                foreach (RadioButton rdo in this.gbxDataBits.Controls)
+                {
+                    if ((byte)rdo.Tag == this.Serial.DataBits)
+                    {
+                        rdo.Checked = true;
+                        break;
+                    }
+                }
+            }
+            else if(this._port.Type == PortType.Ethernet)
+            {
+                this.txtEthernetIP.Text = "127.0.0.1";
+                this.txtPortNo.Value = 5000;
+
+                this.Ethernet.IP = this.txtEthernetIP.Text;
+                this.Ethernet.PortNo = Convert.ToInt32(this.txtPortNo.Value);
+            }
+        }
+
         private RadioButton CreateRdo(object data)
         {
             RadioButton rdo = new RadioButton();
@@ -673,6 +833,7 @@ namespace DotNet.Comm.Frm
             rdo.Dock = DockStyle.Top;
             rdo.Text = data.ToString();
             rdo.Checked = false;
+            rdo.Tag = data;
 
             return rdo;
         }
@@ -755,8 +916,8 @@ namespace DotNet.Comm.Frm
         {
             if (data == null || data.Length == 0) return;
 
-            this._port.Write(data);
             this._curReq++;
+            this._port.Write(data);
             this._dtDataResult.Rows[0]["TryCount"] = (uint)(this._dtDataResult.Rows[0]["TryCount"]) + 1;
         }
 
@@ -967,7 +1128,6 @@ namespace DotNet.Comm.Frm
                 }
             }
         }
-
 
         private void UpdateUI(string cmd)
         {

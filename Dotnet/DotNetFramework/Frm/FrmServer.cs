@@ -104,7 +104,7 @@ namespace DotNetFrame.CustomComm
             (this._server as TCPServer).PortNo = 5000;
             (this._server as TCPServer).ClientActiveEvent += ClientActiveEvent_HYDevice; ;
             this._protocol = new DotNetFrame.CustomComm.HYNux.HYModbus(false);
-            (this._protocol as DotNetFrame.CustomComm.HYNux.HYModbus).IsEthernet = true;
+            (this._protocol as DotNetFrame.CustomComm.HYNux.HYModbus).IsTCP = true;
         }
 
 

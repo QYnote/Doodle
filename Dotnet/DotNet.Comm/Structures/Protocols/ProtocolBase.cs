@@ -18,6 +18,10 @@ namespace DotNet.Comm.Structures.Protocols
         public int ErrCodeLength { get; set; } = 2;
 
         protected bool IsClient { get; }
+        /// <summary>
+        /// Protocol 처리 Class 기본틀
+        /// </summary>
+        /// <param name="isClient">Request 요청자 여부</param>
         protected ProtocolFrame(bool isClient)
         {
             this.IsClient = isClient;
@@ -26,7 +30,7 @@ namespace DotNet.Comm.Structures.Protocols
         /// <summary>
         /// Receive된 Data 추출
         /// </summary>
-        /// <param name="reqBytes">담아갈 Byte</param>
+        /// <param name="reqBytes">요청한 Request Byte Array</param>
         /// <param name="buffer">해석할 Buffer</param>
         /// <remarks>
         /// Data 적합성 여부 상관 없이 Data 길이나 Tail위치만 찾아 Receive Frame을 추출
