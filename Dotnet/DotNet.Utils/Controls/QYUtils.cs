@@ -301,7 +301,7 @@ namespace DotNet.Utils.Controls
         /// <param name="source">찾을 Array</param>
         /// <param name="pattern">검사할 Array</param>
         /// <returns></returns>
-        static public int Find(this byte[] source, byte[] pattern, int startIdx = 0)
+        static public int Find<T>(this T[] source, T[] pattern, int startIdx = 0) where T : IEquatable<T>
         {
             if (source == null || pattern == null) return -1;
             if (source.Length == 0 || source.Length < pattern.Length) return -1;
@@ -314,7 +314,7 @@ namespace DotNet.Utils.Controls
 
                 for (int j = 0; j < pattern.Length; j++)
                 {
-                    if (source[i + j] != pattern[j])
+                    if (source[i + j].Equals(pattern[j]) == false)
                     {
                         isMatch = false;
                         break;
