@@ -33,12 +33,13 @@ namespace DotNet.Comm.Structures.Protocols
                 //Header 시작위치 확인
                 //Cmd는 Error Code로 날라올 수 있기 때문에 Addr만 먼저 찾기
                 startIdx = Array.IndexOf(buffer, reqBytes[0], idxHandle++);
-                if (startIdx < 0) continue;
+                if (startIdx < 0) break;
 
                 //FuncCode
-                if (buffer.Length < startIdx + headerLen) continue;
+                if (buffer.Length < startIdx + headerLen) break;
                 cmd = buffer[startIdx + headerLen - 1];
 
+                //Cmd가 0x80보다 높은데 Request와 다른경우
                 if (cmd >= 0x80 && (cmd - 0x80) != reqBytes[1])
                     continue;
 
@@ -246,6 +247,22 @@ namespace DotNet.Comm.Structures.Protocols
 
             for (int i = 0; i < readCount; i += 2)
                 dic[startAddr + (i / 2)] = (Int16)((reqBytes[7 + i] << 8) + reqBytes[7 + i + 1]);
+        }
+        /// <summary>
+        /// 43(0x2B) Read Device Identification 읽기
+        /// </summary>
+        /// <param name="dic">
+        /// 입력될 Dictionary<br/>
+        /// Register Dictionary와 다른 Object 목록
+        /// </param>
+        /// <param name="rcvBytes">Response Data</param>
+        protected virtual void Get_ReadDeviceIdentification(Dictionary<int, object> dic, byte[] rcvBytes)
+        {
+            //Req : Addr[1] + Cmd[1] + MEI[1] + Device ID[1] + Object Id[1]
+            //Rcv : Addr[1] + Cmd[1] + MEI[1] + Device ID[1] + Confromity level[1] + More Follows[1] + Next Object Id[1]
+            //      + Number of object[1] + ((Object Id[1] + Object Length[1] + Object Value[length]) * n]
+
+
         }
 
         #endregion Command Get Process

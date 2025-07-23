@@ -10,11 +10,25 @@ using DotNet.Utils.Controls;
 
 namespace DotNetFrame.CustomComm.HYNux
 {
+    internal enum ProtocolType
+    {
+        None,
+        HY_ModbusRTU,
+        HY_ModbusAscii,
+        HY_ModbusRTU_EXP,
+        HY_ModbusAscii_EXP,
+        HY_ModbusTCP,
+        PCLink_STD,
+        PCLink_SUM,
+        PCLink_STD_TH300500,
+        PCLink_SUM_TD300500,
+        PCLink_SUM_TH300500,
+    }
     /// <summary>
     /// HY Port
     /// </summary>
     /// <remarks>
-    /// 1Port - 1 Request ↔ 1Response 처리방식
+    /// 1Port - (1 Request ↔ 1Response) 처리방식
     /// </remarks>
     public class HYPort
     {
@@ -24,8 +38,14 @@ namespace DotNetFrame.CustomComm.HYNux
 
 
         private PCPortBase _port;
+        /// <summary>
+        /// User가 Port Open 여부
+        /// </summary>
         private bool _isUserOpen = false;
         private BackgroundWorker _bgWorker = new BackgroundWorker();
+        /// <summary>
+        /// 최근 통신 Data Set
+        /// </summary>
         private CommData _commData = new CommData();
         /// <summary>
         /// 현재 Buffer 길이
@@ -39,10 +59,20 @@ namespace DotNetFrame.CustomComm.HYNux
         /// 마지막 Read 시간
         /// </summary>
         private DateTime _recentReadTime;
+        /// <summary>
+        /// Port에 누적된 Buffer
+        /// </summary>
         private byte[] _stackBuffer;
+        /// <summary>
+        /// Port 종류
+        /// </summary>
         private PortType _type;
+        /// <summary>
+        /// Protocol 종류
+        /// </summary>
+        private ProtocolType _protocolType = ProtocolType.None;
 
-        public bool IsOpen
+        internal bool IsOpen
         {
             get
             {
@@ -52,36 +82,118 @@ namespace DotNetFrame.CustomComm.HYNux
                     return this._port.IsOpen;
             }
         }
-        public int NoneReceiveTimeoutTime { get; set; } = 3000;
-        public int ReceiveTimeoutTime { get; set; } = 5000;
         /// <summary>
-        /// Request 여부
+        /// Port 종류
         /// </summary>
-        /// <remarks>
-        /// Request 후 Receive 중인지에대한 여부
-        /// </remarks>
-        public bool IsRequesting { get; set; } = false;
-        public object PCPort { get { return this._port; } }
-        public PortType Type
+        internal PortType Type
         {
             get { return this._type; }
             set
             {
                 this._type = value;
-                if(value == PortType.Serial)
+                if (value == PortType.Serial)
                 {
                     this._port = new QYSerialPort();
                 }
-                else if(value == PortType.Ethernet)
+                else if (value == PortType.Ethernet)
                 {
                     this._port = new QYEthernet(false);
                 }
             }
         }
-        public ProtocolFrame Protocol { get; set; }
-        public ErrorCheck ErrorCheck { get; set; }
-        public bool CreErrCheck { get; set; } = false;
-        public string ProtocolName { get; set; } = string.Empty;
+        /// <summary>
+        /// 실 통신 Port
+        /// </summary>
+        internal PCPortBase PCPort { get { return this._port; } }
+        /// <summary>
+        /// 데이터가 들어오지 않는 Timeout 설정 시간
+        /// </summary>
+        internal int NoneReceiveTimeoutTime { get; set; } = 3000;
+        /// <summary>
+        /// 데이터가 들어왔는 온 Timeout 설정 시간
+        /// </summary>
+        internal int ReceiveTimeoutTime { get; set; } = 5000;
+        /// <summary>
+        /// Protocol 종류
+        /// </summary>
+        internal ProtocolType ProtocolType
+        {
+            get { return this._protocolType; }
+            set
+            {
+                this._protocolType = value;
+                switch (value)
+                {
+                    case ProtocolType.None:
+                        this.Protocol = null;
+                        this.ErrorCheck = null;
+                        break;
+                    case ProtocolType.HY_ModbusRTU:
+                        this.Protocol = new HYModbus(true);
+                        this.ErrorCheck = new ModbusRTUErrorCheck();
+                        break;
+                    case ProtocolType.HY_ModbusAscii:
+                        this.Protocol = new HYModbus(true) { IsAscii = true };
+                        this.ErrorCheck = new ModbusAsciiErrorCheck();
+                        break;
+                    case ProtocolType.HY_ModbusRTU_EXP:
+                        this.Protocol = new HYModbus(true) { IsEXP = true };
+                        this.ErrorCheck = new ModbusRTUErrorCheck();
+                        break;
+                    case ProtocolType.HY_ModbusAscii_EXP:
+                        this.Protocol = new HYModbus(true) { IsAscii = true, IsEXP = true };
+                        this.ErrorCheck = new ModbusAsciiErrorCheck();
+                        break;
+                    case ProtocolType.HY_ModbusTCP:
+                        this.Protocol = new HYModbus(true) { IsTCP = true };
+                        this.ErrorCheck = new ModbusRTUErrorCheck();
+                        break;
+                    case ProtocolType.PCLink_STD:
+                        this.Protocol = new PCLink(true);
+                        this.ErrorCheck = null;
+                        break;
+                    case ProtocolType.PCLink_SUM:
+                        this.Protocol = new PCLink(true) { _isSUM = true };
+                        this.ErrorCheck = new PCLinkErrorCheck();
+                        break;
+                    case ProtocolType.PCLink_STD_TH300500:
+                        this.Protocol = new PCLink(true) { _isTH3500 = true };
+                        this.ErrorCheck = null;
+                        break;
+                    case ProtocolType.PCLink_SUM_TD300500:
+                        this.Protocol = new PCLink(true) { _isSUM = true, _isTD3500 = true };
+                        this.ErrorCheck = new PCLinkErrorCheck();
+                        break;
+                    case ProtocolType.PCLink_SUM_TH300500:
+                        this.Protocol = new PCLink(true) { _isSUM = true, _isTH3500 = true };
+                        this.ErrorCheck = new PCLinkTHErrorCheck();
+                        break;
+                    default:
+                        this.Protocol = null;
+                        this.ErrorCheck = null;
+                        break;
+                }
+            }
+        }
+        /// <summary>
+        /// Protocol 처리 Class
+        /// </summary>
+        private ProtocolFrame Protocol { get; set; }
+        /// <summary>
+        /// Error Code 처리 Class
+        /// </summary>
+        internal ErrorCheck ErrorCheck { get; private set; }
+        /// <summary>
+        /// Request 진행중 여부
+        /// </summary>
+        /// <remarks>
+        /// Request 후 Receive 중인지에대한 여부
+        /// </remarks>
+        internal bool IsRequesting { get; set; } = false;
+        /// <summary>
+        /// Error Code 생성 여부
+        /// </summary>
+        internal bool CreErrCheck { get; set; } = false;
 
         public HYPort(PortType type)
         {
@@ -121,7 +233,6 @@ namespace DotNetFrame.CustomComm.HYNux
 
             return false;
         }
-
         public void Read()
         {
             if (this._isUserOpen == false
@@ -209,14 +320,13 @@ namespace DotNetFrame.CustomComm.HYNux
                             this._stackBuffer = null;
                         }
                     }
-                }
+                }//Protocol 처리 End
             }
 
             this.StackBuff?.Invoke("Stack Buff", this._stackBuffer);
 
             return;
         }
-
         private bool IsTimeout()
         {
             if (this._recentBufferLen <= 0)
@@ -260,7 +370,6 @@ namespace DotNetFrame.CustomComm.HYNux
 
             return false;
         }
-
         private byte GetErrorCode(byte[] rcvData)
         {
             byte errorCode = 0xFF;
@@ -282,26 +391,22 @@ namespace DotNetFrame.CustomComm.HYNux
 
             return errorCode;
         }
-
         public void Write(byte[] data)
         {
             if (this.IsRequesting || data == null) return;
-
-            byte[] temp = new byte[data.Length + 2];
 
             if (this.CreErrCheck && this.ErrorCheck != null)
             {
                 byte[] errCd = this.ErrorCheck.CreateCheckBytes(data);
 
-                if (this.ProtocolName == "ModbusRTU"
-                    || this.ProtocolName == "ModbusRTU_EXP")
-                {
+                if (this.ProtocolType == ProtocolType.HY_ModbusRTU
+                    || this.ProtocolType == ProtocolType.HY_ModbusRTU_EXP)
                     data = data.BytesAppend(errCd);
-                }
-                else if (this.ProtocolName == "ModbusAscii"
-                    || this.ProtocolName == "ModbusAscii_EXP"
-                    || this.ProtocolName == "PCLink_SUM"
-                    || this.ProtocolName == "PCLink_SUM_TD300500"
+                else if (
+                    this.ProtocolType == ProtocolType.HY_ModbusAscii
+                    || this.ProtocolType == ProtocolType.HY_ModbusAscii_EXP
+                    || this.ProtocolType == ProtocolType.PCLink_SUM
+                    || this.ProtocolType == ProtocolType.PCLink_SUM_TD300500
                     )
                 {
                     if (data[data.Length - 2] == 0x0D
@@ -323,7 +428,7 @@ namespace DotNetFrame.CustomComm.HYNux
                         data = data.BytesAppend(new byte[] { 0x0D, 0x0A });
                     }
                 }
-                else if (this.ProtocolName == "PCLink_SUM_TH300500")
+                else if (this.ProtocolType == ProtocolType.PCLink_SUM_TH300500)
                 {
                     if (data[data.Length - 3] == 0x03
                         && data[data.Length - 2] == 0x0D
@@ -345,6 +450,14 @@ namespace DotNetFrame.CustomComm.HYNux
                         data = data.BytesAppend(new byte[] { 0x03, 0x0D, 0x0A });
                     }
                 }
+            }
+            if(this.ProtocolType == ProtocolType.HY_ModbusTCP)
+            {
+                byte[] bLength = new byte[2];
+                bLength[0] = (byte)((data.Length >> 8) & 0xFF);
+                bLength[1] = (byte)( data.Length       & 0xFF);
+                bLength = QYUtils.BytesAppend(new byte[] { 0x00, 0x00, 0x00, 0x00 }, bLength);
+                data = QYUtils.BytesAppend(bLength, data);
             }
 
             this._commData = new CommData();

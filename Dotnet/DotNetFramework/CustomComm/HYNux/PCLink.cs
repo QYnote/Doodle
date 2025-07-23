@@ -18,7 +18,7 @@ namespace DotNetFrame.CustomComm.HYNux
         public bool _isTH3500 { get; set; } = false;
         public bool _isTD3500 { get; set; } = false;
 
-        private readonly string WhoCmd = "#02#30#31#57#48#4F#0D#0A";
+        private const string WhoCmd = "#02#30#31#57#48#4F#0D#0A";
         public byte[] TailBytes
         {
             get

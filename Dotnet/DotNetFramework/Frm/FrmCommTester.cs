@@ -336,80 +336,17 @@ namespace DotNet.Comm.Frm
             this.cboProtocolList.Width = this.cboPortList.Width;
             this.cboProtocolList.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cboProtocolList.DropDownWidth = (int)(this.cboProtocolList.CreateGraphics().MeasureString("PCLink_SUM_TD300500", this.cboProtocolList.Font).Width);
-            this.cboProtocolList.Items.AddRange(new string[]
-            {
-                "None",
-                "HY_ModbusRTU",
-                "HY_ModbusRTU_EXP",
-                "HY_ModbusAscii",
-                "HY_ModbusAscii_EXP",
-                "PCLink_STD",
-                "PCLink_STD_TH300500",
-                "PCLink_SUM",
-                "PCLink_SUM_TD300500",
-                "PCLink_SUM_TH300500",
-            });
+            this.cboProtocolList.Items.AddRange(QYUtils.EnumToItems<ProtocolType>());
             if (this.cboProtocolList.Items.Count > 0) this.cboProtocolList.SelectedIndex = 0;
             this.cboProtocolList.SelectedIndexChanged += (s, e) =>
             {
-                string item = (string)this.cboProtocolList.SelectedItem;
+                ProtocolType protocol = (ProtocolType)this.cboProtocolList.SelectedItem;
+                this._port.ProtocolType = protocol;
 
-                switch (item)
-                {
-                    case "ModbusRTU":
-                        this._port.Protocol = new Modbus(true);
-                        break;
-                    case "HY_ModbusRTU":
-                        this._port.Protocol = new HYModbus(true);
-                        this._port.ErrorCheck = new ModbusRTUErrorCheck();
-                        break;
-                    case "HY_ModbusAscii":
-                        this._port.Protocol = new HYModbus(true) { IsAscii = true };
-                        this._port.ErrorCheck = new ModbusAsciiErrorCheck();
-                        break;
-                    case "HY_ModbusRTU_EXP":
-                        this._port.Protocol = new HYModbus(true) { IsEXP = true };
-                        this._port.ErrorCheck = new ModbusRTUErrorCheck();
-                        break;
-                    case "HY_ModbusAscii_EXP":
-                        this._port.Protocol = new HYModbus(true) { IsAscii = true, IsEXP = true };
-                        this._port.ErrorCheck = new ModbusAsciiErrorCheck();
-                        break;
-                    case "PCLink_STD":
-                        this._port.Protocol = new PCLink(true);
-                        this._port.ErrorCheck = null;
-                        break;
-                    case "PCLink_SUM":
-                        this._port.Protocol = new PCLink(true) { _isSUM = true };
-                        this._port.ErrorCheck = new PCLinkErrorCheck();
-                        break;
-                    case "PCLink_STD_TH300500":
-                        this._port.Protocol = new PCLink(true) { _isTH3500 = true };
-                        this._port.ErrorCheck = null;
-                        break;
-                    case "PCLink_SUM_TD300500":
-                        this._port.Protocol = new PCLink(true) { _isSUM = true, _isTD3500 = true };
-                        this._port.ErrorCheck = new PCLinkErrorCheck();
-                        break;
-                    case "PCLink_SUM_TH300500":
-                        this._port.Protocol = new PCLink(true) { _isSUM = true, _isTH3500 = true };
-                        this._port.ErrorCheck = new PCLinkTHErrorCheck();
-                        break;
-                    default:
-                        this._port.Protocol = null;
-                        this._port.ErrorCheck = null;
-                        break;
-                }
-
-                if (this._port.Protocol != null)
-                {
-                    this._port.ProtocolName = item;
+                if (protocol != ProtocolType.None)
                     this.gvProtocolResult.Visible = true;
-                }
                 else
-                {
                     this.gvProtocolResult.Visible = false;
-                }
             };
 
             this.chkAddErrChk.Location = new Point(this.cboProtocolList.Location.X, this.cboProtocolList.Location.Y + this.cboProtocolList.Height + 3);
@@ -656,6 +593,7 @@ namespace DotNet.Comm.Frm
 
             #endregion Log Grid
 
+            #region Control Add
 
             this.Controls.Add(this.pnlSplit);
             this.pnlSplit.Panel1.Controls.Add(this.gbxPortSet);
@@ -691,6 +629,9 @@ namespace DotNet.Comm.Frm
             this.pnlLog.Controls.Add(this.gvBuffer);
             this.pnlLog.Controls.Add(this.txtLog);
 
+            #endregion Control Add
+            #region Visible Index
+            
             this.pnlPortSet_Common.BringToFront();
             this.gbxBaudRate.BringToFront();
             this.gbxParity.BringToFront();
@@ -709,6 +650,8 @@ namespace DotNet.Comm.Frm
             this.gvDataLog.BringToFront();
             this.gvBuffer.BringToFront();
             this.txtLog.BringToFront();
+
+            #endregion Visible Index
 
             InitPort();
 
