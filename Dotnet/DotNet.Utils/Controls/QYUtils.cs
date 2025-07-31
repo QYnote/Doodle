@@ -1,22 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace DotNet.Utils.Controls
 {
     static public class QYUtils
     {
-        static public readonly string Regex_IP = @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$";
+        public const string Regex_IP = @"^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$";
 
         #region 데이터 형태 변환
 
@@ -154,7 +143,7 @@ namespace DotNet.Utils.Controls
         /// <param name="bfKey">기존 Key</param>
         /// <param name="afKey">바꿀 Key</param>
         /// <returns>true : Success / false : Fail</returns>
-        static public bool DictKeyChange<TKey, TValue>(IDictionary<TKey, TValue> dic, TKey bfKey, TKey afKey)
+        static public bool DictKeyChange<TKey, TValue>(System.Collections.Generic.IDictionary<TKey, TValue> dic, TKey bfKey, TKey afKey)
         {
             if (dic.ContainsKey(afKey) || !dic.ContainsKey(bfKey)) { return false; }
 
@@ -173,7 +162,7 @@ namespace DotNet.Utils.Controls
         /// <param name="keyA">변경 Index A</param>
         /// <param name="keyB">변경 Index B</param>
         /// <returns></returns>
-        static public bool Swap<T>(this List<T> list, int keyA, int keyB)
+        static public bool Swap<T>(this System.Collections.Generic.List<T> list, int keyA, int keyB)
         {
             if(keyA < 0 || keyB < 0
                 || list.Count - 1 < keyA || list.Count - 1 < keyB)
@@ -224,10 +213,10 @@ namespace DotNet.Utils.Controls
                 return source;
 
             //리스트 인경우
-            else if (typeof(IList).IsAssignableFrom(type))
+            else if (typeof(System.Collections.IList).IsAssignableFrom(type))
             {
-                IList originList = (IList)source;
-                IList copyList = (IList)Activator.CreateInstance(type);
+                System.Collections.IList originList = (System.Collections.IList)source;
+                System.Collections.IList copyList = (System.Collections.IList)Activator.CreateInstance(type);
 
                 foreach (var item in originList)
                 {
@@ -243,7 +232,7 @@ namespace DotNet.Utils.Controls
                 object copy = Activator.CreateInstance(type);
 
                 //get;set; Property 복사
-                foreach (var info in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var info in type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
                 {
                     if(info.CanRead && info.CanWrite)
                     {
@@ -253,7 +242,7 @@ namespace DotNet.Utils.Controls
                 }
 
                 //get;set; 없는 Property 복사
-                foreach (var info in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var info in type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
                 {
                     var value = info.GetValue(source);
                     info.SetValue(copy, CopyFrom(value));
@@ -277,10 +266,10 @@ namespace DotNet.Utils.Controls
             try
             {
                 //존재하지 않으면 false 반환
-                if (File.Exists(filePath)) return false;
+                if (System.IO.File.Exists(filePath)) return false;
 
                 //파일 열기 시도
-                using (Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                using (System.IO.Stream stream = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.ReadWrite, System.IO.FileShare.None))
                 {
                     //열리면 false 반환
                     stream.Close();
@@ -290,7 +279,7 @@ namespace DotNet.Utils.Controls
             catch
             {
                 //안열리면 열려있다고 알리고 true 반환
-                MessageBox.Show("F000000");
+                System.Windows.Forms.MessageBox.Show("F000000");
                 return true;
             }
         }
@@ -330,10 +319,10 @@ namespace DotNet.Utils.Controls
         /// <summary>실행시킨 Class와 실행시킨 Method Name Debug로 뿌려주기</summary>
         static public void DebugWrite(string addStr = "Debug")
         {
-            StackFrame frame = new StackFrame(2);
-            MethodBase method = frame.GetMethod();
+            System.Diagnostics.StackFrame frame = new System.Diagnostics.StackFrame(2);
+            System.Reflection.MethodBase method = frame.GetMethod();
 
-            Debug.WriteLine(string.Format("{0:yyyy-MM-dd HH:mm:ss:fff} {1} - {2}() / {3}", DateTime.Now, method.Name, method.DeclaringType.Name, addStr));
+            System.Diagnostics.Debug.WriteLine(string.Format("{0:yyyy-MM-dd HH:mm:ss:fff} {1} - {2}() / {3}", DateTime.Now, method.Name, method.DeclaringType.Name, addStr));
         }
 
         #endregion 검사 End
@@ -347,7 +336,7 @@ namespace DotNet.Utils.Controls
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        static private void SlaveAddr_KeyPress_Hex(object sender, KeyPressEventArgs e)
+        static private void SlaveAddr_KeyPress_Hex(object sender, System.Windows.Forms.KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar)
                 && !(e.KeyChar == 'a' || e.KeyChar == 'A'
@@ -378,7 +367,7 @@ namespace DotNet.Utils.Controls
         /// <summary>
         /// .NET Winform TextBox IP만 입력가능하도록 변경
         /// </summary>
-        static public void TextBox_IP(object sender, KeyPressEventArgs e)
+        static public void TextBox_IP(object sender, System.Windows.Forms.KeyPressEventArgs e)
         {
             //1. 숫자 or . 을 입력한 것인지 검사
             //제어값 확인(Backspace, Delete 등)
@@ -395,7 +384,7 @@ namespace DotNet.Utils.Controls
             }
 
             //2. IP주소에 맞게 입력하는지 검사
-            TextBox txtbox = sender as TextBox;
+            System.Windows.Forms.TextBox txtbox = sender as System.Windows.Forms.TextBox;
             string text = txtbox.Text + e.KeyChar;
             int dotCnt = text.Count(c => c == '.'); //점 입력 개수
             /*Regex문자 해석
@@ -447,22 +436,22 @@ namespace DotNet.Utils.Controls
         /// </summary>
         /// <param name="dock">Dock 방향</param>
         /// <returns></returns>
-        static public Label CreateSplitLine(DockStyle dock, int thickness = 4)
+        static public System.Windows.Forms.Label CreateSplitLine(System.Windows.Forms.DockStyle dock, int thickness = 4)
         {
-            Label lbl = new Label();
+            System.Windows.Forms.Label lbl = new System.Windows.Forms.Label();
             lbl.Dock = dock;
-            lbl.Margin = new Padding(3);
-            lbl.BackColor = Color.DarkGray;
+            lbl.Margin = new System.Windows.Forms.Padding(3);
+            lbl.BackColor = System.Drawing.Color.DarkGray;
             lbl.Text = "";
-            lbl.BorderStyle = BorderStyle.Fixed3D;
+            lbl.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             lbl.AutoSize = false;
-            if (dock == DockStyle.Left || dock == DockStyle.Right)
+            if (dock == System.Windows.Forms.DockStyle.Left || dock == System.Windows.Forms.DockStyle.Right)
             {
-                lbl.Size = new Size(thickness, lbl.Height);
+                lbl.Size = new System.Drawing.Size(thickness, lbl.Height);
             }
-            else if (dock == DockStyle.Top || dock == DockStyle.Bottom)
+            else if (dock == System.Windows.Forms.DockStyle.Top || dock == System.Windows.Forms.DockStyle.Bottom)
             {
-                lbl.Size = new Size(lbl.Width, thickness);
+                lbl.Size = new System.Drawing.Size(lbl.Width, thickness);
             }
 
             return lbl;
