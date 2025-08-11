@@ -83,31 +83,22 @@ namespace DotNet.Database
 
             SqlCeDataAdapter adapter = null;
             DataSet ds = null;
-            DataTable dt = null;
+            int idx = 0;
 
             try
             {
                 SqlCeConnection conn = this.GetConnection();
 
                 ds = new DataSet();
+                adapter = new SqlCeDataAdapter(query, conn);
+                adapter.Fill(ds);
 
                 string[] queryAry = query.Split(';');
 
-                for (int i = 0; i < queryAry.Length; i++)
-                {
-                    queryAry[i] = queryAry[i].Trim();
-                    if (queryAry[i] == string.Empty) continue;
-
-                    dt = new DataTable();
-                    adapter = new SqlCeDataAdapter(queryAry[i], conn);
-                    adapter.Fill(dt);
-
-                    ds.Tables.Add(dt);
-                }
             }
             catch (Exception ex)
             {
-                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                base.RunLogEvent(string.Format("Query Error: {0}\r\nQuery Index - {1}\r\n\r\nLog:{2}", ex.Message, idx, query));
             }
             finally
             {
@@ -141,16 +132,8 @@ namespace DotNet.Database
                 cmd = new SqlCeCommand(query, this.GetConnection());
                 if (this._transaction != null) cmd.Transaction = this._transaction;
 
-                string[] queryAry = query.Split(';');
-
-                for (int i = 0; i < queryAry.Length; i++)
-                {
-                    queryAry[i] = queryAry[i].Trim();
-                    if (queryAry[i] == string.Empty) continue;
-
-                    cmd.CommandText = queryAry[i];
-                    cmd.ExecuteNonQuery();
-                }
+                cmd.CommandText = query;
+                cmd.ExecuteNonQuery();
 
                 result = true;
             }

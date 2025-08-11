@@ -55,6 +55,8 @@ namespace DotNetFramework.Frm
         {
             InitializeComponent();
             InitUI();
+
+            this._ds = new DataSet();
         }
 
         private void InitUI()
@@ -237,54 +239,69 @@ namespace DotNetFramework.Frm
 
             try
             {
-                string txt = this.txtQuery.Text;
+                string[] txts = this.txtQuery.Text.Split(';');
+                string logTxt = string.Empty;
 
                 this.cboTable.Items.Clear();
+                this._ds.Tables.Clear();
                 this.gvTable.DataSource = null;
+                bool result = false;
 
-                if (txt.ToUpper().Contains("INSERT")
-                    || txt.ToUpper().Contains("UPDATE")
-                    || txt.ToUpper().Contains("DELETE"))
+                for (int i = 0; i < txts.Length; i++)
                 {
-                    bool result = false;
-                    this._DB.BeginTransaction();
+                    string txt = txts[i].Trim();
 
-                    result = this._DB.ExcuteNonQuery(txt);
+                    if (txt == string.Empty) continue;
 
-                    this._DB.EndTransaction(result);
-
-                    if (result)
+                    if (txt.ToUpper().Contains("INSERT")
+                        || txt.ToUpper().Contains("UPDATE")
+                        || txt.ToUpper().Contains("DELETE"))
                     {
-                        //Query 로그 저장
-                        string logText = $"{DateTime.Now}{Environment.NewLine}{txt}{Environment.NewLine}{Environment.NewLine}";
-                        string logpath = string.Format("{0}\\{1}.txt", this.txtSavepath.Text, "sqlLog");
+                        this._DB.BeginTransaction();
 
-                        Directory.CreateDirectory(Path.GetDirectoryName(logpath));
+                        result = this._DB.ExcuteNonQuery(txt);
 
-                        File.AppendAllText(logpath, logText);
-
-                        MessageBox.Show("Query 완료");
-                    }
-                }
-                else if (txt.ToUpper().Contains("SELECT"))
-                {
-                    this._ds = this._DB.ExcuteQuery<DataSet>(txt);
-
-                    if (this._ds != null)
-                    {
-                        foreach (DataTable dt in this._ds.Tables)
+                        if (result)
                         {
-                            this.cboTable.Items.Add(dt.TableName);
+                            logTxt += string.Format("{0}{1}", Environment.NewLine, txt);
+                        }
+
+                        this._DB.EndTransaction(result);
+                    }
+                    else if (txt.ToUpper().Contains("SELECT"))
+                    {
+                        DataTable dt = this._DB.ExcuteQuery<DataTable>(txt);
+
+                        if (dt != null)
+                        {
+                            dt.TableName = string.Format("Table{0}", this.cboTable.Items.Count + 1);
+                            this._ds.Tables.Add(dt.Copy());
+                        }
+
+                        this.cboTable.Items.Add(dt.TableName);
+
+                        if (this.cboTable.Items.Count > 0)
+                        {
+                            if (this.cboTable.SelectedIndex == 0)
+                                ChangeTable();
+                            else
+                                this.cboTable.SelectedIndex = 0;
                         }
                     }
+                }
 
-                    if (this.cboTable.Items.Count > 0)
-                    {
-                        if (this.cboTable.SelectedIndex == 0)
-                            ChangeTable();
-                        else
-                            this.cboTable.SelectedIndex = 0;
-                    }
+                if (result)
+                {
+                    //Query 로그 저장
+                    string logText = string.Format("{0}{0}{1}{2}",
+                        Environment.NewLine, DateTime.Now, logTxt);
+                    string logpath = string.Format("{0}\\{1}.txt", this.txtSavepath.Text, "sqlLog");
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(logpath));
+
+                    File.AppendAllText(logpath, logText);
+
+                    MessageBox.Show("Query 완료");
                 }
             }
             catch(Exception ex)
