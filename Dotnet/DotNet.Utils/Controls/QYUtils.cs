@@ -285,10 +285,11 @@ namespace DotNet.Utils.Controls
         }
 
         /// <summary>
-        /// Array에서 Array 찾기
+        /// Array에서 Array의 시작 Index 찾기
         /// </summary>
         /// <param name="source">찾을 Array</param>
         /// <param name="pattern">검사할 Array</param>
+        /// <param name="startIdx">시작 Index</param>
         /// <returns></returns>
         static public int Find<T>(this T[] source, T[] pattern, int startIdx = 0) where T : IEquatable<T>
         {
