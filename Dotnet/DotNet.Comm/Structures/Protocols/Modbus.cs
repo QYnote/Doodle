@@ -26,27 +26,26 @@ namespace DotNet.Comm.Structures.Protocols
             byte cmd;
 
             //Header : Addr[1] + Cmd[1]
-            if (buffer.Length < 2) return null;
+            if (buffer.Length < headerLen) return null;
 
             while (idxHandle < buffer.Length - 1)
             {
                 //Header 시작위치 확인
-                //Cmd는 Error Code로 날라올 수 있기 때문에 Addr만 먼저 찾기
-                startIdx = Array.IndexOf(buffer, reqBytes[0], idxHandle++);
-                if (startIdx < 0) break;
+                startIdx = buffer.Find(new byte[] { reqBytes[0], reqBytes[1] }, idxHandle);
+                if(startIdx < 0)
+                    //Error Cmd가 날라온건지 확인
+                    startIdx = buffer.Find(new byte[] { reqBytes[0], (byte)(reqBytes[1] + 0x80) }, idxHandle);
+                idxHandle++;
+                if (startIdx < 0) continue;
 
                 //FuncCode
-                if (buffer.Length < startIdx + headerLen) break;
-                cmd = buffer[startIdx + headerLen - 1];
-
-                //Cmd가 0x80보다 높은데 Request와 다른경우
-                if (cmd >= 0x80 && (cmd - 0x80) != reqBytes[1])
-                    continue;
+                if (buffer.Length < startIdx + headerLen) continue;
+                cmd = reqBytes[1];
 
                 //기능코드별 Frame 추출
                 if (cmd == 0x01 || cmd == 0x02 || cmd == 0x03 || cmd == 0x04)
                 {
-                    //기본: Addr[1] + Cmd[1] + ByteLen[1] + Data[Len]
+                    //기본: Addr[1] + Cmd[1] + ByteCount[1] + Data[ByteCount]
                     int byteLen = buffer[startIdx + headerLen];
 
                     frameLen = headerLen + 1 + byteLen + base.ErrCodeLength;
