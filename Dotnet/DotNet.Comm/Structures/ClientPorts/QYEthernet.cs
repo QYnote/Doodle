@@ -14,11 +14,7 @@ namespace DotNet.Comm.Structures.ClientPorts
         #region Fields
         /// <summary>연결 Ethernet Socket</summary>
         private Socket _clientSocket;
-        /// <summary>비동기 연결 시간 체크용 Stopwatch</summary>
-        private Stopwatch _sw = new Stopwatch();
-        /// <summary>비동기 연결 시 읽어들인 Data</summary>
-        private Queue<byte[]> _readingData = new Queue<byte[]>();
-
+        private byte[] _asyncBuffer;
         #endregion Fields
         #region 설정용 Property
 
@@ -58,7 +54,7 @@ namespace DotNet.Comm.Structures.ClientPorts
                 else
                 {
                     if (this._clientSocket == null
-                        || this._sw.ElapsedMilliseconds > this.AsyncTimeout)
+                        || (this._clientSocket != null && this._clientSocket.Connected == false))
                         return false;
                 }
 
@@ -117,7 +113,6 @@ namespace DotNet.Comm.Structures.ClientPorts
                             asyncEvent.SetBuffer(new byte[this.MaxBufferSize], 0, this.MaxBufferSize);
                             asyncEvent.UserToken = this._clientSocket;
                             asyncEvent.Completed += AsyncEvent_Completed;
-                            this._sw.Restart();
 
                             this._clientSocket.ReceiveAsync(asyncEvent);
                         }
@@ -127,10 +122,10 @@ namespace DotNet.Comm.Structures.ClientPorts
 
                     return true;
                 }
-                catch
+                catch(Exception ex)
                 {
                     this._clientSocket = null;
-                    base.LogRun("[Error]Port Open Fail");
+                    base.LogRun(string.Format("[Error]Port Open Fail - {0}", ex.Message));
                 }
             }
             else
@@ -145,63 +140,57 @@ namespace DotNet.Comm.Structures.ClientPorts
         /// </summary>
         private void AsyncEvent_Completed(object sender, SocketAsyncEventArgs e)
         {
-            if (this.IsOpen == true)
+            //연결 끊김 확인
+            if (this._clientSocket != null && this._clientSocket.Connected == false) return;
+            Socket client = sender as Socket;
+
+            if (client.Connected && e.BytesTransferred > 0)
             {
-                if (e.SocketError == SocketError.Success
-                    && e.BytesTransferred > 0)
-                {
-                    try
-                    {
-                        byte[] buffer = new byte[e.BytesTransferred];
-                        Buffer.BlockCopy(e.Buffer, 0, buffer, 0, buffer.Length);
+                this._asyncBuffer = new byte[e.BytesTransferred];
+                Buffer.BlockCopy(e.Buffer, 0, this._asyncBuffer, 0, this._asyncBuffer.Length);
 
-                        this._readingData.Enqueue(buffer);
-
-                        this._clientSocket.ReceiveAsync(e);
-                        this._sw.Restart();
-                    }
-                    catch
-                    {
-                        //this._readingData.Clear();
-                    }
-                }
-                else
-                {
-                    //Server 닫힘 감지
-                    this.Close();
-                }
+                this._clientSocket.ReceiveAsync(e);
             }
         }
         public override bool Close()
         {
             //동기식 연결일 경우 IsOpen일 경우 Close처리
             //비동기식 연결일 경우 바로 Close처리
-            if (this.IsOpen)
-            {
-                try
-                {
-                    this._clientSocket.Shutdown(SocketShutdown.Both);
-                    this._clientSocket.Close();      //Socket 닫기
+            if (this.IsSync) return SyncClose();
+            else return AsyncClose();
+        }
 
-                    this._readingData.Clear();
-                }
-                catch
-                {
-                    base.LogRun("[Error]Port Close Fail");
-                }
-                finally
-                {
-                    this._clientSocket = null;
-                    this._sw.Stop();
-                    this._sw.Reset();
-                }
+        private bool SyncClose()
+        {
+            if (this._clientSocket != null && this._clientSocket.Connected)
+            {
+                this._clientSocket.Shutdown(SocketShutdown.Both);
+                this._clientSocket.Close();      //Socket 닫기
+                this._clientSocket = null;
+
+                return true;
             }
             else
             {
                 base.LogRun("[Alart]Port already close");
+                return true;
             }
+        }
+        private bool AsyncClose()
+        {
+            if(this._clientSocket != null && this._clientSocket.Connected)
+            {
+                this._clientSocket.Shutdown(SocketShutdown.Both);
+                this._clientSocket.Close();      //Socket 닫기
+                this._clientSocket = null;
 
-            return true;
+                return true;
+            }
+            else
+            {
+                base.LogRun("[Alart]Port already close");
+                return true;
+            }
         }
 
         public override byte[] Read()
@@ -233,30 +222,11 @@ namespace DotNet.Comm.Structures.ClientPorts
         /// <returns>PCPort에 담겨있던 Buffer</returns>
         private byte[] AsyncRead()
         {
-            int readCount = this._readingData.Count;
-
-            if (readCount > 0)
+            if(this._asyncBuffer != null && this._asyncBuffer.Length > 0)
             {
-                byte[] readBytes = null;
+                byte[] readBytes = new byte[this._asyncBuffer.Length];
 
-                for (int i = 0; i < readCount; i++)
-                {
-                    byte[] readData = this._readingData.Dequeue();
-
-                    if (readBytes == null)
-                        readBytes = readData;
-                    else
-                    {
-                        if (readData == null) continue;
-                        byte[] containBytes = new byte[readBytes.Length + readData.Length];
-
-                        //옮길 Array, 옮길 Array 시작 index, 넘겨받은 Array, 넘겨받을 Array index, 옮길 Array 수
-                        Buffer.BlockCopy(readBytes, 0, containBytes, 0, readBytes.Length);
-                        Buffer.BlockCopy(readData, 0, containBytes, readBytes.Length, readData.Length);
-
-                        readBytes = containBytes;
-                    }
-                }
+                Buffer.BlockCopy(this._asyncBuffer, 0, readBytes, 0, readBytes.Length);
 
                 return readBytes;
             }
@@ -286,7 +256,7 @@ namespace DotNet.Comm.Structures.ClientPorts
         /// <param name="bytes">전송할 Byte Array</param>
         private void AsyncWrite(byte[] bytes)
         {
-            if (this.IsOpen && bytes != null)
+            if (this._clientSocket.Connected && bytes != null)
             {
                 SocketAsyncEventArgs args = new SocketAsyncEventArgs();
                 args.SetBuffer(bytes, 0, bytes.Length);

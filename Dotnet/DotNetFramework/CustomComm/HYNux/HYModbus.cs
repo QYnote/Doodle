@@ -31,7 +31,7 @@ namespace DotNetFrame.CustomComm.HYNux
             byte[] headerBytes;
             int startIdx,
                 idxHandle = 0,
-                headerLen,
+                headerLen = 2,
                 frameLen;
             byte cmd;
 
@@ -42,7 +42,7 @@ namespace DotNetFrame.CustomComm.HYNux
                 //Ascii: ':'[1] + Addr[2] + Cmd[2]
                 if (reqBytes.Length < 3) return null;
 
-                headerBytes = new byte[] { reqBytes[0], reqBytes[1], reqBytes[2] };
+                headerBytes = new byte[] { reqBytes[0], reqBytes[1], reqBytes[2], reqBytes[3], reqBytes[4] };
                 headerLen = headerBytes.Length;
             }
             else if(this.IsTCP && this.IsAscii == false)
@@ -50,8 +50,7 @@ namespace DotNetFrame.CustomComm.HYNux
                 //TCP: Transaction ID[2] + Protocol ID[2] + DataLength[2] + Addr[1] + Cmd[1]
                 if (reqBytes.Length < 8) return null;
 
-                headerBytes = new byte[] { reqBytes[6] };
-                headerLen = headerBytes.Length + 7;
+                headerBytes = new byte[] { reqBytes[6], reqBytes[7] };
                 idxHandle = 6;
             }
             else
@@ -59,8 +58,7 @@ namespace DotNetFrame.CustomComm.HYNux
                 //기본: Addr[1] + Cmd[1]
                 if (reqBytes.Length < 2) return null;
 
-                headerBytes = new byte[] { reqBytes[0] };
-                headerLen = headerBytes.Length + 1;
+                headerBytes = new byte[] { reqBytes[0], reqBytes[1] };
             }
 
             while (idxHandle < buffer.Length - 1)
@@ -68,6 +66,24 @@ namespace DotNetFrame.CustomComm.HYNux
                 //Header 시작위치 확인
                 //Cmd는 Error Code로 날라올 수 있기 때문에 Addr만 먼저 찾기
                 startIdx = QYUtils.Find(buffer, headerBytes, idxHandle++);
+                if (startIdx < 0)
+                {
+                    //Error Cmd가 날라온건지 확인
+                    if(this.IsAscii == false)
+                    {
+                        startIdx = buffer.Find(new byte[] { headerBytes[0], (byte)(headerBytes[1] + 0x80) }, idxHandle);
+                    }
+                    else
+                    {
+                        cmd = (byte)(Convert.ToByte(Encoding.ASCII.GetString(new byte[] { headerBytes[3], headerBytes[4] }), 16) + 0x80);
+                        byte[] errCmd = Encoding.ASCII.GetBytes(cmd.ToString("X2"));
+                        headerBytes[3] = errCmd[0];
+                        headerBytes[4] = errCmd[1];
+
+                        startIdx = QYUtils.Find(buffer, headerBytes, idxHandle++);
+                    }
+                }
+                idxHandle++;
                 if (startIdx < 0) continue;
 
                 //FuncCode
@@ -155,10 +171,18 @@ namespace DotNetFrame.CustomComm.HYNux
                     frameLen = headerLen + bodyLen + base.ErrCodeLength;
                 }
 
+
                 //CRLF[2]
                 if (this.IsAscii) frameLen += 2;
 
                 if (buffer.Length < startIdx + frameLen) continue;
+
+                //TCP: Transaction ID[2] + Protocol ID[2] + DataLength[2]
+                if (this.IsTCP)
+                {
+                    startIdx -= 6;
+                    frameLen += 6;
+                }
 
                 //Data 추출
                 byte[] frameBytes = new byte[frameLen];
@@ -261,8 +285,10 @@ namespace DotNetFrame.CustomComm.HYNux
         }
         public override bool ReceiveConfirm(byte[] rcvBytes)
         {
-            if (this.IsAscii == false)
+            if (this.IsAscii == false && this.IsTCP == false)
                 return base.ReceiveConfirm(rcvBytes);
+            else if (this.IsAscii == false && this.IsTCP == true)
+                return true;
             else
             {
                 byte cmd = Convert.ToByte(Encoding.ASCII.GetString(new byte[] { rcvBytes[3], rcvBytes[4] }), 16);

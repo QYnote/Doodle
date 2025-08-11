@@ -146,7 +146,7 @@ namespace DotNetFrame.CustomComm.HYNux
                         break;
                     case ProtocolType.HY_ModbusTCP:
                         this.Protocol = new HYModbus(true) { IsTCP = true };
-                        this.ErrorCheck = new ModbusRTUErrorCheck();
+                        this.ErrorCheck = null;
                         break;
                     case ProtocolType.PCLink_STD:
                         this.Protocol = new PCLink(true);
@@ -222,7 +222,6 @@ namespace DotNetFrame.CustomComm.HYNux
             if (this._isUserOpen == true)
             {
                 if(this._port != null
-                    && this._port.IsOpen == true
                     && this._port.Close()
                     )
                 {

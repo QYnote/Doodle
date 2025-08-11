@@ -280,6 +280,14 @@ namespace DotNet.Comm.Frm
             this.txtEthernetIP.TextAlign = HorizontalAlignment.Center;
             this.txtEthernetIP.Text = "127.0.0.1";
             this.txtEthernetIP.KeyPress += QYUtils.TextBox_IP;
+            this.txtEthernetIP.TextChanged += (s, e) =>
+            {
+                System.Net.IPAddress ip = null;
+                if (System.Net.IPAddress.TryParse(this.txtEthernetIP.Text, out ip))
+                {
+                    this.Ethernet.IP = this.txtEthernetIP.Text;
+                }
+            };
 
             //Port No
             this.txtPortNo.Location = new Point(this.txtEthernetIP.Location.X, this.txtEthernetIP.Location.Y + this.txtEthernetIP.Height + 3);
@@ -289,6 +297,10 @@ namespace DotNet.Comm.Frm
             this.txtPortNo.Minimum = 0;
             this.txtPortNo.Maximum = int.MaxValue;
             this.txtPortNo.Value = 5000;
+            this.txtPortNo.ValueChanged += (s, e) =>
+            {
+                this.Ethernet.PortNo = Convert.ToInt32(this.txtPortNo.Value);
+            };
 
             #endregion
 
@@ -535,7 +547,7 @@ namespace DotNet.Comm.Frm
 
             #endregion
             #region Log Grid
-
+            
             this.gbxLog.Dock = DockStyle.Fill;
 
             this.pnlLog.Dock = DockStyle.Right;
@@ -669,6 +681,10 @@ namespace DotNet.Comm.Frm
             {
                 WriteLog(title, data);
             };
+            port.PCPort.Log += (msg) =>
+            {
+                MessageBox.Show(msg);
+            };
         }
 
         private void InitDataLogGrid()
@@ -676,6 +692,7 @@ namespace DotNet.Comm.Frm
             this._dtDataResult.Rows.Clear();
             this._dtProtocolResult.Rows.Clear();
             this._dtDataLog.Rows.Clear();
+            this._dtBuffer.Rows.Clear();
             this._dtDataLog.Columns.Clear();
             this.gvDataLog.Columns.Clear();
             this.txtLog.Text = string.Empty;
@@ -759,8 +776,8 @@ namespace DotNet.Comm.Frm
             }
             else if(this._port.Type == PortType.Ethernet)
             {
-                this.txtEthernetIP.Text = "127.0.0.1";
-                this.txtPortNo.Value = 5000;
+                this.txtEthernetIP.Text = "192.168.2.133";
+                this.txtPortNo.Value = 0502;
 
                 this.Ethernet.IP = this.txtEthernetIP.Text;
                 this.Ethernet.PortNo = Convert.ToInt32(this.txtPortNo.Value);

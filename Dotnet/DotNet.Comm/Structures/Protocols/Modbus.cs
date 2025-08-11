@@ -40,7 +40,7 @@ namespace DotNet.Comm.Structures.Protocols
 
                 //FuncCode
                 if (buffer.Length < startIdx + headerLen) continue;
-                cmd = reqBytes[1];
+                cmd = reqBytes[startIdx + 1];
 
                 //기능코드별 Frame 추출
                 if (cmd == 0x01 || cmd == 0x02 || cmd == 0x03 || cmd == 0x04)
