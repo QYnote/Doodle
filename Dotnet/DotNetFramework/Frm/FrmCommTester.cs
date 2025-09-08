@@ -61,7 +61,7 @@ namespace DotNet.Comm.Frm
 
         #endregion UI Controls
 
-        private int[] _baudrateList = new int[] { 9600, 19200, 38400, 57600, 115200 };
+        private int[] _baudrateList = new int[] { 9600, 19200, 38400, 57600, 115200, 921600 };
         private byte[] _databitsList = new byte[] { 7, 8 };
         private DataTable _dtDataLog = new DataTable();
         private DataTable _dtDataResult = new DataTable();
@@ -126,7 +126,7 @@ namespace DotNet.Comm.Frm
             this.pnlSplit.Panel1.Padding = new Padding(3);
             this.pnlSplit.Panel2.Padding = this.pnlSplit.Panel1.Padding;
             this.pnlSplit.Panel1MinSize = 20;
-            this.pnlSplit.SplitterDistance = 20;
+            this.pnlSplit.SplitterDistance = 22;
 
             #region Port 설정
             this.gbxPortSet.Dock = DockStyle.Left;

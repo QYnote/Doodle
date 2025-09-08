@@ -31,10 +31,10 @@ namespace DotNet.Comm.Structures.Protocols
             while (idxHandle < buffer.Length - 1)
             {
                 //Header 시작위치 확인
-                startIdx = buffer.Find(new byte[] { reqBytes[0], reqBytes[1] }, idxHandle);
+                startIdx = QYUtils.Find(buffer, new byte[] { reqBytes[0], reqBytes[1] }, idxHandle);
                 if(startIdx < 0)
                     //Error Cmd가 날라온건지 확인
-                    startIdx = buffer.Find(new byte[] { reqBytes[0], (byte)(reqBytes[1] + 0x80) }, idxHandle);
+                    startIdx = QYUtils.Find(buffer, new byte[] { reqBytes[0], (byte)(reqBytes[1] + 0x80) }, idxHandle);
                 idxHandle++;
                 if (startIdx < 0) continue;
 

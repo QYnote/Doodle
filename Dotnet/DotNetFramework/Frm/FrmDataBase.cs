@@ -276,9 +276,9 @@ namespace DotNetFramework.Frm
                         {
                             dt.TableName = string.Format("Table{0}", this.cboTable.Items.Count + 1);
                             this._ds.Tables.Add(dt.Copy());
-                        }
 
-                        this.cboTable.Items.Add(dt.TableName);
+                            this.cboTable.Items.Add(dt.TableName);
+                        }
 
                         if (this.cboTable.Items.Count > 0)
                         {
