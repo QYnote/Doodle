@@ -147,10 +147,10 @@ namespace DotNet.Comm.Structures.Protocols
                 case 0x02: this.Get_ReadCoils(dic, reqBytes, rcvBytes); break;
                 case 0x03:
                 case 0x04: this.Get_ReadHoldingRegister(dic, reqBytes, rcvBytes); break;
-                case 0x05: this.Get_WriteSingleCoils(dic, reqBytes); break;
-                case 0x06: this.Get_WriteSingleRegister(dic, reqBytes); break;
-                case 0x0F: this.Get_WriteMultipleCoils(dic, reqBytes); break;
-                case 0x10: this.Get_WriteMultipleRegister(dic, reqBytes); break;
+                case 0x05: this.Get_WriteSingleCoils(dic, rcvBytes); break;
+                case 0x06: this.Get_WriteSingleRegister(dic, rcvBytes); break;
+                case 0x0F: this.Get_WriteMultipleCoils(dic, rcvBytes); break;
+                case 0x10: this.Get_WriteMultipleRegister(dic, rcvBytes); break;
             }
         }
         #region Command Get Process
