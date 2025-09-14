@@ -16,6 +16,7 @@ namespace DotNetFramework
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            //Application.Run(new FrmSolution());
             Application.Run(new FrmSolution());
         }
     }

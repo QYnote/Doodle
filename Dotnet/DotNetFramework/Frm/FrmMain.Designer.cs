@@ -1,6 +1,6 @@
-﻿namespace DotNetFramework
+﻿namespace DotNetFramework.Frm
 {
-    partial class FrmSolution
+    partial class FrmMain
     {
         /// <summary>
         /// Required designer variable.

@@ -43,6 +43,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\QYCircularProgressBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\QYCircularProgressBar.Designer.cs">
+      <DependentUpon>QYCircularProgressBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\QYLeftMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\QYLeftMenu.Designer.cs">
+      <DependentUpon>QYLeftMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controls\QYUtils.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -81,8 +93,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -95,9 +107,11 @@
     <None Include="Resources\Comm_32x32.png" />
     <Content Include="Resources\Connect_Green_32x32.png" />
     <Content Include="Resources\Connect_Red_32x32.png" />
+    <None Include="Resources\FrmTitle_Button_16x16.png" />
     <Content Include="Resources\GreenSync_16x16.png" />
     <None Include="Resources\Image_32x32.png" />
     <Content Include="Resources\LAN_Come_16x16.png" />
+    <None Include="Resources\Menu_Hamburgar_32x32.png" />
     <Content Include="Resources\Plus_00_32x32.png" />
     <Content Include="Resources\RedPower_16x16.png" />
     <Content Include="Resources\Serial_Come_16x16.png" />

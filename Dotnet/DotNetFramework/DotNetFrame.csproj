@@ -82,11 +82,23 @@
     <Compile Include="FrmSolution.Designer.cs">
       <DependentUpon>FrmSolution.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrmSolution_NonUse.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmSolution_NonUse.Designer.cs">
+      <DependentUpon>FrmSolution_NonUse.cs</DependentUpon>
+    </Compile>
     <Compile Include="Frm\FrmDataBase.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Frm\FrmDataBase.Designer.cs">
       <DependentUpon>FrmDataBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Frm\FrmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm\FrmMain.Designer.cs">
+      <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
     <Compile Include="Frm\FrmServer.cs">
       <SubType>Form</SubType>

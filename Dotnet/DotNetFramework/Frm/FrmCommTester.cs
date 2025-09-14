@@ -1,5 +1,4 @@
 ﻿using DotNet.Comm.Structures.ClientPorts;
-using DotNet.Comm.Structures.Protocols;
 using DotNet.Utils.Controls;
 using DotNetFrame.CustomComm.HYNux;
 using System;
@@ -734,13 +733,15 @@ namespace DotNet.Comm.Frm
             AddLogEvent(this._port);
             if (this._port.Type == PortType.Serial)
             {
-                this.Serial.PortName = (string)this.cboPortList.Items[0];
+                if(this.cboPortList.Items.Count > 0)
+                    this.Serial.PortName = (string)this.cboPortList.Items[0];
                 this.Serial.BaudRate = (int)this._baudrateList[0];
                 this.Serial.Parity = (Parity)QYUtils.EnumToItems<Parity>()[0];
                 this.Serial.StopBits = (StopBits)QYUtils.EnumToItems<StopBits>()[0];
                 this.Serial.DataBits = (int)this._databitsList[1];
 
-                this.cboPortList.SelectedIndex = 0;
+                if(this.cboPortList.Items.Count > 0)
+                    this.cboPortList.SelectedIndex = 0;
                 foreach (RadioButton rdo in this.gbxBaudRate.Controls)
                 {
                     if((int)rdo.Tag == this.Serial.BaudRate)

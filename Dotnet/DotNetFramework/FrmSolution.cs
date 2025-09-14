@@ -1,12 +1,10 @@
 ﻿using DotNet.Utils.Controls;
-using DotNetFramework.Frm;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -15,292 +13,184 @@ namespace DotNetFramework
 {
     public partial class FrmSolution : Form
     {
-        private ToolStripButton btnCommTester;
-        private ToolStripButton btnSensorToImage;
-        private ToolStripButton btnDataBase = new ToolStripButton();
-        private ToolStripButton btnTest;
+        #region UI Controls
+
+        private QYLeftMenu leftMenu = new QYLeftMenu();
+        private QYLeftMenuItem btnCommTester = new QYLeftMenuItem();
+        private QYLeftMenuItem btnDataBase = new QYLeftMenuItem();
+
+        private Panel pnlTitleBar = new Panel();
+        private Label lblTitleText = new Label();
+        private Button btnClose = new Button();
+        private Button btnMinimize = new Button();
+        private Button btnSize = new Button();
+
+        private Panel pnlBody = new Panel();
+
+        #endregion UI Controls End
+
+        private Form _curForm = null;
+        private string txtTitle = "QYDoodleProgram";
 
         public FrmSolution()
         {
             InitializeComponent();
-
-            this.IsMdiContainer = true;
-            this.Text = ".Net FrameWork(WinForm)";
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.Size = new Size(1200, 800);
-
-            this.IsMdiContainer = true;
-
             InitUI();
         }
 
         private void InitUI()
         {
-            //MenuBar
-            ToolStrip TopMenu = new ToolStrip();
-            TopMenu.ImageScalingSize = new Size(32, 32);
-            TopMenu.ItemClicked += (sender, e) => { MdiOpen(e.ClickedItem.Name); };
+            this.ControlBox = false;
+            this.Text = string.Empty;
+            this.Size = new Size(1150, 750);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.MaximizedBounds = Screen.FromControl(this).WorkingArea;
 
-            this.btnCommTester = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
-            this.btnCommTester.Name = "CommTester";
+            #region Left Menu
+
+            this.leftMenu.BackColor = Color.LightSkyBlue;
+            this.leftMenu.TopMainClick = (s, e) => { CallForm("Main"); };
+            this.leftMenu.ItemClick += (s, e) => { CallForm((s as Control).Name); };
+
+            this.btnCommTester.Name = "CommTest";
             this.btnCommTester.Image = DotNet.Utils.Properties.Resources.Connect_32x32;
-            this.btnCommTester.ToolTipText = "통신테스터기";
+            this.btnCommTester.Text = "통신 테스터기";
 
-            this.btnSensorToImage = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
-            this.btnSensorToImage.Name = "SensorToImage";
-            this.btnSensorToImage.Image = DotNet.Utils.Properties.Resources.Image_32x32;
-            this.btnSensorToImage.ToolTipText = "센서이미지화";
-
-            this.btnDataBase.Name = "DataBase";
+            this.btnDataBase.Name = "DBConnector";
             this.btnDataBase.Image = DotNet.Utils.Properties.Resources.Server_32x32;
-            this.btnDataBase.ToolTipText = "Database";
-            this.btnDataBase.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            this.btnDataBase.Text = "Database 접속기";
 
-            this.btnTest = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
-            this.btnTest.Name = "Test";
-            this.btnTest.Image = DotNet.Utils.Properties.Resources.Test_32x32;
-            this.btnTest.ToolTipText = "테스트";
+            #endregion Left Menu End
+            #region Title Bar
 
-            //메뉴 추가
-            TopMenu.Items.AddRange(new ToolStripItem[] {
-                this.btnCommTester,
-                this.btnSensorToImage,
-                this.btnDataBase,
-                this.btnTest
-            });
+            this.pnlTitleBar.Dock = DockStyle.Top;
+            this.pnlTitleBar.BackColor = Color.LightSkyBlue;
+            this.pnlTitleBar.MouseDown += (s, e) =>
+            {
+                if(e.Button == MouseButtons.Left)
+                {
+                    ReleaseCapture();
+                    SendMessage(this.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+                }
+            };
+            this.pnlTitleBar.Height = 24;
 
-            this.Controls.Add(TopMenu);
+            this.lblTitleText.Dock = DockStyle.Left;
+            this.lblTitleText.TextAlign = ContentAlignment.MiddleLeft;
+            this.lblTitleText.Width = 300;
+
+            this.btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.btnClose.FlatAppearance.BorderSize = 0;
+            this.btnClose.FlatAppearance.MouseDownBackColor = Color.FromArgb(200, this.btnClose.BackColor);
+            this.btnClose.FlatAppearance.MouseOverBackColor = Color.FromArgb(100, this.btnClose.BackColor);
+            this.btnClose.FlatStyle = FlatStyle.Flat;
+            this.btnClose.Image = DotNet.Utils.Properties.Resources.FrmTitle_Button_16x16;
+            this.btnClose.ImageAlign = ContentAlignment.MiddleCenter;
+            this.btnClose.Size = new Size(22, 22);
+            this.btnClose.Location = new Point(this.pnlTitleBar.Width - this.btnClose.Width, 0);
+            this.btnClose.Click += (s, e) => { Application.Exit(); };
+
+            this.btnSize.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.btnSize.FlatAppearance.BorderSize = 0;
+            this.btnSize.FlatAppearance.MouseDownBackColor = this.btnClose.FlatAppearance.MouseDownBackColor;
+            this.btnSize.FlatAppearance.MouseOverBackColor = this.btnClose.FlatAppearance.MouseOverBackColor;
+            this.btnSize.FlatStyle = FlatStyle.Flat;
+            this.btnSize.Image = DotNet.Utils.Properties.Resources.FrmTitle_Button_16x16;
+            this.btnSize.ImageAlign = ContentAlignment.MiddleCenter;
+            this.btnSize.Size = this.btnClose.Size;
+            this.btnSize.Location = new Point(this.btnClose.Location.X - this.btnSize.Width, 0);
+            this.btnSize.Click += (s, e) =>
+            {
+                if (this.WindowState == FormWindowState.Normal)
+                {
+                    this.WindowState = FormWindowState.Maximized;
+                }
+                else
+                {
+                    this.WindowState = FormWindowState.Normal;
+                }
+            };
+
+            this.btnMinimize.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.btnMinimize.FlatAppearance.BorderSize = 0;
+            this.btnMinimize.FlatAppearance.MouseDownBackColor = this.btnClose.FlatAppearance.MouseDownBackColor;
+            this.btnMinimize.FlatAppearance.MouseOverBackColor = this.btnClose.FlatAppearance.MouseOverBackColor;
+            this.btnMinimize.FlatStyle = FlatStyle.Flat;
+            this.btnMinimize.Image = DotNet.Utils.Properties.Resources.FrmTitle_Button_16x16;
+            this.btnMinimize.ImageAlign = ContentAlignment.MiddleCenter;
+            this.btnMinimize.Size = this.btnClose.Size;
+            this.btnMinimize.Location = new Point(this.btnSize.Location.X - this.btnMinimize.Width, 0);
+            this.btnMinimize.Click += (s, e) => { this.WindowState = FormWindowState.Minimized; };
+
+            #endregion Title Bar End
+
+            this.pnlBody.Dock = DockStyle.Fill;
+
+            this.Controls.Add(this.pnlBody);
+            this.pnlTitleBar.Controls.Add(this.lblTitleText);
+            this.pnlTitleBar.Controls.Add(this.btnClose);
+            this.pnlTitleBar.Controls.Add(this.btnSize);
+            this.pnlTitleBar.Controls.Add(this.btnMinimize);
+            this.Controls.Add(this.pnlTitleBar);
+            this.leftMenu.Items.Add(this.btnDataBase);
+            this.leftMenu.Items.Add(this.btnCommTester);
+            this.Controls.Add(this.leftMenu);
         }
 
-        private void MdiOpen(string btnName)
+        private void CallForm(string frmName)
         {
-            Form frm = null;
-            bool isOpen = false;
+            //1. 기존 Form 숨김
+            if(this._curForm != null)
+                this._curForm.Hide();
 
-            //이미 열린 Form인지 탐색
-            foreach (Form frmChild in this.MdiChildren)
+            //2. 이미 열린 Form 탐색
+            foreach (var ctrl in this.pnlBody.Controls)
             {
-                if (btnName == frmChild.Name)
+                if(ctrl is Form frm
+                    && frm.Name == frmName)
                 {
-                    isOpen = true;
-                    frmChild.Focus();
-                    break;
-                }
-            }
-
-            if (!isOpen)
-            {
-                //Form 생성
-                if (btnName == this.btnCommTester.Name) { frm = new DotNet.Comm.Frm.FrmCommTester() { Name = this.btnCommTester.Name }; }
-                else if (btnName == this.btnSensorToImage.Name) { frm = new DotNetFrame.CustomComm.FrmServer() { Name = this.btnSensorToImage.Name }; }
-                else if (btnName == this.btnDataBase.Name) { frm = new FrmDataBase() { Name = this.btnDataBase.Name }; }
-                else if (btnName == btnTest.Name)
-                {
-                    frm = null;
-                }
-
-                //이미 틀어져 있는지 검색
-                if (frm != null)
-                {
-                    frm.MdiParent = this;
-                    frm.WindowState = FormWindowState.Maximized;
+                    this.lblTitleText.Text = string.Format("{0} - {1}", this.txtTitle, frmName);
                     frm.Show();
+                    return;
                 }
+            }
+
+            //3. 신규 Form 생성
+            switch(frmName)
+            {
+                case "Main": this._curForm = new DotNetFramework.Frm.FrmMain() { Name = frmName }; break;
+                case "CommTest": this._curForm = new DotNet.Comm.Frm.FrmCommTester() { Name = frmName }; break;
+                case "DBConnector": this._curForm = new Frm.FrmDataBase() { Name = frmName }; break;
+            }
+
+            if(this._curForm != null)
+            {
+                this.lblTitleText.Text = string.Format("{0} - {1}", this.txtTitle, frmName);
+
+                this._curForm.Dock = DockStyle.Fill;
+                this._curForm.FormBorderStyle = FormBorderStyle.None;
+                this._curForm.TopLevel = false;
+                this.pnlBody.Controls.Add(this._curForm);
+
+                this._curForm.Show();
             }
         }
 
-        class Receipe
-        {
-            public string Name = string.Empty;
-            public decimal MaxQty = 0;
-            public decimal CreQty = 0;
-            public Dictionary<Material, decimal> Materials = new Dictionary<Material, decimal>();
-        }
-        class Material
-        {
-            public string Name = string.Empty;
-            public decimal Price = 0;
-            public decimal MaxWeekQty = 0;
-            public decimal CurWeekQty = 0;
-        }
-        Dictionary<string, Material> dicMat;
-
-        private void temp()
-        {
-            Receipe[] receipes = new Receipe[6];
-            dicMat = new Dictionary<string, Material>();
-            dicMat.Add("소금", new Material() { Name = "소금", MaxWeekQty = 60, Price = 100 });
-            dicMat.Add("설탕", new Material() { Name = "설탕", MaxWeekQty = 60, Price = 1200 });
-            dicMat.Add("양배추", new Material() { Name = "양배추", MaxWeekQty = 60, Price = 800 });
-            dicMat.Add("식용유", new Material() { Name = "식용유", MaxWeekQty = 60, Price = 1200 });
-            dicMat.Add("마늘", new Material() { Name = "마늘", MaxWeekQty = 30, Price = 1200 });
-            dicMat.Add("후추", new Material() { Name = "후추", MaxWeekQty = 60, Price = 2000 });
-            dicMat.Add("레몬", new Material() { Name = "레몬", MaxWeekQty = 30, Price = 3000 });
-            dicMat.Add("토마토", new Material() { Name = "토마토", MaxWeekQty = 60, Price = 6800 });
-            dicMat.Add("아스파라거스", new Material() { Name = "아스파라거스", MaxWeekQty = 60, Price = 10000 });
-            dicMat.Add("완두콩", new Material() { Name = "완두콩", MaxWeekQty = 60, Price = 10000 });
-            dicMat.Add("고기", new Material() { Name = "고기", MaxWeekQty = 60, Price = 250 });
-            dicMat.Add("딸기", new Material() { Name = "딸기", MaxWeekQty = 30, Price = 1200 });
-
-            dicMat["소금"].MaxWeekQty -= dicMat["소금"].MaxWeekQty;
-            dicMat["설탕"].MaxWeekQty -= dicMat["설탕"].MaxWeekQty;
-            dicMat["양배추"].MaxWeekQty -= dicMat["양배추"].MaxWeekQty;
-            dicMat["식용유"].MaxWeekQty -= dicMat["식용유"].MaxWeekQty;
-            dicMat["마늘"].MaxWeekQty -= dicMat["마늘"].MaxWeekQty;
-            dicMat["후추"].MaxWeekQty -= dicMat["후추"].MaxWeekQty;
-            dicMat["레몬"].MaxWeekQty -= dicMat["레몬"].MaxWeekQty;
-            dicMat["토마토"].MaxWeekQty -= dicMat["토마토"].MaxWeekQty;
-            dicMat["아스파라거스"].MaxWeekQty -= dicMat["아스파라거스"].MaxWeekQty;
-            dicMat["완두콩"].MaxWeekQty -= dicMat["완두콩"].MaxWeekQty;
-            dicMat["고기"].MaxWeekQty -= dicMat["고기"].MaxWeekQty;
-            dicMat["딸기"].MaxWeekQty -= dicMat["딸기"].MaxWeekQty;
-
-            //현재 가지고있는 재료 수
-            dicMat["레몬"].MaxWeekQty += 1 + 30;
-            dicMat["고기"].MaxWeekQty += 64;
-            dicMat["마늘"].MaxWeekQty += 3;
-            dicMat["후추"].MaxWeekQty += 1;
-            dicMat["설탕"].MaxWeekQty += 8;
-            dicMat["딸기"].MaxWeekQty += 30;
-
-            for (int i = 0; i < receipes.Length; i++)
-            {
-                receipes[i] = new Receipe();
-
-                switch (i)
-                {
-                    case 0:
-                        receipes[i].Name = "조개찜";
-                        receipes[i].Materials.Add(dicMat["레몬"], 4);
-                        break;
-                    case 1:
-                        receipes[i].Name = "크림소스 스테이크";
-                        receipes[i].Materials.Add(dicMat["고기"], 10);
-                        receipes[i].Materials.Add(dicMat["마늘"], 2);
-                        receipes[i].Materials.Add(dicMat["후추"], 3);
-                        receipes[i].Materials.Add(dicMat["설탕"], ((decimal)2 / 3) * 2);
-                        break;
-                    case 2:
-                        receipes[i].Name = "감자수프";
-                        receipes[i].Materials.Add(dicMat["후추"], 6);
-                        break;
-                    case 3:
-                        receipes[i].Name = "알리오 올리오";
-                        receipes[i].Materials.Add(dicMat["마늘"], 7);
-                        receipes[i].Materials.Add(dicMat["후추"], 2);
-
-                        break;
-                    case 4:
-                        receipes[i].Name = "얼음 딸기주스";
-                        receipes[i].Materials.Add(dicMat["딸기"], 6);
-                        receipes[i].Materials.Add(dicMat["설탕"], 4);
-                        break;
-                    case 5:
-                        receipes[i].Name = "사과 생크림케이크";
-                        receipes[i].Materials.Add(dicMat["설탕"], 11);
-                        break;
-                }
-
-                foreach (var matPair in receipes[i].Materials)
-                {
-                    //주간 최대 제작량
-                    decimal qty = matPair.Key.MaxWeekQty / matPair.Value;
-
-                    if (receipes[i].MaxQty < qty) receipes[i].MaxQty = qty;
-                }
-            }
-
-            List<List<int>> list = new List<List<int>>();
-            List<int> idxs = new List<int>();
-
-            for (int i = 0; i < receipes.Length; i++)
-            {
-                idxs.Add(i);
-            }
-
-            Permute(idxs, 0, list);
-
-            decimal bestCnt = 0;
-            int handle = 0;
-            foreach (var ary in list)
-            {
-                decimal maxTotalCnt = 0;
-                //Debug.WriteLine(handle);
-
-                //레시피 제작Idx 순서
-                foreach (var idx in ary)
-                {
-                    handle++;
-                    //생산 음식
-                    Receipe receip = receipes[idx];
-                    int receipMaxCnt = 999;
-
-                    foreach (var mPair in receip.Materials)
-                    {
-                        Material material = mPair.Key;
-                        decimal consumeQty = mPair.Value;
-                        
-                        //남은 주간 최대 제작 수
-                        if (material.MaxWeekQty - material.CurWeekQty >= consumeQty)
-                        {
-                            int matCreQty = (int)((material.MaxWeekQty - material.CurWeekQty) / consumeQty);
-
-                            //주간 최대 제작 수만큼 주간 남은 재료수 계산처리
-                            if (receipMaxCnt > matCreQty)
-                            {
-                                receipMaxCnt = matCreQty;
-
-                                material.CurWeekQty += (receipMaxCnt * consumeQty);
-                                receip.CreQty = receipMaxCnt;
-                            }
-                        }
-                        else
-                        {
-                            receipMaxCnt = 0;
-                            receip.CreQty = receipMaxCnt;
-                            break;
-                        }
-                    }
-
-                    if(receipMaxCnt != 999)
-                        maxTotalCnt += receipMaxCnt;
-                }
-
-                if(bestCnt < maxTotalCnt)
-                {
-                    bestCnt = maxTotalCnt;
-                    Debug.WriteLine(string.Format("Ary:{0} - Count:{1} - Handle:{2}", string.Join("\t", ary), bestCnt, handle));
-                    foreach (var idx in ary)
-                    {
-                        Debug.WriteLine(string.Format("Receipe:{0} - Count:{1}", receipes[idx].Name, receipes[idx].CreQty));
-                    }
-                }
-
-                //초기화
-                foreach (var idx in ary)
-                {
-                    foreach (var material in receipes[idx].Materials.Keys)
-                        material.CurWeekQty = 0;
-
-                    receipes[idx].CreQty = 0;
-                }
-            }
-        }
-
-        private void Permute(List<int> list, int startIdx, List<List<int>> rst)
-        {
-            if (startIdx == list.Count)
-            {
-                rst.Add(new List<int>(list));
-                return;
-            }
-
-            for (int i = startIdx; i < list.Count; i++)
-            {
-                QYUtils.Swap(list, startIdx, i);
-                Permute(list, startIdx + 1, rst);
-                QYUtils.Swap(list, startIdx, i);
-            }
-        }
+        /// <summary>
+        /// 다른 Control의 Mouse상태 해제
+        /// </summary>
+        [System.Runtime.InteropServices.DllImport("user32.DLL", EntryPoint = "ReleaseCapture")]
+        private extern static void ReleaseCapture();
+        /// <summary>
+        /// WindowHandle 메시지 전송
+        /// </summary>
+        /// <param name="hWnd"></param>
+        /// <param name="wMsg"></param>
+        /// <param name="wParam"></param>
+        /// <param name="lParam"></param>
+        [System.Runtime.InteropServices.DllImport("user32.DLL", EntryPoint = "SendMessage")]
+        private extern static void SendMessage(System.IntPtr hWnd, int wMsg, int wParam, int lParam);
+        private const int WM_NCLBUTTONDOWN = 0x112;  //비 클라이언트 영역 클릭
+        private const int HTCAPTION = 0xF012; //TitleBar
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace DotNet.Utils.Controls
 {
@@ -459,5 +461,42 @@ namespace DotNet.Utils.Controls
         }
 
         #endregion 공통Type Control생성 End
+
+        public class Collection<TOwner, TItem> where TOwner : Control
+                                               where TItem : Control
+        {
+            public TOwner Owner { get; }
+            internal Collection(TOwner owner)
+            {
+                this.Owner = owner;
+            }
+
+            public TItem this[int idx]
+            {
+                get { return this.Owner.Controls[idx] as TItem; }
+            }
+            /// <summary>
+            /// Item 추가
+            /// </summary>
+            /// <param name="item">추가할 item</param>
+            public virtual void Add(TItem item) => this.Owner.Controls.Add(item);
+            /// <summary>
+            /// Item 수
+            /// </summary>
+            public int Count => this.Owner.Controls.Count;
+            /// <summary>
+            /// foreach 지원용 Enumratable
+            /// </summary>
+            /// <returns>이번차례 Item</returns>
+            public IEnumerator<TItem> GetEnumerator()
+            {
+                foreach (Control ctrl in this.Owner.Controls)
+                {
+                    if (ctrl is TItem item)
+                        yield return item;
+                }
+            }
+        }
     }
+
 }

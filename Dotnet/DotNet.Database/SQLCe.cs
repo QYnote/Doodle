@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlServerCe;
-using System.Data.Sql;
 using System.Diagnostics;
-using DotNet.Utils;
 
 namespace DotNet.Database
 {
@@ -22,7 +20,7 @@ namespace DotNet.Database
         {
             get
             {
-                if(base._filePath == string.Empty
+                if(base._dataSource == string.Empty
                     || base._password == string.Empty)
                     return string.Empty;
 
@@ -30,7 +28,7 @@ namespace DotNet.Database
                     "Data Source={0};" +
                     "Password={1};" +
                     "Persist Security Info=True",
-                    base._filePath, base._password);
+                    base._dataSource, base._password);
             }
         }
 
@@ -42,7 +40,7 @@ namespace DotNet.Database
         /// <param name="password">DB Password</param>
         public SQLCe(string filePath, string password)
         {
-            base._filePath = filePath;
+            base._dataSource = filePath;
             base._password = password;
             this._conn = GetConnection();
         }
@@ -54,7 +52,8 @@ namespace DotNet.Database
         {
             if(this._conn == null)
             {
-                this._conn = new SqlCeConnection(this.ConnectionString);
+                if(System.IO.File.Exists(this._dataSource))
+                    this._conn = new SqlCeConnection(this.ConnectionString);
             }
             else
             {

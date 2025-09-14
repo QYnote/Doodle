@@ -153,6 +153,16 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
+        public static System.Drawing.Bitmap FrmTitle_Button_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("FrmTitle_Button_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
         public static System.Drawing.Bitmap GreenSync_16x16 {
             get {
                 object obj = ResourceManager.GetObject("GreenSync_16x16", resourceCulture);
@@ -176,6 +186,16 @@ namespace DotNet.Utils.Properties {
         public static System.Drawing.Bitmap LAN_Come_16x16 {
             get {
                 object obj = ResourceManager.GetObject("LAN_Come_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Menu_Hamburgar_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Menu_Hamburgar_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -14,7 +14,7 @@ namespace DotNet.Database
         public delegate void DBLoghandler(string errorMessage);
         public event DBLoghandler LogEvent;
 
-        protected string _filePath = string.Empty;
+        protected string _dataSource = string.Empty;
         protected string _password = string.Empty;
 
         protected abstract string ConnectionString { get; }
