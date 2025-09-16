@@ -149,6 +149,7 @@ namespace DotNetFramework
                 if(ctrl is Form frm
                     && frm.Name == frmName)
                 {
+                    this._curForm = frm;
                     this.lblTitleText.Text = string.Format("{0} - {1}", this.txtTitle, frmName);
                     frm.Show();
                     return;

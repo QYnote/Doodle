@@ -71,10 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomComm\HYNux\HYErrorCheck.cs" />
-    <Compile Include="CustomComm\HYNux\HYModbus.cs" />
-    <Compile Include="CustomComm\HYNux\HYPort.cs" />
-    <Compile Include="CustomComm\HYNux\PCLink.cs" />
+    <Compile Include="CustomComm\HYNux\HYCommTesterPort.cs" />
     <Compile Include="CustomComm\RuntimeData.cs" />
     <Compile Include="FrmSolution.cs">
       <SubType>Form</SubType>

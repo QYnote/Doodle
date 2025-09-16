@@ -7,8 +7,8 @@
     <ProjectGuid>{51E53D22-AD2C-4C18-99D5-6B6D73FDD404}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Dnf.Communication</RootNamespace>
-    <AssemblyName>Dnf.Communication</AssemblyName>
+    <RootNamespace>Dotnet.Comm</RootNamespace>
+    <AssemblyName>Dotnet.Comm</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -45,20 +45,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientPorts\PCPortBase.cs" />
+    <Compile Include="ClientPorts\QYEthernet.cs" />
+    <Compile Include="ClientPorts\QYSerialPort.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Structures\ClientPorts\PCPortBase.cs" />
-    <Compile Include="Structures\ClientPorts\QYEthernet.cs" />
-    <Compile Include="Structures\ClientPorts\QYSerialPort.cs" />
-    <Compile Include="Structures\Protocols\ErrorCheck.cs" />
-    <Compile Include="Structures\Protocols\Modbus.cs" />
-    <Compile Include="Structures\Servers\ServerBase.cs" />
-    <Compile Include="Structures\Servers\TCPServer.cs" />
-    <Compile Include="Structures\Protocols\ProtocolBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocols\Customs\HYNux\HYModbus.cs" />
+    <Compile Include="Protocols\Customs\HYNux\PCLink.cs" />
+    <Compile Include="Protocols\ErrorCheck.cs" />
+    <Compile Include="Protocols\Modbus.cs" />
+    <Compile Include="Protocols\ProtocolFrame.cs" />
+    <Compile Include="Servers\ServerBase.cs" />
+    <Compile Include="Servers\TCPServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

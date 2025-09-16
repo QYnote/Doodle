@@ -22,7 +22,7 @@ namespace DotNetFrame.CustomComm
         #endregion UI Controls
 
         private ServerBase _server;
-        DotNet.Comm.Structures.Protocols.ProtocolFrame _protocol;
+        DotNet.Comm.Protocols.ProtocolFrame _protocol;
 
 
         public FrmServer()
@@ -103,18 +103,18 @@ namespace DotNetFrame.CustomComm
             (this._server as TCPServer).IP = "127.0.0.1";
             (this._server as TCPServer).PortNo = 5000;
             (this._server as TCPServer).ClientActiveEvent += ClientActiveEvent_HYDevice; ;
-            this._protocol = new DotNetFrame.CustomComm.HYNux.HYModbus(false);
-            (this._protocol as DotNetFrame.CustomComm.HYNux.HYModbus).IsTCP = true;
+            this._protocol = new DotNet.Comm.Protocols.Customs.HYNux.HYModbus(false);
+            (this._protocol as DotNet.Comm.Protocols.Customs.HYNux.HYModbus).IsTCP = true;
         }
 
 
         Dictionary<int, object> Register = new Dictionary<int, object>();
         private byte[] ClientActiveEvent_HYDevice(byte[] data)
         {
-            byte[] req = this._protocol.DataExtract_Request(1, data);
-            byte[] res = this._protocol.CreateResponse(Register, req);
+            byte[] req = this._protocol.Request_ExtractFrame(data);
+            //byte[] res = this._protocol.CreateResponse(Register, req);
 
-            return res;
+            return null;
         }
 
         #endregion End HY Device
@@ -130,7 +130,7 @@ namespace DotNetFrame.CustomComm
             (this._server as TCPServer).IP = "127.0.0.1";
             (this._server as TCPServer).PortNo = 5000;
             (this._server as TCPServer).ClientActiveEvent += FrmServer_ClientActiveEvent;
-            this._protocol = new DotNetFrame.CustomComm.HYNux.PCLink(false);
+            this._protocol = new DotNet.Comm.Protocols.Customs.HYNux.PCLink(false);
         }
 
         private byte[] FrmServer_ClientActiveEvent(byte[] data)
@@ -162,9 +162,9 @@ namespace DotNetFrame.CustomComm
             }
             else
             {
-                DotNetFrame.CustomComm.HYNux.PCLink pcLink = this._protocol as DotNetFrame.CustomComm.HYNux.PCLink;
+                DotNet.Comm.Protocols.Customs.HYNux.PCLink pcLink = this._protocol as DotNet.Comm.Protocols.Customs.HYNux.PCLink;
 
-                int startIdx = data.Find(pcLink.HeadBytes);
+                int startIdx = -1;
                 if (startIdx < 0) return null;
                 int endIdx = data.Find(pcLink.TailBytes, startIdx);
 

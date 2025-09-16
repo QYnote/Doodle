@@ -46,9 +46,9 @@ namespace DotNetFramework.Frm
 
         private void UpdatUI(object state)
         {
-            this.progressCPU.Value = this.cpuCounter.NextValue();//CPU 코어수
-            long memBytes = Process.GetCurrentProcess().WorkingSet64;
-            this.progressMemory.Value = memBytes / 1024f / 1024f;
+            this.progressCPU.Value = this.cpuCounter.NextValue() / Environment.ProcessorCount;//CPU 코어수
+            long memBytes = Process.GetCurrentProcess().PrivateMemorySize64;
+            this.progressMemory.Value = Process.GetCurrentProcess().PrivateMemorySize64 / (1024 * 1024f);
         }
     }
 }

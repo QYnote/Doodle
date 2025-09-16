@@ -67,9 +67,33 @@ namespace DotNet.Utils.Controls
             }
         }
 
+        /// <summary>
+        /// ProgressBar Value 색
+        /// </summary>
         public Color ProgressColor { get; set; } = Color.LightSkyBlue;
+        /// <summary>
+        /// ProgressBar 배경색
+        /// </summary>
         public Color TackColor { get; set; } = Color.FromArgb(200, Color.LightGray);
+        /// <summary>
+        /// Progress Line 두께
+        /// </summary>
         public int LineWidth { get; set; } = 10;
+        /// <summary>
+        /// 원 그리는 시작 점 각도
+        /// </summary>
+        /// <remarks>
+        /// 우측을 0도로 기준</br>
+        /// Default: -90
+        /// </remarks>
+        public float StartAngle { get; set; } = -90;
+        /// <summary>
+        /// 원 그릴 각도
+        /// </summary>
+        /// <remarks>
+        /// StartAngle 기준 그릴 각도량
+        /// </remarks>
+        public float DrawAngle { get; set; } = 360;
         public string ValueUnit { get; set; } = string.Empty;
 
 
@@ -91,12 +115,12 @@ namespace DotNet.Utils.Controls
 
             //배경 원
             using (Pen trackPen = new Pen(this.TackColor, this.LineWidth))
-                e.Graphics.DrawEllipse(trackPen, rect);
+                e.Graphics.DrawArc(trackPen, rect, this.StartAngle, this.DrawAngle);
 
             //진행도 원
-            float sweepAngle = this.Value / this.Maximum * 360f;
+            float sweepAngle = this.Value / this.Maximum * this.DrawAngle; //360º중에서 차지하는 비율
             using (Pen progressPen = new Pen(this.ProgressColor, this.LineWidth))
-                e.Graphics.DrawArc(progressPen, rect, -90, sweepAngle);
+                e.Graphics.DrawArc(progressPen, rect, this.StartAngle, sweepAngle);
             string text = string.Format("{0:F2} {1}", this.Value, this.ValueUnit);
             using (Brush brush = new SolidBrush(this.ForeColor))
             {

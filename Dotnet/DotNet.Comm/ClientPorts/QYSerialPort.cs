@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Comm.Structures.ClientPorts
+namespace DotNet.Comm.ClientPorts
 {
     public class QYSerialPort : PCPortBase
     {
@@ -133,6 +133,16 @@ namespace DotNet.Comm.Structures.ClientPorts
             {
                 this._serialPort.Write(bytes, 0, bytes.Length);
             }
+        }
+
+        public override void InitPort()
+        {
+            if (this._serialPort != null)
+                this._serialPort.Close();
+            this.Parity = Parity.None;
+            this.StopBits = StopBits.One;
+            this.DataBits = 8;
+            this.BaudRate = 9600;
         }
     }
 }

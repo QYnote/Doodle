@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Comm.Structures.ClientPorts
+namespace DotNet.Comm.ClientPorts
 {
     public class QYEthernet : PCPortBase
     {
@@ -264,6 +264,12 @@ namespace DotNet.Comm.Structures.ClientPorts
 
                 args.Dispose();
             }
+        }
+
+        public override void InitPort()
+        {
+            this._clientSocket = null;
+            this._asyncBuffer = null;
         }
     }
 }

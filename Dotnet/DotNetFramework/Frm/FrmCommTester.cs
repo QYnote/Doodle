@@ -1,4 +1,5 @@
-﻿using DotNet.Comm.Structures.ClientPorts;
+﻿using Dotnet.Comm;
+using DotNet.Comm.ClientPorts;
 using DotNet.Utils.Controls;
 using DotNetFrame.CustomComm.HYNux;
 using System;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static DotNetFrame.CustomComm.HYNux.HYCommTesterPort;
 
 namespace DotNet.Comm.Frm
 {
@@ -66,17 +68,18 @@ namespace DotNet.Comm.Frm
         private DataTable _dtDataResult = new DataTable();
         private DataTable _dtProtocolResult = new DataTable();
         private DataTable _dtBuffer = new DataTable();
-        private HYPort _port = new HYPort(PortType.Serial);
+        private HYCommTesterPort _port = new HYCommTesterPort();
         private BackgroundWorker BgWorker = new BackgroundWorker();
         private int _bufferColCount = 10;
+        private int rstColCount = 512;
 
         private QYSerialPort Serial
         {
             get
             {
                 if (this._port != null
-                    && this._port.PCPort is QYSerialPort)
-                    return this._port.PCPort as QYSerialPort;
+                    && this._port.ComPort is QYSerialPort)
+                    return this._port.ComPort as QYSerialPort;
                 else
                     return null;
             }
@@ -86,8 +89,8 @@ namespace DotNet.Comm.Frm
             get
             {
                 if (this._port != null
-                    && this._port.PCPort is QYEthernet)
-                    return this._port.PCPort as QYEthernet;
+                    && this._port.ComPort is QYEthernet)
+                    return this._port.ComPort as QYEthernet;
                 else
                     return null;
             }
@@ -98,6 +101,7 @@ namespace DotNet.Comm.Frm
         private int _curReq = 0;
 
         private bool _isInit = false;
+        private bool _isRequesting = false;
 
         public FrmCommTester()
         {
@@ -110,9 +114,9 @@ namespace DotNet.Comm.Frm
 
             this.FormClosing += (s, e) =>
             {
-                if (this._port.IsOpen)
+                if (this._port.IsUserOpen)
                 {
-                    this._port.Close();
+                    this._port.Disconnect();
                 }
             };
         }
@@ -149,7 +153,7 @@ namespace DotNet.Comm.Frm
 
                 if(selectedItem == "Serial")
                 {
-                    this._port = new HYPort(PortType.Serial);
+                    this._port.CommType = CommType.Serial;
                     this.cboPortList.Visible = true;
                     this.txtEthernetIP.Visible = false;
                     this.txtPortNo.Visible = false;
@@ -161,7 +165,7 @@ namespace DotNet.Comm.Frm
                 }
                 else if(selectedItem == "Ethernet")
                 {
-                    this._port = new HYPort(PortType.Ethernet);
+                    this._port.CommType = CommType.Ethernet;
                     this.cboPortList.Visible = false;
                     this.txtEthernetIP.Visible = true;
                     this.txtPortNo.Visible = true;
@@ -185,7 +189,7 @@ namespace DotNet.Comm.Frm
             this.cboPortList.SelectedIndexChanged += (s, e) =>
             {
                 if (this._isInit == false) return;
-                if (this._port.IsOpen == false)
+                if (this._port.IsUserOpen == false)
                 {
                     this.Serial.PortName = (string)this.cboPortList.SelectedItem;
                 }
@@ -311,9 +315,9 @@ namespace DotNet.Comm.Frm
             {
                 if (this.btnConnect.Text == "Connect")
                 {
-                    if (this._port.IsOpen == false
-                        && this._port.Open())
+                    if (this._port.IsUserOpen == false)
                     {
+                        this._port.Connect();
                         this.cboPortType.Enabled = false;
                         this.txtEthernetIP.Enabled = false;
                         this.cboPortList.Enabled = false;
@@ -323,8 +327,9 @@ namespace DotNet.Comm.Frm
                 }
                 else
                 {
-                    if (this._port.Close())
+                    if (this._port.IsUserOpen == true)
                     {
+                        this._port.Disconnect();
                         this.cboPortType.Enabled = true;
                         this.txtEthernetIP.Enabled = true;
                         this.cboPortList.Enabled = true;
@@ -365,9 +370,6 @@ namespace DotNet.Comm.Frm
             this.chkAddErrChk.Text = "ErrorCheck 생성";
             this.chkAddErrChk.CheckAlign = ContentAlignment.MiddleRight;
             this.chkAddErrChk.Checked = false;
-            this.chkAddErrChk.CheckedChanged += (s, e) => {
-                this._port.CreErrCheck = this.chkAddErrChk.Checked;
-            };
 
             this.gbxProtocolSet.Dock = DockStyle.Left;
             this.gbxProtocolSet.Width = this.chkAddErrChk.Location.X + this.chkAddErrChk.Width + 3;
@@ -563,6 +565,10 @@ namespace DotNet.Comm.Frm
             this.gvBuffer.AllowUserToResizeRows = false;
 
             //Request, Receive Log GridView
+            this._dtDataLog.Columns.Add(new DataColumn("Type", typeof(string)) { DefaultValue = string.Empty });
+            this._dtDataLog.Columns.Add(new DataColumn("Time", typeof(string)));
+            
+
             this.gvDataLog.Dock = DockStyle.Fill;
             this.gvDataLog.AutoSize = false;
             this.gvDataLog.DataSource = this._dtDataLog;
@@ -572,6 +578,44 @@ namespace DotNet.Comm.Frm
             this.gvDataLog.AllowUserToAddRows = false;
             this.gvDataLog.AllowUserToResizeColumns = false;
             this.gvDataLog.AllowUserToResizeRows = false;
+
+            DataGridViewTextBoxColumn colType = new DataGridViewTextBoxColumn();
+            colType.Name = "Type";
+            colType.DataPropertyName = "Type";
+            colType.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colType.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colType.HeaderText = "Type";
+            colType.ReadOnly = true;
+            colType.Width = 40;
+            colType.DisplayIndex = 0;
+            this.gvDataLog.Columns.Add(colType);
+
+            DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
+            colTime.DataPropertyName = "Time";
+            colTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colTime.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            colTime.HeaderText = "Time";
+            colTime.ReadOnly = true;
+            colTime.Width = 130;
+            colTime.DisplayIndex = 1;
+            this.gvDataLog.Columns.Add(colTime);
+
+            for (int i = 0; i < rstColCount; i++)
+            {
+                string colName = string.Format("Col{0}", i);
+
+                this._dtDataLog.Columns.Add(new DataColumn(colName, typeof(string)));
+
+                DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
+                col.DataPropertyName = colName;
+                col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                col.Width = 25;
+                col.HeaderText = (i + 1).ToString();
+                col.ReadOnly = true;
+                col.DisplayIndex = 2 + i;
+
+                this.gvDataLog.Columns.Add(col);
+            }
 
 
             for (int i = 0; i < this._bufferColCount; i++)
@@ -670,54 +714,13 @@ namespace DotNet.Comm.Frm
             this.txtPortNo.Visible = false;
         }
 
-        private void AddLogEvent(HYPort port)
-        {
-            port.CommLog += (title, data) =>
-            {
-                WriteLog(title, data);
-            };
-            port.StackBuff += (title, data) =>
-            {
-                WriteLog(title, data);
-            };
-            port.PCPort.Log += (msg) =>
-            {
-                MessageBox.Show(msg);
-            };
-        }
-
         private void InitDataLogGrid()
         {
             this._dtDataResult.Rows.Clear();
             this._dtProtocolResult.Rows.Clear();
             this._dtDataLog.Rows.Clear();
             this._dtBuffer.Rows.Clear();
-            this._dtDataLog.Columns.Clear();
-            this.gvDataLog.Columns.Clear();
             this.txtLog.Text = string.Empty;
-
-            DataGridViewTextBoxColumn colType = new DataGridViewTextBoxColumn();
-            colType.Name = "Type";
-            colType.DataPropertyName = "Type";
-            colType.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colType.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colType.HeaderText = "Type";
-            colType.ReadOnly = true;
-            colType.Width = 40;
-
-            DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
-            colTime.DataPropertyName = "Time";
-            colTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colTime.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colTime.HeaderText = "Time";
-            colTime.ReadOnly = true;
-            colTime.Width = 130;
-
-            this.gvDataLog.Columns.Add(colType);
-            this.gvDataLog.Columns.Add(colTime);
-
-            this._dtDataLog.Columns.Add(new DataColumn("Type", typeof(string)) { DefaultValue = string.Empty });
-            this._dtDataLog.Columns.Add(new DataColumn("Time", typeof(string)));
 
             this._dtDataResult.Rows.Add();
             this._dtProtocolResult.Rows.Add();
@@ -725,13 +728,11 @@ namespace DotNet.Comm.Frm
             this.gvProtocolResult.ClearSelection();
 
             this.gvCommResult.EndEdit();
-            this.gvDataLog.EndEdit();
         }
 
         private void InitPort()
         {
-            AddLogEvent(this._port);
-            if (this._port.Type == PortType.Serial)
+            if (this._port.CommType == CommType.Serial)
             {
                 if(this.cboPortList.Items.Count > 0)
                     this.Serial.PortName = (string)this.cboPortList.Items[0];
@@ -775,7 +776,7 @@ namespace DotNet.Comm.Frm
                     }
                 }
             }
-            else if(this._port.Type == PortType.Ethernet)
+            else if(this._port.CommType == CommType.Ethernet)
             {
                 this.txtEthernetIP.Text = "192.168.2.133";
                 this.txtPortNo.Value = 0502;
@@ -783,6 +784,7 @@ namespace DotNet.Comm.Frm
                 this.Ethernet.IP = this.txtEthernetIP.Text;
                 this.Ethernet.PortNo = Convert.ToInt32(this.txtPortNo.Value);
             }
+            this._port.Log += UpdateUI;
         }
 
         private RadioButton CreateRdo(object data)
@@ -807,6 +809,7 @@ namespace DotNet.Comm.Frm
                 return;
             }
             InitDataLogGrid();
+
 
             int handle = 0;
             string splitStr;
@@ -848,8 +851,12 @@ namespace DotNet.Comm.Frm
             }
 
             this._recycleData = bytes.ToArray();
+            if (this.chkAddErrChk.Checked)
+            {
+                this._recycleData = QYUtils.BytesAppend(this._recycleData, this._port.Protocol.CreateErrCode(this._recycleData));
+            }
 
-            this._port.IsRequesting = false;
+            this._isRequesting = true;
             this._curReq = 0;
             if (this.chkRewrite.Checked)
             {
@@ -867,19 +874,8 @@ namespace DotNet.Comm.Frm
             {
                 this.BgWorker.RunWorkerAsync();
 
-                if (this.chkRewrite.Checked)
-                    this.btnSend.Text = "Stop";
-                
+                this.btnSend.Text = "Stop";
             }
-        }
-
-        private void RequestData(byte[] data)
-        {
-            if (data == null || data.Length == 0) return;
-
-            this._curReq++;
-            this._port.Write(data);
-            this._dtDataResult.Rows[0]["TryCount"] = (uint)(this._dtDataResult.Rows[0]["TryCount"]) + 1;
         }
 
         private void WriteLog(string type, params byte[] data)
@@ -887,7 +883,7 @@ namespace DotNet.Comm.Frm
             try
             {
                 if (this.InvokeRequired)
-                    this.Invoke(new BytesLogHandler(WriteLog), type, data);
+                    this.BeginInvoke(new BytesLogHandler(WriteLog), new object[] { type, data });
                 else
                 {
                     string dataStr = string.Empty;
@@ -922,35 +918,35 @@ namespace DotNet.Comm.Frm
                             this._dtProtocolResult.Rows[0]["ErrChk"] = (uint)(this._dtProtocolResult.Rows[0]["ErrChk"]) + 1;
                             //에러코드 확인
                             {
-                                byte[] temp,
-                                    calcErrCode = new byte[this._port.ErrorCheck.CheckLen],
-                                    getErrCode = new byte[this._port.ErrorCheck.CheckLen];
-                                string calcErrStr = string.Empty,
-                                    getErrStr = string.Empty;
-                                if (this._port.ErrorCheck is ModbusAsciiErrorCheck
-                                    || this._port.ErrorCheck is PCLinkErrorCheck)
-                                    temp = new byte[data.Length - 2 - this._port.ErrorCheck.CheckLen];
-                                else
-                                    temp = new byte[data.Length - this._port.ErrorCheck.CheckLen];
+                                //byte[] temp,
+                                //    calcErrCode = new byte[this._port.ErrorCheck.CheckLen],
+                                //    getErrCode = new byte[this._port.ErrorCheck.CheckLen];
+                                //string calcErrStr = string.Empty,
+                                //    getErrStr = string.Empty;
+                                //if (this._port.ErrorCheck is ModbusAsciiErrorCheck
+                                //    || this._port.ErrorCheck is PCLinkErrorCheck)
+                                //    temp = new byte[data.Length - 2 - this._port.ErrorCheck.CheckLen];
+                                //else
+                                //    temp = new byte[data.Length - this._port.ErrorCheck.CheckLen];
 
-                                //받은 Error Code
-                                Buffer.BlockCopy(data, temp.Length - 1, getErrCode, 0, getErrCode.Length);
-                                for (int i = 0; i < getErrCode.Length; i++)
-                                {
-                                    getErrStr += string.Format(" {0:X2}", getErrCode[i]);
-                                }
+                                ////받은 Error Code
+                                //Buffer.BlockCopy(data, temp.Length - 1, getErrCode, 0, getErrCode.Length);
+                                //for (int i = 0; i < getErrCode.Length; i++)
+                                //{
+                                //    getErrStr += string.Format(" {0:X2}", getErrCode[i]);
+                                //}
 
-                                //계산식 Error Code
-                                Buffer.BlockCopy(data, 0, temp, 0, temp.Length);
-                                calcErrCode = this._port.ErrorCheck.CreateCheckBytes(temp);
-                                for (int i = 0; i < calcErrCode.Length; i++)
-                                {
-                                    calcErrStr += string.Format(" {0:X2}", calcErrCode[i]);
-                                }
+                                ////계산식 Error Code
+                                //Buffer.BlockCopy(data, 0, temp, 0, temp.Length);
+                                //calcErrCode = this._port.ErrorCheck.CreateCheckBytes(temp);
+                                //for (int i = 0; i < calcErrCode.Length; i++)
+                                //{
+                                //    calcErrStr += string.Format(" {0:X2}", calcErrCode[i]);
+                                //}
 
-                                this.txtLog.AppendText(string.Format("ErrorCheck Dismatch:{0}\r\n" +
-                                    "계산된 ErrCode :{1} / 받은 ErrCode :{2}\r\n\r\n",
-                                    dataStr, calcErrStr, getErrStr));
+                                //this.txtLog.AppendText(string.Format("ErrorCheck Dismatch:{0}\r\n" +
+                                //    "계산된 ErrCode :{1} / 받은 ErrCode :{2}\r\n\r\n",
+                                //    dataStr, calcErrStr, getErrStr));
                             }
                             break;
                         case "Protocol NG":
@@ -1056,63 +1052,263 @@ namespace DotNet.Comm.Frm
         {
             while (true)
             {
-                if (this.BgWorker.CancellationPending)
+                try
                 {
-                    UpdateUI("EndSending");
-                    break;
-                }
-                else
-                {
-                    try
+                    if (this.BgWorker.CancellationPending)
+                        break;
+                    else
                     {
-                        if (this._port.IsRequesting)
-                        {
-                            this._port.Read();
-                        }
-                        else
+                        if (this._isRequesting
+                            && this._port.RegularQueue.Count == 0)
                         {
                             if (this._maxReq <= this._curReq)
-                            {
-                                UpdateUI("EndSending");
                                 break;
+                            else
+                            {
+                                this._curReq++;
+                                this._port.WriteQueue.Enqueue(this._recycleData);
+                                this._dtDataResult.Rows[0]["TryCount"] = (uint)(this._dtDataResult.Rows[0]["TryCount"]) + 1;
                             }
-
-                            RequestData(this._recycleData);
                         }
-
-                        System.Threading.Thread.Sleep(200);
-                    }
-                    catch
-                    {
-
                     }
                 }
+                catch
+                {
+
+                }
             }
+
+            this._isRequesting = false;
+            UpdateUI("EndSending");
         }
 
-        private void UpdateUI(string cmd)
+        private void UpdateUI(string logName, params object[] data)
         {
             try
             {
                 if (this.InvokeRequired)
-                {
-
-                    this.Invoke(new UIUpdateHandler(UpdateUI), cmd);
-                }
+                    this.BeginInvoke(new HYPortLogHandler(UpdateUI), logName, data);
                 else
                 {
-                    switch (cmd)
+                    string str = string.Empty;
+                    switch (logName)
                     {
+                        case "ComPortLog":
+                            str = data[0] as string;
+                            this.txtLog.AppendText(string.Format("Port Log: {0}\r\n", str));
+                            break;
+                        case "Request":
+                            {
+                                byte[] req = data[0] as byte[];
+                                //송신 Grid Log Update
+                                DataRow dr = this._dtDataLog.NewRow();
+                                dr["Type"] = "Req";
+                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                                for (int i = 0; i < req.Length; i++)
+                                {
+                                    if((i != 0) && ((i % rstColCount) == 0))
+                                    {
+                                        this._dtDataLog.Rows.Add(dr);
+                                        dr = this._dtDataLog.NewRow();
+                                    }
+
+                                    dr[string.Format("Col{0}", i)] = req[i].ToString("X2");
+                                }
+                                this._dtDataLog.Rows.Add(dr);
+
+                                //TextLog Update
+                                str = ByteToString(req);
+                                this.txtLog.AppendText(string.Format("Req:{0}\r\n", str));
+                            }
+                            break;
+                        case "StackBuffer":
+                            break;
+                        case "Error-ErrorCode":
+                            {
+                                byte[] frame = data[0] as byte[];
+                                //수신 Grid Log Update
+                                DataRow dr = this._dtDataLog.NewRow();
+                                dr["Type"] = "Rcv";
+                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                                for (int i = 0; i < frame.Length; i++)
+                                {
+                                    if ((i != 0) && ((i % rstColCount) == 0))
+                                    {
+                                        this._dtDataLog.Rows.Add(dr);
+                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                        dr = this._dtDataLog.NewRow();
+                                    }
+
+                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
+                                }
+                                this._dtDataLog.Rows.Add(dr);
+                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+
+                                //TextLog Update
+                                str = ByteToString(data[0] as byte[]);
+                                this.txtLog.AppendText(string.Format("Res Error - ErrorCode:{0}\r\n", str));
+
+                                //Result Grid Update
+                                this._dtProtocolResult.Rows[0]["ErrChk"] = (uint)(this._dtProtocolResult.Rows[0]["ErrChk"]) + 1;
+                            }
+                            break;
+                        case "Error-Protocol":
+                            {
+                                byte[] frame = data[0] as byte[];
+                                //수신 Grid Log Update
+                                DataRow dr = this._dtDataLog.NewRow();
+                                dr["Type"] = "Rcv";
+                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                                for (int i = 0; i < frame.Length; i++)
+                                {
+                                    if ((i != 0) && ((i % rstColCount) == 0))
+                                    {
+                                        this._dtDataLog.Rows.Add(dr);
+                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                        dr = this._dtDataLog.NewRow();
+                                    }
+
+                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
+                                }
+                                this._dtDataLog.Rows.Add(dr);
+                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+
+                                //TextLog Update
+                                str = ByteToString(data[0] as byte[]);
+                                this.txtLog.AppendText(string.Format("Res Error - Protocol:{0}\r\n", str));
+
+                                //Result Grid Update
+                                this._dtProtocolResult.Rows[0]["ProtocolErr"] = (uint)(this._dtProtocolResult.Rows[0]["ProtocolErr"]) + 1;
+                            }
+                            break;
+                        case "Receive End":
+                            {
+                                byte[] frame = data[1] as byte[];
+                                //수신 Grid Log Update
+                                DataRow dr = this._dtDataLog.NewRow();
+                                dr["Type"] = "Rcv";
+                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                                for (int i = 0; i < frame.Length; i++)
+                                {
+                                    if ((i != 0) && ((i % rstColCount) == 0))
+                                    {
+                                        this._dtDataLog.Rows.Add(dr);
+                                        dr = this._dtDataLog.NewRow();
+                                    }
+
+                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
+                                }
+                                this._dtDataLog.Rows.Add(dr);
+
+                                //TextLog Update
+                                str = ByteToString(frame);
+                                this.txtLog.AppendText(string.Format("Res:{0}\r\n", str));
+
+                                //Result Grid Update
+                                this._dtDataResult.Rows[0]["Success"] = (uint)(this._dtDataResult.Rows[0]["Success"]) + 1;
+                            }
+                            break;
+                        case "None Response":
+                            {
+                                //수신 Grid Log Update
+                                DataRow dr = this._dtDataLog.NewRow();
+                                dr["Type"] = "Rcv";
+                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                                this._dtDataLog.Rows.Add(dr);
+                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+
+                                //TextLog Update
+                                this.txtLog.AppendText(string.Format("Res Timeover - None: -\r\n"));
+
+                                //Result Grid Update
+                                this._dtDataResult.Rows[0]["None Receive"] = (uint)(this._dtDataResult.Rows[0]["None Receive"]) + 1;
+                            }
+                            break;
+                        case "Stop Response":
+                            {
+                                byte[] frame = data[0] as byte[];
+                                //수신 Grid Log Update
+                                DataRow dr = this._dtDataLog.NewRow();
+                                dr["Type"] = "Rcv";
+                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                                for (int i = 0; i < frame.Length; i++)
+                                {
+                                    if ((i != 0) && ((i % rstColCount) == 0))
+                                    {
+                                        this._dtDataLog.Rows.Add(dr);
+                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                        dr = this._dtDataLog.NewRow();
+                                    }
+
+                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
+                                }
+                                this._dtDataLog.Rows.Add(dr);
+                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+
+                                //TextLog Update
+                                str = ByteToString(frame);
+                                this.txtLog.AppendText(string.Format("Res Timeover - Stop:{0}\r\n", str));
+
+                                //Result Grid Update
+                                this._dtDataResult.Rows[0]["Receive Stop"] = (uint)(this._dtDataResult.Rows[0]["Receive Stop"]) + 1;
+                            }
+                            break;
+                        case "Long Response":
+                            {
+                                byte[] frame = data[0] as byte[];
+                                //수신 Grid Log Update
+                                DataRow dr = this._dtDataLog.NewRow();
+                                dr["Type"] = "Rcv";
+                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                                for (int i = 0; i < frame.Length; i++)
+                                {
+                                    if ((i != 0) && ((i % rstColCount) == 0))
+                                    {
+                                        this._dtDataLog.Rows.Add(dr);
+                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                        dr = this._dtDataLog.NewRow();
+                                    }
+
+                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
+                                }
+                                this._dtDataLog.Rows.Add(dr);
+                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+
+                                //TextLog Update
+                                str = ByteToString(data[0] as byte[]);
+                                this.txtLog.AppendText(string.Format("Res Timeover - Long:{0}\r\n", str));
+
+                                //Result Grid Update
+                                this._dtDataResult.Rows[0]["Receive Too Long"] = (uint)(this._dtDataResult.Rows[0]["Receive Too Long"]) + 1;
+                            }
+                            break;
                         case "EndSending":
                             this.btnSend.Text = "Send";
                             break;
                     }
+
+                    if(this.gvDataLog.Rows.Count > 0)
+                        this.gvDataLog.FirstDisplayedScrollingRowIndex = this.gvDataLog.Rows.Count - 1;
                 }
             }
-            catch
+            catch (Exception ex)
             {
 
             }
         }
+
+        private string ByteToString(byte[] bytes)
+        {
+            string str = string.Empty;
+
+            if(bytes != null && bytes.Length != 0)
+            {
+                foreach (var b in bytes)
+                    str += string.Format(" {0:X2}", b);
+            }
+
+            return str;
+        }
+
     }
 }

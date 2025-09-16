@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Comm.Structures.ClientPorts
+namespace DotNet.Comm.ClientPorts
 {
     /// <summary>Port 종류</summary>
     public enum PortType
@@ -61,6 +61,7 @@ namespace DotNet.Comm.Structures.ClientPorts
         /// </summary>
         /// <param name="bytes">전송할 Byte Array</param>
         public abstract void Write(byte[] bytes);
+        public abstract void InitPort();
         /// <summary>
         /// Log Event 실행
         /// </summary>
