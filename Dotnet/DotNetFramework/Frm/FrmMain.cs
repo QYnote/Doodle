@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DotNetFramework.Frm
+namespace DotNetFrame.Frm
 {
     public partial class FrmMain : Form
     {

@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DotNetFramework
+namespace DotNetFrame
 {
     public partial class FrmSolution : Form
     {
@@ -18,6 +18,7 @@ namespace DotNetFramework
         private QYLeftMenu leftMenu = new QYLeftMenu();
         private QYLeftMenuItem btnCommTester = new QYLeftMenuItem();
         private QYLeftMenuItem btnDataBase = new QYLeftMenuItem();
+        private QYLeftMenuItem btnServer = new QYLeftMenuItem();
 
         private Panel pnlTitleBar = new Panel();
         private Label lblTitleText = new Label();
@@ -36,6 +37,8 @@ namespace DotNetFramework
         {
             InitializeComponent();
             InitUI();
+
+            Load += (s, e) => { CallForm("Main"); };
         }
 
         private void InitUI()
@@ -59,6 +62,10 @@ namespace DotNetFramework
             this.btnDataBase.Name = "DBConnector";
             this.btnDataBase.Image = DotNet.Utils.Properties.Resources.Server_32x32;
             this.btnDataBase.Text = "Database 접속기";
+
+            this.btnServer.Name = "Server";
+            this.btnServer.Image = DotNet.Utils.Properties.Resources.Comm_32x32;
+            this.btnServer.Text = "임시서버 생성기";
 
             #endregion Left Menu End
             #region Title Bar
@@ -132,6 +139,7 @@ namespace DotNetFramework
             this.pnlTitleBar.Controls.Add(this.btnSize);
             this.pnlTitleBar.Controls.Add(this.btnMinimize);
             this.Controls.Add(this.pnlTitleBar);
+            this.leftMenu.Items.Add(this.btnServer);
             this.leftMenu.Items.Add(this.btnDataBase);
             this.leftMenu.Items.Add(this.btnCommTester);
             this.Controls.Add(this.leftMenu);
@@ -159,9 +167,10 @@ namespace DotNetFramework
             //3. 신규 Form 생성
             switch(frmName)
             {
-                case "Main": this._curForm = new DotNetFramework.Frm.FrmMain() { Name = frmName }; break;
-                case "CommTest": this._curForm = new DotNet.Comm.Frm.FrmCommTester() { Name = frmName }; break;
+                case "Main": this._curForm = new Frm.FrmMain() { Name = frmName }; break;
+                case "CommTest": this._curForm = new Frm.FrmCommTester() { Name = frmName }; break;
                 case "DBConnector": this._curForm = new Frm.FrmDataBase() { Name = frmName }; break;
+                case "Server": this._curForm = new Frm.FrmServer() { Name = frmName }; break;
             }
 
             if(this._curForm != null)

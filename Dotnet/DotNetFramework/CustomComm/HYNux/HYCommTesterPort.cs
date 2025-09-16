@@ -38,8 +38,6 @@ namespace DotNetFrame.CustomComm.HYNux
         public event HYPortLogHandler Log;
 
         public delegate void ReadWriteHandler(string title, byte[] data);
-        public event ReadWriteHandler CommLog;
-        public event ReadWriteHandler StackBuff;
 
         private CommType _commType = CommType.Serial;
         private ProtocolType _protocolType = ProtocolType.HY_ModbusRTU;

@@ -1,4 +1,4 @@
-﻿namespace DotNet.Comm.Frm
+﻿namespace DotNetFrame.Frm
 {
     partial class FrmCommTester
     {

@@ -1,4 +1,4 @@
-﻿namespace DotNetFramework
+﻿namespace DotNetFrame
 {
     partial class FrmSolution
     {

@@ -1,5 +1,4 @@
 ﻿using DotNet.Utils.Controls;
-using DotNetFramework.Frm;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,9 +14,7 @@ namespace DotNetFramework
 {
     public partial class FrmSolution_NonUse : Form
     {
-        private ToolStripButton btnCommTester;
         private ToolStripButton btnSensorToImage;
-        private ToolStripButton btnDataBase;
         private ToolStripButton btnTest;
 
         public FrmSolution_NonUse()
@@ -50,11 +47,6 @@ namespace DotNetFramework
             this.btnSensorToImage.Name = "SensorToImage";
             this.btnSensorToImage.Image = DotNet.Utils.Properties.Resources.Image_32x32;
             this.btnSensorToImage.ToolTipText = "센서이미지화";
-
-            this.btnDataBase.Name = "DataBase";
-            this.btnDataBase.Image = DotNet.Utils.Properties.Resources.Server_32x32;
-            this.btnDataBase.ToolTipText = "Database";
-            this.btnDataBase.DisplayStyle = ToolStripItemDisplayStyle.Image;
 
             this.btnTest = new ToolStripButton() { DisplayStyle = ToolStripItemDisplayStyle.Image }; //통신
             this.btnTest.Name = "Test";
@@ -91,10 +83,7 @@ namespace DotNetFramework
             if (!isOpen)
             {
                 //Form 생성
-                if (btnName == this.btnCommTester.Name) { frm = new DotNet.Comm.Frm.FrmCommTester() { Name = this.btnCommTester.Name }; }
-                else if (btnName == this.btnSensorToImage.Name) { frm = new DotNetFrame.CustomComm.FrmServer() { Name = this.btnSensorToImage.Name }; }
-                else if (btnName == this.btnDataBase.Name) { frm = new FrmDataBase() { Name = this.btnDataBase.Name }; }
-                else if (btnName == btnTest.Name)
+                if (btnName == btnTest.Name)
                 {
                     frm = null;
                 }

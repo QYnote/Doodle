@@ -1,4 +1,4 @@
-﻿namespace DotNetFrame.CustomComm
+﻿namespace DotNetFrame.Frm
 {
     partial class FrmServer
     {

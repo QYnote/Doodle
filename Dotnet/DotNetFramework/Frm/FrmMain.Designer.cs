@@ -1,4 +1,4 @@
-﻿namespace DotNetFramework.Frm
+﻿namespace DotNetFrame.Frm
 {
     partial class FrmMain
     {

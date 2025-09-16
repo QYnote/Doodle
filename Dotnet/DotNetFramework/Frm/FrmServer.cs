@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DotNetFrame.CustomComm
+namespace DotNetFrame.Frm
 {
     public partial class FrmServer : Form
     {
@@ -99,10 +99,10 @@ namespace DotNetFrame.CustomComm
 
         private void HYDevice()
         {
-            this._server = new TCPServer(ServerSendType.ReadWrite);
+            this._server = new TCPServer();
             (this._server as TCPServer).IP = "127.0.0.1";
             (this._server as TCPServer).PortNo = 5000;
-            (this._server as TCPServer).ClientActiveEvent += ClientActiveEvent_HYDevice; ;
+            (this._server as TCPServer).CreateResponseEvent += ClientActiveEvent_HYDevice; ;
             this._protocol = new DotNet.Comm.Protocols.Customs.HYNux.HYModbus(false);
             (this._protocol as DotNet.Comm.Protocols.Customs.HYNux.HYModbus).IsTCP = true;
         }
@@ -126,10 +126,10 @@ namespace DotNetFrame.CustomComm
 
         private void InfinityWrite()
         {
-            this._server = new TCPServer(ServerSendType.WriteRead);
+            this._server = new TCPServer();
             (this._server as TCPServer).IP = "127.0.0.1";
             (this._server as TCPServer).PortNo = 5000;
-            (this._server as TCPServer).ClientActiveEvent += FrmServer_ClientActiveEvent;
+            (this._server as TCPServer).CreateResponseEvent += FrmServer_ClientActiveEvent;
             this._protocol = new DotNet.Comm.Protocols.Customs.HYNux.PCLink(false);
         }
 

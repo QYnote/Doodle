@@ -12,9 +12,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static DotNetFrame.CustomComm.HYNux.HYCommTesterPort;
 
-namespace DotNet.Comm.Frm
+namespace DotNetFrame.Frm
 {
 
     public partial class FrmCommTester : Form
@@ -1087,7 +1086,7 @@ namespace DotNet.Comm.Frm
             try
             {
                 if (this.InvokeRequired)
-                    this.BeginInvoke(new HYPortLogHandler(UpdateUI), logName, data);
+                    this.BeginInvoke(new HYCommTesterPort.HYPortLogHandler(UpdateUI), logName, data);
                 else
                 {
                     string str = string.Empty;
@@ -1293,7 +1292,11 @@ namespace DotNet.Comm.Frm
             }
             catch (Exception ex)
             {
-
+                System.Diagnostics.Debug.WriteLine(string.Format(
+                    "FrmCommTester.cs - UpdateUI()\r\n" +
+                    "{0}\r\n\r\n" +
+                    "{1}",
+                    ex.Message, ex.StackTrace));
             }
         }
 
