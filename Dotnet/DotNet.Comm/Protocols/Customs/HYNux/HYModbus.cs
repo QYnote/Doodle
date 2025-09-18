@@ -175,66 +175,6 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
                         if (this.IsAscii) frameLen *= 2;
                         break;
-                    //case 0x17:
-                    //    if (this.ProductType == ProductType.TS510)
-                    //        //Address(1) + Cmd(1 : 0x17) + Pattern No.(2) + Byte 수(2) + Data(90) + CRC (2)
-                    //        frameLen = 98;
-                    //    else if (this.ProductType == ProductType.TD300 || this.ProductType == ProductType.TD500)
-                    //    {
-                    //        //Address(1) + Cmd(1 : 0x17) + Byte 수(2) + Data(~) + CRC (2)
-                    //        int dataLen = (buffer[startIdx + 4] << 8) + buffer[startIdx + 5];
-                    //        frameLen = 4 + dataLen;
-                    //    }
-                    //    else if (this.ProductType == ProductType.TD510 || this.ProductType == ProductType.TD511)
-                    //    {
-                    //        //Address(1) + Cmd(1 : 0x17) + Pattern No.(2) + 시작 Seg No(2) +Seg 수(2) + Byte 수(2: 32 * Seg수 고정) + Data(n)
-                    //        int byteCountLen = this.IsEXP ? 4 : 2,
-                    //            segCount = 0;
-                    //        if (this.IsAscii) byteCountLen *= 2;
-
-                    //        if (this.IsAscii)
-                    //        {
-                    //            //Ascii → Rtu Bytes
-                    //            byte[] dataLenBytes = new byte[byteCountLen / 2];
-
-                    //            for (int i = 0; i < dataLenBytes.Length; i++)
-                    //            {
-                    //                dataLenBytes[i] = Convert.ToByte(
-                    //                    Encoding.ASCII.GetString(
-                    //                        new byte[] {
-                    //                            buffer[startIdx + headerLen + 8 + (i * 2)],
-                    //                            buffer[startIdx + headerLen + 8 + (i * 2) + 1]
-                    //                        }
-                    //                    ),
-                    //                    16
-                    //                );
-                    //            }
-
-                    //            //Data 길이 추출
-                    //            for (int i = 0; i < dataLenBytes.Length; i++)
-                    //                segCount += dataLenBytes[i] << (8 * ((dataLenBytes.Length - 1) - i));
-
-                    //            segCount *= 2;
-
-                    //            frameLen = headerLen + 8 + byteCountLen + ((segCount * 32) * 2);
-                    //        }
-                    //        else
-                    //        {
-                    //            segCount = (buffer[startIdx + 6] << 8) + buffer[startIdx + 7];
-
-                    //            frameLen = headerLen + 8 + byteCountLen + (segCount * 32);
-                    //        }
-                    //    }
-                    //    break;
-                    //case 0x1A:
-                    //    if (this.ProductType == ProductType.TS510)
-                    //        //Address(1) + Cmd(1 : 0x1A) + Pattern No.(2) + CRC (2)
-                    //        //사양서에는 Pattern No. 뒤에 Byte 수(2)가 있지만 실제로는 오지 않음
-                    //        frameLen = 6;
-                    //    else if (this.ProductType == ProductType.TD510 || this.ProductType == ProductType.TD511)
-                    //        //Address(1) + Cmd(1 : 0x1A) + Pattern No.(2) + 시작 Seg No(2) + Seg 수(2) + CRC (2)
-                    //        frameLen = 10;
-                    //    break;
                     case 0x2B:
                         //TD300, 500 - (0x2B)Read Device Indetification	
                         frameLen = 68;
@@ -260,6 +200,9 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
                             int bodyLen = 1;
                             if (this.IsAscii) bodyLen *= 2;
 
+                            frameLen = headerLen + bodyLen;
+                            if (buffer.Length < frameLen) continue;
+
                             System.Diagnostics.Debug.WriteLine(
                                 string.Format("({0}) Protocol Error - Func: {1:X2} / ErrCode: {2:X2}",
                                     this.GetType().Name,
@@ -269,8 +212,6 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
                                         buffer[startIdx + 2]
                                 )
                             );
-
-                            frameLen = headerLen + bodyLen;
                         }
                         else
                         {
@@ -637,109 +578,74 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
         #endregion ErrorCode End
 
-        public override List<byte[]> CreateRequest_ReadHoldingRegister(int deviceAddr, List<int> readList, int maxFrameCount = 63)
+        public List<byte[]> CreateRequest_ReadCoils(int deviceAddr, List<int> readList, int maxFrameCount = 63)
         {
-            List<byte[]> frameList = base.CreateRequest_ReadHoldingRegister(deviceAddr, readList, maxFrameCount);
+            List<int[]> addrList = base.SortContinuouseAddress(readList, maxFrameCount);
+            List<byte[]> dataFrame = base.CreateRequest_Read(deviceAddr, addrList);
 
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x01;
+
+            return CreateRequest_ApplyCustom(dataFrame);
+        }
+        public List<byte[]> CreateRequest_ReadDiscreteInputs(int deviceAddr, List<int> readList, int maxFrameCount = 63)
+        {
+            List<int[]> addrList = base.SortContinuouseAddress(readList, maxFrameCount);
+            List<byte[]> dataFrame = base.CreateRequest_Read(deviceAddr, addrList);
+
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x02;
+
+            return CreateRequest_ApplyCustom(dataFrame);
+        }
+        public List<byte[]> CreateRequest_ReadHoldingRegister(int deviceAddr, List<int> readList, int maxFrameCount = 63)
+        {
+            List<int[]> addrList = base.SortContinuouseAddress(readList, maxFrameCount);
+            List<byte[]> dataFrame = base.CreateRequest_Read(deviceAddr, addrList);
+
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x03;
+
+            return CreateRequest_ApplyCustom(dataFrame);
+        }
+        public List<byte[]> CreateRequest_ReadInputRegister(int deviceAddr, List<int> readList, int maxFrameCount = 63)
+        {
+            List<int[]> addrList = base.SortContinuouseAddress(readList, maxFrameCount);
+            List<byte[]> dataFrame = base.CreateRequest_Read(deviceAddr, addrList);
+
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x04;
+
+            return CreateRequest_ApplyCustom(dataFrame);
+        }
+
+        /// <summary>
+        /// Modbus 기본처리 Frame → HYModbus 처리 Process 진행
+        /// </summary>
+        /// <param name="frameList">Modbus Frame</param>
+        /// <returns></returns>
+        private List<byte[]> CreateRequest_ApplyCustom(List<byte[]> frameList)
+        {
             //RTU → Ascii
             if (this.IsAscii)
                 frameList = this.ConvertFrame_RtuToAscii(frameList);
 
             //ErrorCode Append
-            List<byte[]> errList = new List<byte[]>();
-            foreach (var frame in frameList)
-            {
-                byte[] errCode = this.CreateErrCode(frame);
-                byte[] result = frame;
-
-                if (errCode != null)
-                {
-                    result = QYUtils.BytesAppend(frame, errCode);
-
-                    if (this.IsAscii)
-                    {
-                        byte[] ascii = new byte[result.Length + 3];
-                        ascii[0] = 0x3A; //':'
-                        ascii[ascii.Length - 2] = 0x0D;//CR
-                        ascii[ascii.Length - 1] = 0x0A;//LF
-
-                        Buffer.BlockCopy(result, 0, ascii, 1, result.Length);
-
-                        result = ascii;
-                    }
-                }
-
-                errList.Add(result);
-            }
-            frameList = errList;
+            frameList = Append_ErrorCode(frameList);
 
             //TCP
             if (this.IsTCP)
-            {
-                List<byte[]> tcpList = new List<byte[]>();
-                foreach (var frame in frameList)
-                {
-                    //Transaction ID[2] + Protocol ID[2] + DataLength[2] + ModbusFrame
-                    byte[] tcpFrame = new byte[6];
-                    tcpFrame[4] = (byte)((frame.Length >> 8) & 0xFF);
-                    tcpFrame[5] = (byte)(frame.Length & 0xFF);
-
-                    byte[] temp = QYUtils.BytesAppend(tcpFrame, frame);
-
-                    tcpList.Add(temp);
-                }
-
-                if (tcpList.Count > 0)
-                    frameList = tcpList;
-            }
-
+                frameList = Append_TCP(frameList);
 
             if (frameList.Count == 0) return null;
 
             return frameList;
         }
-
-        public override List<byte[]> CreateRequest_ReadInputRegister(int deviceAddr, List<int> readList, int maxFrameCount = 63)
-        {
-            List<byte[]> frameList = base.CreateRequest_ReadInputRegister(deviceAddr, readList, maxFrameCount);
-
-            //RTU → Ascii
-            if (this.IsAscii)
-                frameList = this.ConvertFrame_RtuToAscii(frameList);
-
-            //ErrorCode Append
-            List<byte[]> errList = new List<byte[]>();
-            foreach (var frame in frameList)
-            {
-                byte[] errCode = this.CreateErrCode(frame);
-                byte[] result = frame;
-
-                if (errCode != null)
-                {
-                    result = QYUtils.BytesAppend(frame, errCode);
-
-                    if (this.IsAscii)
-                    {
-                        byte[] ascii = new byte[result.Length + 3];
-                        ascii[0] = 0x3A; //':'
-                        ascii[ascii.Length - 2] = 0x0D;//CR
-                        ascii[ascii.Length - 1] = 0x0A;//LF
-
-                        Buffer.BlockCopy(result, 0, ascii, 1, result.Length);
-
-                        result = ascii;
-                    }
-                }
-
-                errList.Add(result);
-            }
-            frameList = errList;
-
-            if (frameList.Count == 0) return null;
-
-            return frameList;
-        }
-
+        /// <summary>
+        /// Modbus → Ascii 변환처리
+        /// </summary>
+        /// <param name="frameList">Modbus Frmae</param>
+        /// <returns>Ascii Frame</returns>
         private List<byte[]> ConvertFrame_RtuToAscii(List<byte[]> frameList)
         {
             List<byte[]> asciiFrameList = new List<byte[]>();
@@ -759,6 +665,66 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
             }
 
             return asciiFrameList;
+        }
+        /// <summary>
+        /// ErrorCode 붙이기
+        /// </summary>
+        /// <param name="frameList">계산할 Frame</param>
+        /// <returns>ErrorCode가 붙은 Frame</returns>
+        private List<byte[]> Append_ErrorCode(List<byte[]> frameList)
+        {
+            List<byte[]> errList = new List<byte[]>();
+            foreach (var frame in frameList)
+            {
+                byte[] errCode = this.CreateErrCode(frame);
+                byte[] result = frame;
+
+                if (errCode != null)
+                {
+                    result = QYUtils.BytesAppend(frame, errCode);
+
+                    if (this.IsAscii)
+                    {
+                        byte[] ascii = new byte[result.Length + 3];
+                        ascii[0] = 0x3A; //':'
+                        ascii[ascii.Length - 2] = 0x0D;//CR
+                        ascii[ascii.Length - 1] = 0x0A;//LF
+
+                        Buffer.BlockCopy(result, 0, ascii, 1, result.Length);
+
+                        result = ascii;
+                    }
+                }
+
+                errList.Add(result);
+            }
+
+            return errList;
+        }
+        /// <summary>
+        /// TCP Frame 붙이기
+        /// </summary>
+        /// <param name="frameList">붙일 Frame</param>
+        /// <returns>TCP Frame이 붙은 Frame</returns>
+        private List<byte[]> Append_TCP(List<byte[]> frameList)
+        {
+            List<byte[]> tcpList = new List<byte[]>();
+            foreach (var frame in frameList)
+            {
+                //Transaction ID[2] + Protocol ID[2] + DataLength[2] + ModbusFrame
+                byte[] tcpFrame = new byte[6];
+                tcpFrame[4] = (byte)((frame.Length >> 8) & 0xFF);
+                tcpFrame[5] = (byte)(frame.Length & 0xFF);
+
+                byte[] temp = QYUtils.BytesAppend(tcpFrame, frame);
+
+                tcpList.Add(temp);
+            }
+
+            if (tcpList.Count == 0)
+                return frameList;
+
+            return tcpList;
         }
     }
 }

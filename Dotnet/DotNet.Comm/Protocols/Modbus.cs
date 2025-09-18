@@ -283,6 +283,109 @@ namespace DotNet.Comm.Protocols
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// 01(0x01) ReadCoils Request byte Array List 생성
+        /// </summary>
+        /// <param name="deviceAddr">장비 통신주소</param>
+        /// <param name="readList">읽으려는 Registry Address 목록, </param>
+        /// <param name="maxFrameCount">1개 전송시 최대 연속 Address수</param>
+        /// <returns>Requeset Byte Array List</returns>
+        public virtual List<byte[]> CreateRequest_ReadCoils(int deviceAddr, List<int> readList)
+        {
+            List<int[]> addrList = base.SortContinuouseAddress(readList, 0xFFFF);
+            List<byte[]> dataFrame = this.CreateRequest_Read(deviceAddr, addrList);
+
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x01;
+
+            if (dataFrame.Count == 0) return null;
+
+            return dataFrame;
+        }
+        /// <summary>
+        /// 02(0x02) ReadDiscreteInputs Request byte Array List 생성
+        /// </summary>
+        /// <param name="deviceAddr">장비 통신주소</param>
+        /// <param name="readList">읽으려는 Registry Address 목록</param>
+        /// <param name="maxFrameCount">1개 전송시 최대 연속 Address수</param>
+        /// <returns>Requeset Byte Array List</returns>
+        public virtual List<byte[]> CreateRequest_ReadDiscreteInputs(int deviceAddr, List<int> readList)
+        {
+            List<int[]> addrList = base.SortContinuouseAddress(readList, 0xFFFF);
+            List<byte[]> dataFrame = this.CreateRequest_Read(deviceAddr, addrList);
+
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x02;
+
+            if (dataFrame.Count == 0) return null;
+
+            return dataFrame;
+        }
+        /// <summary>
+        /// 03(0x03) ReadHoldingRegister Request byte Array List 생성
+        /// </summary>
+        /// <param name="deviceAddr">장비 통신주소</param>
+        /// <param name="readList">읽으려는 Registry Address 목록</param>
+        /// <param name="maxFrameCount">1개 전송시 최대 연속 Address수</param>
+        /// <returns>Requeset Byte Array List</returns>
+        public virtual List<byte[]> CreateRequest_ReadHoldingRegister(int deviceAddr, List<int> readList)
+        {
+            List<int[]> addrList = base.SortContinuouseAddress(readList, 0xFFFF);
+            List<byte[]> dataFrame = this.CreateRequest_Read(deviceAddr, addrList);
+
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x03;
+
+            if (dataFrame.Count == 0) return null;
+
+            return dataFrame;
+        }
+        /// <summary>
+        /// 04(0x04) ReadInputRegister Request byte Array List 생성
+        /// </summary>
+        /// <param name="deviceAddr">장비 통신주소</param>
+        /// <param name="readList">읽으려는 Registry Address 목록</param>
+        /// <param name="maxFrameCount">1개 전송시 최대 연속 Address수</param>
+        /// <returns>Requeset Byte Array List</returns>
+        public virtual List<byte[]> CreateRequest_ReadInputRegister(int deviceAddr, List<int> readList)
+        {
+            List<int[]> addrList = base.SortContinuouseAddress(readList, 0xFFFF);
+            List<byte[]> dataFrame = this.CreateRequest_Read(deviceAddr, addrList);
+
+            for (int i = 0; i < dataFrame.Count; i++)
+                dataFrame[i][1] = 0x04;
+
+            if (dataFrame.Count == 0) return null;
+
+            return dataFrame;
+        }
+        /// <summary>
+        /// 01~04(0x01~0x04) Request 기본구조 byte Array List 생성
+        /// </summary>
+        /// <returns>Cmd값이 0x00으로 지정되어있는 Frame List</returns>
+        protected List<byte[]> CreateRequest_Read(int deviceAddr, List<int[]> readList)
+        {
+            byte addr = (byte)(deviceAddr & 0xFF);
+            List<byte[]> dataFrame = new List<byte[]>();
+
+            foreach (var addrFrame in readList)
+            {
+                byte[] frame = new byte[6];
+                frame[0] = addr;
+                frame[1] = 0x00;
+                frame[2] = (byte)((addrFrame[0] >> 8) & 0xFF);
+                frame[3] = (byte)(addrFrame[0] & 0xFF);
+                frame[4] = (byte)((addrFrame.Length >> 8) & 0xFF);
+                frame[5] = (byte)(addrFrame.Length & 0xFF);
+
+                dataFrame.Add(frame);
+            }
+
+            if (dataFrame.Count == 0) return null;
+
+            return dataFrame;
+        }
+
         #endregion Request End
         #region ErrorCode
 
@@ -297,60 +400,5 @@ namespace DotNet.Comm.Protocols
         }
 
         #endregion ErrorCode End
-
-        /// <summary>
-        /// 03(0x03) ReadHoldingRegister Request byte Array List 생성
-        /// </summary>
-        /// <param name="deviceAddr">장비 통신주소</param>
-        /// <param name="readList">읽으려는 Registry Address 목록</param>
-        /// <param name="maxFrameCount">1개 전송시 최대 연속 Address수</param>
-        /// <returns>Requeset Byte Array List</returns>
-        public virtual List<byte[]> CreateRequest_ReadHoldingRegister(int deviceAddr, List<int> readList, int maxFrameCount = 63)
-        {
-            byte addr = (byte)(deviceAddr & 0xFF);
-            List<byte[]> dataFrame = new List<byte[]>();
-            List<int[]> addrList = base.SortContinuouseAddress(readList, maxFrameCount);
-
-            foreach (var addrFrame in addrList)
-            {
-                byte[] frame = new byte[6];
-                frame[0] = addr;
-                frame[1] = 0x03;
-                frame[2] = (byte)((addrFrame[0] >> 8) & 0xFF);
-                frame[3] = (byte)(addrFrame[0] & 0xFF);
-                frame[4] = (byte)((addrFrame.Length >> 8) & 0xFF);
-                frame[5] = (byte)(addrFrame.Length & 0xFF);
-
-                dataFrame.Add(frame);
-            }
-
-            if (dataFrame.Count == 0) return null;
-
-            return dataFrame;
-        }
-
-        public virtual List<byte[]> CreateRequest_ReadInputRegister(int deviceAddr, List<int> readList, int maxFrameCount = 63)
-        {
-            byte addr = (byte)(deviceAddr & 0xFF);
-            List<byte[]> dataFrame = new List<byte[]>();
-            List<int[]> addrList = base.SortContinuouseAddress(readList, maxFrameCount);
-
-            foreach (var addrFrame in addrList)
-            {
-                byte[] frame = new byte[6];
-                frame[0] = addr;
-                frame[1] = 0x04;
-                frame[2] = (byte)((addrFrame[0] >> 8) & 0xFF);
-                frame[3] = (byte)(addrFrame[0] & 0xFF);
-                frame[4] = (byte)((addrFrame.Length >> 8) & 0xFF);
-                frame[5] = (byte)(addrFrame.Length & 0xFF);
-
-                dataFrame.Add(frame);
-            }
-
-            if (dataFrame.Count == 0) return null;
-
-            return dataFrame;
-        }
     }
 }

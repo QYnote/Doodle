@@ -79,6 +79,9 @@ namespace DotNetFrame.CustomComm.HYNux
             set
             {
                 this._protocolType = value;
+                this.RegularQueue.Clear();
+                this.WriteQueue.Clear();
+                this._sendingBytes = null;
 
                 switch (value)
                 {
@@ -130,7 +133,7 @@ namespace DotNetFrame.CustomComm.HYNux
         internal HYCommTesterPort()
         {
             this.CommType = CommType.Serial;
-            this.ProtocolType = ProtocolType.HY_ModbusRTU;
+            this.ProtocolType = ProtocolType.None;
             this._bgWorker.WorkerSupportsCancellation = true;
             this._bgWorker.DoWork += _bgWorker_DoWork;
         }
@@ -242,7 +245,7 @@ namespace DotNetFrame.CustomComm.HYNux
                             //3. Protocol 처리
                             if (this.Protocol == null)
                             {
-                                this._sendingBytes = null;
+
                             }
                             else
                             {

@@ -1134,6 +1134,40 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
         #region 일반 PCLink Request 생성
 
         /// <summary>
+        /// IRR 랜덤 Address 읽기 Request byte Array List 생성
+        /// </summary>
+        /// <param name="deviceAddr">장비 통신주소</param>
+        /// <param name="readList">읽으려는 Registry Address 목록</param>
+        /// <returns>Requeset Byte Array List</returns>
+        public List<byte[]> CreateRequest_IRR(int deviceAddr, List<int> readList)
+        {
+            if (this.IsTH3500 || this.IsTD3500)
+                throw new Exception(string.Format("[ERROR]CreateRequest - IRR : Protocol is TD3,500 or TH3,500"));
+
+            //1. 연속 Adress목록 추출
+            List<int[]> addrList = base.SortContinuouseAddress(readList, 32);
+            List<byte[]> frameList = new List<byte[]>();
+
+            foreach (var addrAry in addrList)
+            {
+                if (addrAry.Length == 0) continue;
+
+                //2. Main Frame 생성
+                string bodyStr = string.Format("{0:D2}IRR,{1:D2}", deviceAddr, addrAry.Length);
+                foreach (var addr in addrAry)
+                    bodyStr += string.Format(",{0:D4}", addr);
+
+                //3. Frame 생성
+                byte[] frame = this.CreateFrame(bodyStr);
+                frameList.Add(frame);
+            }
+
+            if (frameList.Count > 0)
+                return frameList;
+
+            return null;
+        }
+        /// <summary>
         /// DRS 연속 Address 읽기 Request byte Array List 생성
         /// </summary>
         /// <param name="deviceAddr">장비 통신주소</param>
@@ -1165,7 +1199,6 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
             return null;
         }
-
         /// <summary>
         /// DRR 랜덤 Address 읽기 Request byte Array List 생성
         /// </summary>

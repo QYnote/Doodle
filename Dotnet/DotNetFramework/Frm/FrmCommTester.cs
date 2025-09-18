@@ -725,8 +725,6 @@ namespace DotNetFrame.Frm
             this._dtProtocolResult.Rows.Add();
             this.gvCommResult.ClearSelection();
             this.gvProtocolResult.ClearSelection();
-
-            this.gvCommResult.EndEdit();
         }
 
         private void InitPort()
@@ -808,6 +806,7 @@ namespace DotNetFrame.Frm
                 return;
             }
             InitDataLogGrid();
+            this._port.WriteQueue.Clear();
 
 
             int handle = 0;
@@ -877,176 +876,6 @@ namespace DotNetFrame.Frm
             }
         }
 
-        private void WriteLog(string type, params byte[] data)
-        {
-            try
-            {
-                if (this.InvokeRequired)
-                    this.BeginInvoke(new BytesLogHandler(WriteLog), new object[] { type, data });
-                else
-                {
-                    string dataStr = string.Empty;
-                    if (data != null)
-                    {
-                        for (int i = 0; i < data.Length; i++)
-                        {
-                            dataStr += string.Format(" {0:X2}", data[i]);
-                        }
-                    }
-
-                    switch (type)
-                    {
-                        case "After Write":
-                            InsertData(type, data);
-                            this.txtLog.AppendText(string.Format("Req:{0}\r\n", dataStr));
-                            break;
-                        case "None Receive":
-                        case "Receive Stop":
-                        case "Receive Too Long":
-                            InsertData(type, data);
-                            this._dtDataResult.Rows[0][type] = (uint)(this._dtDataResult.Rows[0][type]) + 1;
-                            this.txtLog.AppendText(string.Format("Rcv Timeover:{0}\r\n\r\n", dataStr));
-                            break;
-                        case "Receive Success":
-                            InsertData(type, data);
-                            this._dtDataResult.Rows[0]["Success"] = (uint)(this._dtDataResult.Rows[0]["Success"]) + 1;
-                            this.txtLog.AppendText(string.Format("Rcv:{0}\r\n\r\n", dataStr));
-                            break;
-                        case "ErrorCheck Dismatch":
-                            InsertData(type, data);
-                            this._dtProtocolResult.Rows[0]["ErrChk"] = (uint)(this._dtProtocolResult.Rows[0]["ErrChk"]) + 1;
-                            //에러코드 확인
-                            {
-                                //byte[] temp,
-                                //    calcErrCode = new byte[this._port.ErrorCheck.CheckLen],
-                                //    getErrCode = new byte[this._port.ErrorCheck.CheckLen];
-                                //string calcErrStr = string.Empty,
-                                //    getErrStr = string.Empty;
-                                //if (this._port.ErrorCheck is ModbusAsciiErrorCheck
-                                //    || this._port.ErrorCheck is PCLinkErrorCheck)
-                                //    temp = new byte[data.Length - 2 - this._port.ErrorCheck.CheckLen];
-                                //else
-                                //    temp = new byte[data.Length - this._port.ErrorCheck.CheckLen];
-
-                                ////받은 Error Code
-                                //Buffer.BlockCopy(data, temp.Length - 1, getErrCode, 0, getErrCode.Length);
-                                //for (int i = 0; i < getErrCode.Length; i++)
-                                //{
-                                //    getErrStr += string.Format(" {0:X2}", getErrCode[i]);
-                                //}
-
-                                ////계산식 Error Code
-                                //Buffer.BlockCopy(data, 0, temp, 0, temp.Length);
-                                //calcErrCode = this._port.ErrorCheck.CreateCheckBytes(temp);
-                                //for (int i = 0; i < calcErrCode.Length; i++)
-                                //{
-                                //    calcErrStr += string.Format(" {0:X2}", calcErrCode[i]);
-                                //}
-
-                                //this.txtLog.AppendText(string.Format("ErrorCheck Dismatch:{0}\r\n" +
-                                //    "계산된 ErrCode :{1} / 받은 ErrCode :{2}\r\n\r\n",
-                                //    dataStr, calcErrStr, getErrStr));
-                            }
-                            break;
-                        case "Protocol NG":
-                            InsertData(type, data);
-                            this._dtProtocolResult.Rows[0]["ProtocolErr"] = (uint)(this._dtProtocolResult.Rows[0]["ProtocolErr"]) + 1;
-                            this.txtLog.AppendText(string.Format("Protocol Error:{0}\r\n", dataStr));
-                            break;
-                        case "Stack Buff":
-                            WriteBuffer(data);
-                            break;
-                    }
-                }
-            }
-            catch
-            {
-
-            }
-        }
-
-        private void InsertData(string type, byte[] data)
-        {
-            DataRow dr = this._dtDataLog.NewRow();
-            switch (type)
-            {
-                case "After Write":
-                    dr["Type"] = "Req";
-                    break;
-                case "None Receive":
-                case "Receive Stop":
-                case "Receive Too Long":
-                case "Receive Success":
-                case "ErrorCheck Dismatch":
-                case "Protocol NG":
-                    dr["Type"] = "Rcv";
-                    break;
-                default: dr["Type"] = type; break;
-            }
-            dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-
-            if (data != null)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    string colName = string.Format("Col{0}", i);
-
-                    //데이터 길이만큼 Column 추가
-                    if (this._dtDataLog.Columns.Contains(colName) == false)
-                    {
-                        DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
-                        col.DataPropertyName = colName;
-                        col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                        col.Width = 25;
-                        col.HeaderText = (i + 1).ToString();
-                        col.ReadOnly = true;
-
-                        this.gvDataLog.Columns.Add(col);
-
-                        this._dtDataLog.Columns.Add(new DataColumn(colName, typeof(string)) { DefaultValue = string.Empty });
-                    }
-
-                    dr[colName] = data[i].ToString("X2");
-                }
-            }
-
-            this._dtDataLog.Rows.Add(dr);
-
-            if (type == "None Receive"
-                || type == "Receive Stop"
-                || type == "Receive Too Long"
-                || type == "ErrorCheck Dismatch"
-                || type == "Protocol NG"
-                )
-            {
-                //Error시 Type BackColor 지정
-                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
-            }
-
-            this.gvDataLog.FirstDisplayedScrollingRowIndex = this.gvDataLog.Rows.Count - 1;
-        }
-
-        private void WriteBuffer(byte[] data)
-        {
-            this._dtBuffer.Clear();
-            if (data == null) return;
-
-            DataRow dr = null;
-            for (int i = 0; i < data.Length; i++)
-            {
-                string fieldName = string.Format("col{0}", i % this._bufferColCount);
-
-                if (i % this._bufferColCount == 0)
-                {
-                    dr = this._dtBuffer.NewRow();
-
-                    this._dtBuffer.Rows.Add(dr);
-                }
-
-                dr[fieldName] = data[i].ToString("X2");
-            }
-        }
-
         private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             while (true)
@@ -1058,7 +887,7 @@ namespace DotNetFrame.Frm
                     else
                     {
                         if (this._isRequesting
-                            && this._port.RegularQueue.Count == 0)
+                            && this._port.WriteQueue.Count == 0)
                         {
                             if (this._maxReq <= this._curReq)
                                 break;
@@ -1066,7 +895,6 @@ namespace DotNetFrame.Frm
                             {
                                 this._curReq++;
                                 this._port.WriteQueue.Enqueue(this._recycleData);
-                                this._dtDataResult.Rows[0]["TryCount"] = (uint)(this._dtDataResult.Rows[0]["TryCount"]) + 1;
                             }
                         }
                     }
@@ -1115,12 +943,37 @@ namespace DotNetFrame.Frm
                                 }
                                 this._dtDataLog.Rows.Add(dr);
 
+                                //시도횟수 증가
+                                this._dtDataResult.Rows[0]["TryCount"] = this._curReq;
+
                                 //TextLog Update
                                 str = ByteToString(req);
                                 this.txtLog.AppendText(string.Format("Req:{0}\r\n", str));
                             }
                             break;
                         case "StackBuffer":
+                            {
+                                byte[] buffer = data[0] as byte[];
+                                this._dtBuffer.Clear();
+
+                                DataRow dr = null;
+                                for (int i = 0; i < buffer.Length; i++)
+                                {
+                                    string fieldName = string.Format("col{0}", i % this._bufferColCount);
+                                    if(i % this._bufferColCount == 0)
+                                    {
+                                        if (i != 0)
+                                            this._dtBuffer.Rows.Add(dr);
+
+                                        dr = this._dtBuffer.NewRow();
+                                    }
+
+                                    dr[fieldName] = buffer[i].ToString("X2");
+                                }
+
+                                if(dr != null)
+                                    this._dtBuffer.Rows.Add(dr);
+                            }
                             break;
                         case "Error-ErrorCode":
                             {
@@ -1201,7 +1054,7 @@ namespace DotNetFrame.Frm
 
                                 //TextLog Update
                                 str = ByteToString(frame);
-                                this.txtLog.AppendText(string.Format("Res:{0}\r\n", str));
+                                this.txtLog.AppendText(string.Format("Res:{0}\r\n\r\n", str));
 
                                 //Result Grid Update
                                 this._dtDataResult.Rows[0]["Success"] = (uint)(this._dtDataResult.Rows[0]["Success"]) + 1;
