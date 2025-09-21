@@ -708,6 +708,7 @@ namespace DotNetFrame.Frm
             #endregion Visible Index
 
             InitPort();
+            this._port.Log += UpdateUI;
 
             this.txtEthernetIP.Visible = false;
             this.txtPortNo.Visible = false;
@@ -781,7 +782,6 @@ namespace DotNetFrame.Frm
                 this.Ethernet.IP = this.txtEthernetIP.Text;
                 this.Ethernet.PortNo = Convert.ToInt32(this.txtPortNo.Value);
             }
-            this._port.Log += UpdateUI;
         }
 
         private RadioButton CreateRdo(object data)
@@ -954,7 +954,7 @@ namespace DotNetFrame.Frm
                         case "StackBuffer":
                             {
                                 byte[] buffer = data[0] as byte[];
-                                this._dtBuffer.Clear();
+                                this._dtBuffer.Rows.Clear();
 
                                 DataRow dr = null;
                                 for (int i = 0; i < buffer.Length; i++)
@@ -979,22 +979,7 @@ namespace DotNetFrame.Frm
                             {
                                 byte[] frame = data[0] as byte[];
                                 //수신 Grid Log Update
-                                DataRow dr = this._dtDataLog.NewRow();
-                                dr["Type"] = "Rcv";
-                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-                                for (int i = 0; i < frame.Length; i++)
-                                {
-                                    if ((i != 0) && ((i % rstColCount) == 0))
-                                    {
-                                        this._dtDataLog.Rows.Add(dr);
-                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
-                                        dr = this._dtDataLog.NewRow();
-                                    }
-
-                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
-                                }
-                                this._dtDataLog.Rows.Add(dr);
-                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                AddRcvDataLog(frame, true);
 
                                 //TextLog Update
                                 str = ByteToString(data[0] as byte[]);
@@ -1008,22 +993,7 @@ namespace DotNetFrame.Frm
                             {
                                 byte[] frame = data[0] as byte[];
                                 //수신 Grid Log Update
-                                DataRow dr = this._dtDataLog.NewRow();
-                                dr["Type"] = "Rcv";
-                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-                                for (int i = 0; i < frame.Length; i++)
-                                {
-                                    if ((i != 0) && ((i % rstColCount) == 0))
-                                    {
-                                        this._dtDataLog.Rows.Add(dr);
-                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
-                                        dr = this._dtDataLog.NewRow();
-                                    }
-
-                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
-                                }
-                                this._dtDataLog.Rows.Add(dr);
-                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                AddRcvDataLog(frame, true);
 
                                 //TextLog Update
                                 str = ByteToString(data[0] as byte[]);
@@ -1037,21 +1007,7 @@ namespace DotNetFrame.Frm
                             {
                                 byte[] frame = data[1] as byte[];
                                 //수신 Grid Log Update
-                                DataRow dr = this._dtDataLog.NewRow();
-                                dr["Type"] = "Rcv";
-                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-                                for (int i = 0; i < frame.Length; i++)
-                                {
-                                    if ((i != 0) && ((i % rstColCount) == 0))
-                                    {
-                                        this._dtDataLog.Rows.Add(dr);
-                                        dr = this._dtDataLog.NewRow();
-                                    }
-
-                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
-                                }
-                                this._dtDataLog.Rows.Add(dr);
-
+                                AddRcvDataLog(frame, false);
                                 //TextLog Update
                                 str = ByteToString(frame);
                                 this.txtLog.AppendText(string.Format("Res:{0}\r\n\r\n", str));
@@ -1067,7 +1023,7 @@ namespace DotNetFrame.Frm
                                 dr["Type"] = "Rcv";
                                 dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
                                 this._dtDataLog.Rows.Add(dr);
-                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Salmon;
 
                                 //TextLog Update
                                 this.txtLog.AppendText(string.Format("Res Timeover - None: -\r\n"));
@@ -1080,22 +1036,7 @@ namespace DotNetFrame.Frm
                             {
                                 byte[] frame = data[0] as byte[];
                                 //수신 Grid Log Update
-                                DataRow dr = this._dtDataLog.NewRow();
-                                dr["Type"] = "Rcv";
-                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-                                for (int i = 0; i < frame.Length; i++)
-                                {
-                                    if ((i != 0) && ((i % rstColCount) == 0))
-                                    {
-                                        this._dtDataLog.Rows.Add(dr);
-                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
-                                        dr = this._dtDataLog.NewRow();
-                                    }
-
-                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
-                                }
-                                this._dtDataLog.Rows.Add(dr);
-                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                AddRcvDataLog(frame, true);
 
                                 //TextLog Update
                                 str = ByteToString(frame);
@@ -1109,22 +1050,7 @@ namespace DotNetFrame.Frm
                             {
                                 byte[] frame = data[0] as byte[];
                                 //수신 Grid Log Update
-                                DataRow dr = this._dtDataLog.NewRow();
-                                dr["Type"] = "Rcv";
-                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-                                for (int i = 0; i < frame.Length; i++)
-                                {
-                                    if ((i != 0) && ((i % rstColCount) == 0))
-                                    {
-                                        this._dtDataLog.Rows.Add(dr);
-                                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
-                                        dr = this._dtDataLog.NewRow();
-                                    }
-
-                                    dr[string.Format("Col{0}", i)] = frame[i].ToString("X2");
-                                }
-                                this._dtDataLog.Rows.Add(dr);
-                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Red;
+                                AddRcvDataLog(frame, true);
 
                                 //TextLog Update
                                 str = ByteToString(data[0] as byte[]);
@@ -1166,5 +1092,33 @@ namespace DotNetFrame.Frm
             return str;
         }
 
+        private void AddRcvDataLog(byte[] bytes, bool isError = false)
+        {
+            DataRow dr = this._dtDataLog.NewRow();
+            dr["Type"] = "Rcv";
+            dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                if ((i != 0) && ((i % rstColCount) == 0))
+                {
+                    this._dtDataLog.Rows.Add(dr);
+                    if(isError)
+                    {
+                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Crimson;
+                        this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.ForeColor = Color.White;
+                    }
+                    dr = this._dtDataLog.NewRow();
+                }
+
+                dr[string.Format("Col{0}", i)] = bytes[i].ToString("X2");
+            }
+            this._dtDataLog.Rows.Add(dr);
+            if(isError)
+            {
+                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Crimson;
+                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.ForeColor = Color.White;
+            }
+
+        }
     }
 }

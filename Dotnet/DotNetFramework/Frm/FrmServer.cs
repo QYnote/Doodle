@@ -1,4 +1,5 @@
-﻿using DotNet.Server.Servers;
+﻿using DotNet.Comm.Protocols;
+using DotNet.Server.Servers;
 using DotNet.Utils.Controls;
 using System;
 using System.Collections.Generic;
@@ -16,20 +17,34 @@ namespace DotNetFrame.Frm
     {
         #region UI Controls
 
-        private TextBox txtServerLog = new TextBox();
+        private SplitContainer pnlSplit = new SplitContainer();
+        private GroupBox gbxSetting = new GroupBox();
+        private TextBox txtIP_Address = new TextBox();
+        private NumericUpDown txtIP_PortNo = new NumericUpDown();
+
+        private ComboBox cboProtocol = new ComboBox();
+
+
         private Button btnOpenClose = new Button();
+        private TextBox txtServerLog = new TextBox();
 
         #endregion UI Controls
 
         private ServerBase _server;
-        DotNet.Comm.Protocols.ProtocolFrame _protocol;
+        private ProtocolFrame _protocol;
+
+        private Dictionary<int, object> _regModbus = new Dictionary<int, object>()
+        {
+            { 0, (Int16)0x0001 },
+            { 1, (Int16)0x1672 },
+        };
+        private byte[] _stackBuffer = null;
 
 
         public FrmServer()
         {
             InitializeComponent();
             InitUI();
-            InitComponent();
 
             this.FormClosing += (s, e) =>
             {
@@ -42,56 +57,177 @@ namespace DotNetFrame.Frm
 
         private void InitUI()
         {
-            this.btnOpenClose.Location = new Point(3, 3);
-            this.btnOpenClose.Text = "Open";
-            this.btnOpenClose.Click += (s, e) =>
+            this.pnlSplit.Dock = DockStyle.Fill;
+            this.pnlSplit.Panel1.Padding = this.pnlSplit.Panel2.Padding = new Padding(3);
+
+            #region 설정 Panel
+
+            this.gbxSetting.Dock = DockStyle.Fill;
+            this.gbxSetting.Padding = new Padding(3);
+            this.gbxSetting.Text = "Server Settings";
+
+            this.txtIP_Address.Location = new Point(3, (int)(this.CreateGraphics().MeasureString(this.gbxSetting.Text, this.gbxSetting.Font).Height) + 3);
+            this.txtIP_Address.Text = "127.0.0.1";
+            this.txtIP_Address.TextAlign = HorizontalAlignment.Center;
+            this.txtIP_Address.KeyPress += QYUtils.TextBox_IP;
+
+            this.txtIP_PortNo.Location = new Point(this.txtIP_Address.Location.X, this.txtIP_Address.Bottom + 3);
+            this.txtIP_PortNo.TextAlign = HorizontalAlignment.Center;
+            this.txtIP_PortNo.Minimum = 0;
+            this.txtIP_PortNo.Maximum = int.MaxValue;
+            this.txtIP_PortNo.Value = 5000;
+            this.txtIP_PortNo.Width = this.txtIP_Address.Width;
+
+            #endregion 설정 Panel
+
+            this.cboProtocol.Location = new Point(this.txtIP_PortNo.Location.X, this.txtIP_PortNo.Bottom + 3);
+            this.cboProtocol.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cboProtocol.Items.AddRange(new string[]
             {
-                this.txtServerLog.Text = string.Empty;
+                "Modbus",
+                "TeraHz",
+            });
 
-                if(this.btnOpenClose.Text == "Open")
-                {
-                    this._server.Open();
+            this.btnOpenClose.Location = new Point(this.cboProtocol.Location.X, this.cboProtocol.Bottom + 3);
+            this.btnOpenClose.Text = "Open";
+            this.btnOpenClose.Click += BtnOpenClose_Click;
 
-                    this.btnOpenClose.Text = "Close";
-                }
-                else if(this.btnOpenClose.Text == "Close")
-                {
-                    this._server.Close();
-
-                    this.btnOpenClose.Text = "Open";
-                }
-            };
-
-            this.txtServerLog.Location = new Point(this.btnOpenClose.Location.X, this.btnOpenClose.Location.Y + this.btnOpenClose.Height + 3);
+            this.txtServerLog.Dock = DockStyle.Fill;
             this.txtServerLog.ReadOnly = true;
             this.txtServerLog.Multiline = true;
             this.txtServerLog.Width = this.ClientSize.Width - 3;
             this.txtServerLog.Height = this.ClientSize.Height - this.txtServerLog.Location.Y;
             this.txtServerLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            this.Controls.Add(this.btnOpenClose);
-            this.Controls.Add(this.txtServerLog);
+            this.Controls.Add(this.pnlSplit);
+            this.pnlSplit.Panel1.Controls.Add(this.gbxSetting);
+            this.gbxSetting.Controls.Add(this.txtIP_Address);
+            this.gbxSetting.Controls.Add(this.txtIP_PortNo);
+            this.gbxSetting.Controls.Add(this.cboProtocol);
+            this.gbxSetting.Controls.Add(this.btnOpenClose);
+            this.pnlSplit.Panel2.Controls.Add(this.txtServerLog);
+            //this.Controls.Add(this.btnOpenClose);
+            //this.Controls.Add(this.txtServerLog);
         }
 
-        private void InitComponent()
+        private void BtnOpenClose_Click(object sender, EventArgs e)
         {
-            HYDevice();
-            this._server.Log += _server_Log;
+
+            if (this.btnOpenClose.Text == "Open")
+            {
+                //서버 Open 처리
+                if ((string)this.cboProtocol.SelectedItem == "Modbus")
+                {
+                    //Server 종류 설정
+                    TCPServer server = new TCPServer();
+                    server.IP = this.txtIP_Address.Text;
+                    server.PortNo = Convert.ToInt32(this.txtIP_PortNo.Value);
+                    server.Log += (msg) => { this.UIUpdate(msg); };
+                    server.CreateResponseEvent += Server_CreateResponseEvent_Modbus;
+
+                    this._server = server;
+
+                    //Server Protocol 지정
+                    this._protocol = new Modbus(false);
+                }
+                else
+                {
+                    this._protocol = null;
+                    this._server = null;
+                }
+
+                if (this._server != null)
+                {
+                    this.txtServerLog.Text = string.Empty;
+                    this._server.Open();
+
+                    //UI Update
+                    this.btnOpenClose.Text = "Close";
+                    this.txtIP_Address.Enabled = false;
+                    this.txtIP_PortNo.Enabled = false;
+                    this.cboProtocol.Enabled = false;
+                }
+            }
+            else if(this.btnOpenClose.Text == "Close")
+            {
+                //서버 종료 처리
+                if(this._server != null)
+                    this._server.Close();
+
+                //UI Update
+                this.btnOpenClose.Text = "Open";
+                this.txtIP_Address.Enabled = true;
+                this.txtIP_PortNo.Enabled = true;
+                this.cboProtocol.Enabled = true;
+
+                this._stackBuffer = null;
+            }
+        }
+        private byte[] Server_CreateResponseEvent_Modbus(byte[] buffer)
+        {
+            if (buffer == null) return null;
+
+            //0. Test용 수신 Buffer 표기
+            this.UIUpdate(string.Format("buffer: {0}" , ByteToString(buffer)));
+
+            //1. Buffer 보관
+            if (this._stackBuffer == null)
+                this._stackBuffer = buffer;
+            else
+            {
+                byte[] temp = new byte[this._stackBuffer.Length + buffer.Length];
+                Buffer.BlockCopy(this._stackBuffer, 0, temp, 0, this._stackBuffer.Length);
+                Buffer.BlockCopy(buffer, 0, temp, this._stackBuffer.Length, buffer.Length);
+
+                this._stackBuffer = temp;
+            }
+
+
+            //2. Reqeust Frame 추출
+            if(this._stackBuffer != null)
+            {
+                byte[] reqFrame = this._protocol.Request_ExtractFrame(this._stackBuffer);
+                
+                if (reqFrame != null)
+                {
+                    this.UIUpdate(string.Format("Request Frame: {0}", ByteToString(reqFrame)));
+                    //3. Response Frame 생성
+                    byte[] resFrame = this._protocol.Request_CreateResponse(reqFrame, this._regModbus);
+                    
+                    if (resFrame != null)
+                    {
+                        this.UIUpdate(string.Format("Response Frame: {0}", ByteToString(resFrame)));
+
+                        this._stackBuffer = null;
+                        return resFrame;
+                    }
+                }
+            }
+
+            return null;
         }
 
-        private void _server_Log(string msg)
+        private string ByteToString(byte[] bytes)
         {
-            UIUpdate(msg);
+            string str = string.Empty;
+
+            if (bytes != null && bytes.Length != 0)
+            {
+                foreach (var b in bytes)
+                    str += string.Format(" {0:X2}", b);
+            }
+
+            return str;
         }
 
         delegate void UIHandler(string text);
         private void UIUpdate(string txt)
         {
             if (this.InvokeRequired)
-                this.Invoke(new UIHandler(UIUpdate), txt);
+                this.BeginInvoke(new UIHandler(UIUpdate), txt);
             else
             {
-                this.txtServerLog.AppendText(string.Format("{0}: {1}\r\n", DateTime.Now, txt));
+                this.txtServerLog.AppendText(string.Format("{0}: {1}\r\n", DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff"), txt));
             }
         }
 

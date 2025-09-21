@@ -15,16 +15,17 @@ namespace DotNetFrame.CustomComm.HYNux
     internal enum ProtocolType
     {
         None,
+        Modbus,
         HY_ModbusRTU,
         HY_ModbusRTU_EXP,
         HY_ModbusAscii,
         HY_ModbusAscii_EXP,
         HY_ModbusTCP,
-        PCLink_STD,
-        PCLink_STD_TH300500,
-        PCLink_SUM,
-        PCLink_SUM_TD300500,
-        PCLink_SUM_TH300500,
+        HY_PCLink_STD,
+        HY_PCLink_STD_TH300500,
+        HY_PCLink_SUM,
+        HY_PCLink_SUM_TD300500,
+        HY_PCLink_SUM_TH300500,
     }
     /// <summary>
     /// HY Port
@@ -85,37 +86,18 @@ namespace DotNetFrame.CustomComm.HYNux
 
                 switch (value)
                 {
-                    case ProtocolType.HY_ModbusRTU:
-                        this.Protocol = new HYModbus(true);
-                        break;
-                    case ProtocolType.HY_ModbusRTU_EXP:
-                        this.Protocol = new HYModbus(true) { IsEXP = true };
-                        break;
-                    case ProtocolType.HY_ModbusAscii:
-                        this.Protocol = new HYModbus(true) { IsAscii = true };
-                        break;
-                    case ProtocolType.HY_ModbusAscii_EXP:
-                        this.Protocol = new HYModbus(true) { IsAscii = true, IsEXP = true };
-                        break;
-                    case ProtocolType.HY_ModbusTCP:
-                        this.Protocol = new HYModbus(true) { IsTCP = true };
-                        break;
-                    case ProtocolType.PCLink_STD:
-                        this.Protocol = new PCLink(true);
-                        break;
-                    case ProtocolType.PCLink_STD_TH300500:
-                        this.Protocol = new PCLink(true) { IsTH3500 = true };
-                        break;
-                    case ProtocolType.PCLink_SUM:
-                        this.Protocol = new PCLink(true) { IsSUM = true };
-                        break;
-                    case ProtocolType.PCLink_SUM_TH300500:
-                        this.Protocol = new PCLink(true) { IsSUM = true, IsTH3500 = true };
-                        break;
-                    case ProtocolType.PCLink_SUM_TD300500:
-                        this.Protocol = new PCLink(true) { IsSUM = true, IsTD3500 = true };
-                        break;
-                    default: this.Protocol = null; break;
+                    case ProtocolType.Modbus:                   this.Protocol = new Modbus(true); break;
+                    case ProtocolType.HY_ModbusRTU:             this.Protocol = new HYModbus(true); break;
+                    case ProtocolType.HY_ModbusRTU_EXP:         this.Protocol = new HYModbus(true) { IsEXP = true }; break;
+                    case ProtocolType.HY_ModbusAscii:           this.Protocol = new HYModbus(true) { IsAscii = true }; break;
+                    case ProtocolType.HY_ModbusAscii_EXP:       this.Protocol = new HYModbus(true) { IsAscii = true, IsEXP = true }; break;
+                    case ProtocolType.HY_ModbusTCP:             this.Protocol = new HYModbus(true) { IsTCP = true }; break;
+                    case ProtocolType.HY_PCLink_STD:            this.Protocol = new PCLink(true); break;
+                    case ProtocolType.HY_PCLink_STD_TH300500:   this.Protocol = new PCLink(true) { IsTH3500 = true }; break;
+                    case ProtocolType.HY_PCLink_SUM:            this.Protocol = new PCLink(true) { IsSUM = true }; break;
+                    case ProtocolType.HY_PCLink_SUM_TH300500:   this.Protocol = new PCLink(true) { IsSUM = true, IsTH3500 = true }; break;
+                    case ProtocolType.HY_PCLink_SUM_TD300500:   this.Protocol = new PCLink(true) { IsSUM = true, IsTD3500 = true }; break;
+                    default:                                    this.Protocol = null; break;
                 }
             }
         }
@@ -144,7 +126,6 @@ namespace DotNetFrame.CustomComm.HYNux
             {
                 if (this.ComPort.IsOpen) return;
 
-                this.ComPort.InitPort();
                 this.ComPort.Open();
 
                 this._bgWorker.RunWorkerAsync();
@@ -179,7 +160,6 @@ namespace DotNetFrame.CustomComm.HYNux
                     if (this.ComPort.IsOpen == false)
                     {
                         this.Status = CommStatus.DisConnect;
-                        this.ComPort.InitPort();
                         this.ComPort.Open();
                         System.Threading.Thread.Sleep(3000);
                         continue;
@@ -314,10 +294,11 @@ namespace DotNetFrame.CustomComm.HYNux
 
         private bool IsTimeout()
         {
+            TimeSpan ts;
             if (this._recentBufferLen <= 0)
             {
                 //None Receive Timeout
-                TimeSpan ts = DateTime.Now - this._sendingTime;
+                ts = DateTime.Now - this._sendingTime;
 
                 if (ts.TotalMilliseconds > 3000)
                 {
@@ -328,20 +309,22 @@ namespace DotNetFrame.CustomComm.HYNux
             }
             else
             {
-                TimeSpan ts = DateTime.Now - this._recentReadTime;
-
-                if (ts.TotalMilliseconds > 10000)
+                ts = DateTime.Now - this._sendingTime;
+                //Sending시간 > 10초전 && 계속 StackBuffer가 증가중일 경우
+                if(ts.TotalMilliseconds > 10000 && (this._recentBufferLen != this._curBufferLen))
                 {
-                    if (this._recentBufferLen == this._curBufferLen)
-                    {
-                        //Receive 중단됨
-                        this.Log?.Invoke("Stop Response", new object[] { this._stackBuffer });
-                    }
-                    else
-                    {
-                        //Receive 너무 김
-                        this.Log?.Invoke("Long Response", new object[] { this._stackBuffer });
-                    }
+                    //Receie가 너무 김
+                    this.Log?.Invoke("Long Response", new object[] { this._stackBuffer });
+
+                    return true;
+                }
+
+                ts = DateTime.Now - this._recentReadTime;
+                //최근 Receive 시간 > 5초전
+                if(ts.TotalMilliseconds > 5000)
+                {
+                    //Receive 중단됨
+                    this.Log?.Invoke("Stop Response", new object[] { this._stackBuffer });
 
                     return true;
                 }

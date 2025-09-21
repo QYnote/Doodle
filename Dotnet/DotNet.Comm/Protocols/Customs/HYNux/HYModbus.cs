@@ -304,13 +304,13 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
                 switch (cmd)
                 {
                     case 0x01:
-                    case 0x02: return this.Get_ReadCoils(cmd, rcvBytes, reqBytes);
+                    case 0x02: return this.Response_GetReadCoils(cmd, rcvBytes, reqBytes);
                     case 0x03:
-                    case 0x04: return this.Get_ReadHoldingRegister(cmd, rcvBytes, reqBytes);
-                    case 0x05: return base.Get_WriteSingleCoils(rcvBytes);
-                    case 0x06: return base.Get_WriteSingleRegister(rcvBytes);
-                    case 0x0F: return base.Get_WriteMultipleCoils(rcvBytes);
-                    case 0x10: return base.Get_WriteMultipleRegister(rcvBytes);
+                    case 0x04: return this.Response_GetReadHoldingRegister(cmd, rcvBytes, reqBytes);
+                    case 0x05: return base.Response_GetWriteSingleCoils(rcvBytes);
+                    case 0x06: return base.Response_GetWriteSingleRegister(rcvBytes);
+                    case 0x0F: return base.Response_GetWriteMultipleCoils(rcvBytes);
+                    case 0x10: return base.Response_GetWriteMultipleRegister(rcvBytes);
                     default:
                         if (cmd > 0x80)
                             return new List<object>()
@@ -340,10 +340,10 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
         /// <param name="cmd">입력한 명령코드</param>
         /// <param name="frame">Response Data</param>
         /// <param name="reqBytes">Request Data</param>
-        protected override List<object> Get_ReadCoils(byte cmd, byte[] frame, byte[] reqBytes)
+        protected override List<object> Response_GetReadCoils(byte cmd, byte[] frame, byte[] reqBytes)
         {
             if (this.IsEXP == false)
-                return base.Get_ReadCoils(cmd, frame, reqBytes);
+                return base.Response_GetReadCoils(cmd, frame, reqBytes);
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + ReadAddrCount[2]
             //Res : Addr[1] + Cmd[1] + ByteCount[2] + Data[ByteCount]
             //ByteCount 1→ 2증가
@@ -372,10 +372,10 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
         /// <param name="cmd">입력한 명령코드</param>
         /// <param name="frame">Response Data</param>
         /// <param name="reqBytes">Request Data</param>
-        protected override List<object> Get_ReadHoldingRegister(byte cmd, byte[] frame, byte[] reqBytes)
+        protected override List<object> Response_GetReadHoldingRegister(byte cmd, byte[] frame, byte[] reqBytes)
         {
             if (this.IsEXP == false)
-                return base.Get_ReadHoldingRegister(cmd, frame, reqBytes);
+                return base.Response_GetReadHoldingRegister(cmd, frame, reqBytes);
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + ReadAddrCount[2]
             //Rcv : Addr[1] + Cmd[1] + ByteCount[2] + Data[ByteCount] Hi/Lo
             //ByteCount 1→ 2증가
@@ -726,5 +726,6 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
             return tcpList;
         }
+
     }
 }

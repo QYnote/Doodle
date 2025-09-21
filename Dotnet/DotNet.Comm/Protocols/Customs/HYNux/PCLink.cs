@@ -987,7 +987,8 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
         {
             throw new NotImplementedException();
         }
-        public override List<object> Request_ExtractData(byte[] frame, params object[] subData)
+
+        public override byte[] Request_CreateResponse(byte[] reqFrame, params object[] subData)
         {
             throw new NotImplementedException();
         }

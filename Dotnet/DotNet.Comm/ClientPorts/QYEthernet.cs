@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNet.Utils.Controls;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,6 +16,8 @@ namespace DotNet.Comm.ClientPorts
         /// <summary>연결 Ethernet Socket</summary>
         private Socket _clientSocket;
         private byte[] _asyncBuffer;
+        private System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);    //Method 실행 순서 처리기
+
         #endregion Fields
         #region 설정용 Property
 
@@ -106,7 +109,7 @@ namespace DotNet.Comm.ClientPorts
 
                         if (connectResult == true)
                         {
-                            this._clientSocket.EndConnect(asyncResult);
+                            this._clientSocket.EndConnect(asyncResult);//연결시도 종료
 
                             //비동기 이벤트 설정
                             SocketAsyncEventArgs asyncEvent = new SocketAsyncEventArgs();
@@ -138,20 +141,49 @@ namespace DotNet.Comm.ClientPorts
         /// <summary>
         /// 비동기통신 수신 종료 이벤트
         /// </summary>
-        private void AsyncEvent_Completed(object sender, SocketAsyncEventArgs e)
+        private async void AsyncEvent_Completed(object sender, SocketAsyncEventArgs e)
         {
             //연결 끊김 확인
-            if (this._clientSocket != null && this._clientSocket.Connected == false) return;
-            Socket client = sender as Socket;
+            if (this._clientSocket == null || this._clientSocket.Connected == false) return;
 
-            if (client.Connected && e.BytesTransferred > 0)
+            await this.Async_SocketRead(sender, e);
+        }
+
+        private async Task Async_SocketRead(object sender, SocketAsyncEventArgs e)
+        {
+            await this.semaphore.WaitAsync();//Method 실행 순서 대기
+
+            try
             {
-                this._asyncBuffer = new byte[e.BytesTransferred];
-                Buffer.BlockCopy(e.Buffer, 0, this._asyncBuffer, 0, this._asyncBuffer.Length);
+                if (this._clientSocket == null && this._clientSocket.Connected == false) return;
+                Socket client = sender as Socket;
+
+                if (client.Connected && e.BytesTransferred > 0)
+                {
+                    if (this._asyncBuffer == null)
+                    {
+                        this._asyncBuffer = new byte[e.BytesTransferred];
+                        Buffer.BlockCopy(e.Buffer, 0, this._asyncBuffer, 0, this._asyncBuffer.Length);
+                    }
+                    else
+                    {
+                        this._asyncBuffer = QYUtils.BytesAppend(this._asyncBuffer, e.Buffer);
+                    }
+                }
 
                 this._clientSocket.ReceiveAsync(e);
             }
+            catch
+            {
+                this.Close();
+            }
+            finally
+            {
+                //순서대기 해제
+                this.semaphore.Release();
+            }
         }
+
         public override bool Close()
         {
             //동기식 연결일 경우 IsOpen일 경우 Close처리
@@ -222,13 +254,22 @@ namespace DotNet.Comm.ClientPorts
         /// <returns>PCPort에 담겨있던 Buffer</returns>
         private byte[] AsyncRead()
         {
-            if(this._asyncBuffer != null && this._asyncBuffer.Length > 0)
+            this.semaphore.Wait();//Method 실행순서 대기
+            try
             {
-                byte[] readBytes = new byte[this._asyncBuffer.Length];
+                if (this._asyncBuffer != null && this._asyncBuffer.Length > 0)
+                {
+                    byte[] readBytes = new byte[this._asyncBuffer.Length];
 
-                Buffer.BlockCopy(this._asyncBuffer, 0, readBytes, 0, readBytes.Length);
+                    Buffer.BlockCopy(this._asyncBuffer, 0, readBytes, 0, readBytes.Length);
+                    this._asyncBuffer = null;
 
-                return readBytes;
+                    return readBytes;
+                }
+            }
+            finally
+            {
+                this.semaphore.Release();//순서대기 해제
             }
 
             return null;
@@ -268,6 +309,7 @@ namespace DotNet.Comm.ClientPorts
 
         public override void InitPort()
         {
+            this.Close();
             this._clientSocket = null;
             this._asyncBuffer = null;
         }

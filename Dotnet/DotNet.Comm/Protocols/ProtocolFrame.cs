@@ -45,13 +45,12 @@ namespace DotNet.Comm.Protocols
         /// <returns>추출한 Request Frame</returns>
         public abstract byte[] Request_ExtractFrame(byte[] buffer, params object[] subData);
         /// <summary>
-        /// Request Frame에서 추출한 Data 목록
+        /// Request Frame을통한 Response Data 생성
         /// </summary>
-        /// <typeparam name="T">Protocol별 추출 Data Type</typeparam>
-        /// <param name="frame">추출할 Request Frame</param>
-        /// <param name="subData">추출에 필요한 Sub Data</param>
-        /// <returns>추출한 Data 목록</returns>
-        public abstract List<object> Request_ExtractData(byte[] frame, params object[] subData);
+        /// <param name="reqFrame">수신된 Request Frame</param>
+        /// <param name="subData">생성에 필요한 Sub Data</param>
+        /// <returns>생성한 Resonse Frame</returns>
+        public abstract byte[]Request_CreateResponse(byte[] reqFrame, params object[] subData);
 
         #endregion Request End
         #region Error Code

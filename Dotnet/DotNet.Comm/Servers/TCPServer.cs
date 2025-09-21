@@ -85,51 +85,59 @@ namespace DotNet.Server.Servers
         private void ClientMethod(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            System.IO.MemoryStream ms = new System.IO.MemoryStream();
             byte[] bufferFull = new byte[1024];
             byte[] sendBytes = null;
             int bytesLength;
 
-            try
+            while (client.Connected)
             {
-                //수신된 Data 읽기
-                while ((bytesLength = stream.Read(bufferFull, 0, bufferFull.Length)) > 0)
+                try
                 {
-                    byte[] buffer = new byte[bytesLength];
-                    Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
+                    //연결 검사
+                    if (client.Client.Poll(0, SelectMode.SelectRead) && client.Client.Available == 0)
+                    {
+                        base.RunLog(string.Format("Client Receive End - IP : {0} / Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
+                        client.Client.Shutdown(SocketShutdown.Both);
+                        client.Close();
+                        this._clientList.Remove(client);
+                        break;
+                    }
 
-                    //Client Active Event로 읽어들인 Buffer 전송
-                    sendBytes = base.RunCreateResponse(buffer);
-                }
+                    //수신된 Data 검사
+                    bytesLength = stream.Read(bufferFull, 0, bufferFull.Length);
 
-                //보낸 Client에게 되돌려주는 Data
-                if (sendBytes != null && sendBytes.Length != 0)
-                {
-                    stream.Write(sendBytes, 0, sendBytes.Length);
-                    sendBytes = null;
-                }
+                    if (bytesLength > 0)
+                    {
+                        //Socket Buffer 최대치 검사
+                        if (bufferFull.Length < bytesLength)
+                            bufferFull = new byte[bufferFull.Length * 2];
 
-                //주기적으로 전송하는 Data
-                sendBytes = RunPeriodicSend();
-                if(sendBytes != null && sendBytes.Length != 0)
-                {
-                    stream.Write(sendBytes, 0, sendBytes.Length);
+                        byte[] buffer = new byte[bytesLength];
+                        Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
+
+                        //Client Active Event에 읽어들인 Buffer 전송
+                        sendBytes = base.RunCreateResponse(buffer);
+
+                        //보낸 Client에게 되돌려주는 Data
+                        if (sendBytes != null && sendBytes.Length != 0)
+                        {
+                            stream.Write(sendBytes, 0, sendBytes.Length);
+                            sendBytes = null;   //전송 후 초기화
+                        }
+                    }
+
+                    //주기적으로 전송하는 Data
+                    sendBytes = RunPeriodicSend();
+                    if (sendBytes != null && sendBytes.Length != 0)
+                    {
+                        stream.Write(sendBytes, 0, sendBytes.Length);
+                    }
                 }
-            }
-            catch(Exception ex)
-            {
-                base.RunLog(string.Format("Error : {0}\r\nTrace:{1}", ex.Message, ex.StackTrace));
-            }
-            finally
-            {
-                if (client.Connected == true)
+                catch (Exception ex)
                 {
-                    base.RunLog(string.Format("Client Receive End - IP : {0} / Port : {1}", (client.Client.RemoteEndPoint as IPEndPoint).Address.ToString(), (client.Client.RemoteEndPoint as IPEndPoint).Port));
-                    client.Client.Shutdown(SocketShutdown.Both);
-                    client.Close();
-                    this._clientList.Remove(client);
+                    base.RunLog(string.Format("Error : {0}\r\nTrace:{1}", ex.Message, ex.StackTrace));
                 }
-            }
+            }//End While
         }
 
         /// <summary>서버 닫기</summary>

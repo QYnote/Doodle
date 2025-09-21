@@ -23,7 +23,7 @@ namespace DotNet.Comm.Protocols
 
         public override byte[] Response_ExtractFrame(byte[] buffer, params object[] subData)
         {
-            if (subData[0] == null) return null;
+            if (subData[0] == null || (subData[0] is byte[]) == false) return null;
             byte[] reqFrame = subData[0] as byte[];
 
             int idxHandle = 0,
@@ -84,20 +84,20 @@ namespace DotNet.Comm.Protocols
         }
         public override List<object> Response_ExtractData(byte[] frame, params object[] subData)
         {
-            if (subData[0] == null) return null;
+            if (subData[0] == null || (subData[0] is byte[]) == false) return null;
             byte[] reqBytes = subData[0] as byte[];
             byte cmd = frame[1];
 
             switch (cmd)
             {
                 case 0x01:
-                case 0x02: return this.Get_ReadCoils(cmd, frame, reqBytes);
+                case 0x02: return this.Response_GetReadCoils(cmd, frame, reqBytes);
                 case 0x03:
-                case 0x04: return this.Get_ReadHoldingRegister(cmd, frame, reqBytes);
-                case 0x05: return this.Get_WriteSingleCoils(frame);
-                case 0x06: return this.Get_WriteSingleRegister(frame);
-                case 0x0F: return this.Get_WriteMultipleCoils(frame);
-                case 0x10: return this.Get_WriteMultipleRegister(frame);
+                case 0x04: return this.Response_GetReadHoldingRegister(cmd, frame, reqBytes);
+                case 0x05: return this.Response_GetWriteSingleCoils(frame);
+                case 0x06: return this.Response_GetWriteSingleRegister(frame);
+                case 0x0F: return this.Response_GetWriteMultipleCoils(frame);
+                case 0x10: return this.Response_GetWriteMultipleRegister(frame);
                 default:
                     if (cmd > 0x80)
                         return new List<object>()
@@ -124,7 +124,7 @@ namespace DotNet.Comm.Protocols
         /// <param name="cmd">입력한 명령코드</param>
         /// <param name="frame">Response Data</param>
         /// <param name="reqBytes">Request Data</param>
-        protected virtual List<object> Get_ReadCoils(byte cmd, byte[] frame, byte[] reqBytes)
+        protected virtual List<object> Response_GetReadCoils(byte cmd, byte[] frame, byte[] reqBytes)
         {
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + ReadAddrCount[2]
             //Res : Addr[1] + Cmd[1] + ByteCount[1] + Data[ByteCount]
@@ -153,7 +153,7 @@ namespace DotNet.Comm.Protocols
         /// <param name="cmd">입력한 명령코드</param>
         /// <param name="frame">Response Data</param>
         /// <param name="reqBytes">Request Data</param>
-        protected virtual List<object> Get_ReadHoldingRegister(byte cmd, byte[] frame, byte[] reqBytes)
+        protected virtual List<object> Response_GetReadHoldingRegister(byte cmd, byte[] frame, byte[] reqBytes)
         {
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + ReadAddrCount[2]
             //Rcv : Addr[1] + Cmd[1] + ByteCount[1] + Data[ByteCount] Hi/Lo
@@ -179,7 +179,7 @@ namespace DotNet.Comm.Protocols
         /// 05(0x05) WriteSingleCoils Frame 읽기
         /// </summary>
         /// <param name="frame">Response Data</param>
-        protected virtual List<object> Get_WriteSingleCoils(byte[] frame)
+        protected virtual List<object> Response_GetWriteSingleCoils(byte[] frame)
         {
             //Req : Addr[1] + Cmd[1] + Addr[2] + WriteData[2]
             int addr = (frame[2] << 8) + frame[3];
@@ -207,7 +207,7 @@ namespace DotNet.Comm.Protocols
         /// 06(0x06) WriteSingleRegister Frame 읽기
         /// </summary>
         /// <param name="frame">Response Data</param>
-        protected virtual List<object> Get_WriteSingleRegister(byte[] frame)
+        protected virtual List<object> Response_GetWriteSingleRegister(byte[] frame)
         {
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + Data[2]
             int addr = (frame[2] << 8) + frame[3];
@@ -223,7 +223,7 @@ namespace DotNet.Comm.Protocols
         /// 15(0x0F) WriteMultipleCoils Frame 읽기
         /// </summary>
         /// <param name="frame">Response Data</param>
-        protected virtual List<object> Get_WriteMultipleCoils(byte[] frame)
+        protected virtual List<object> Response_GetWriteMultipleCoils(byte[] frame)
         {
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + WriteCount[2] + ByteCount[1] + Value[ByteCount]
             int startAddr = (frame[2] << 8) + frame[3],
@@ -247,7 +247,7 @@ namespace DotNet.Comm.Protocols
         /// 16(0x10) WriteMultipleRegister Frame 읽기
         /// </summary>
         /// <param name="frame">Response Data</param>
-        protected virtual List<object> Get_WriteMultipleRegister(byte[] frame)
+        protected virtual List<object> Response_GetWriteMultipleRegister(byte[] frame)
         {
             //Req : Addr[1] + Cmd[1] + StartAddr[2] + WriteCount[2] + ByteCount[1] + Value[ByteCount]
             int startAddr = (frame[2] << 8) + frame[3],
@@ -275,13 +275,160 @@ namespace DotNet.Comm.Protocols
 
         public override byte[] Request_ExtractFrame(byte[] buffer, params object[] subData)
         {
-            throw new NotImplementedException();
+            int frameLength = -1;
+            if (buffer.Length < 2) return null;
+            byte cmd = buffer[1];
+
+            if(cmd == 0x01 || cmd == 0x02 || cmd == 0x03 ||
+                cmd == 0x04 || cmd == 0x05 || cmd == 0x06)
+            {
+                //0x01, 2, 3, 4: Address[1] + Command[1] + DataAddress[2] + ReadCount[2]
+                //0x05, 6: Address[1] + Command[1] + DataAddress[2] + Value[2]
+                frameLength = 6;
+            }
+            else
+            {
+                //illegal Function
+                //미사용 Function
+                byte[] errFrame = new byte[3];
+                errFrame[0] = buffer[0];
+                errFrame[1] = (byte)(cmd | 0x80);
+                errFrame[2] = 0x01;
+
+                return errFrame;
+            }
+
+            //Frame 길이만큼 들어왔는지 검사
+            if (frameLength == -1 || buffer.Length < frameLength) return null;
+
+            //Frame 추출
+            byte[] frame = new byte[frameLength];
+            Buffer.BlockCopy(buffer, 0, frame, 0, frameLength);
+            return frame;
         }
 
-        public override List<object> Request_ExtractData(byte[] frame, params object[] subData)
+        public override byte[] Request_CreateResponse(byte[] reqFrame, params object[] subData)
         {
-            throw new NotImplementedException();
+            if (subData[0] == null) return null;
+            Dictionary<int, object> reg = subData[0] as Dictionary<int, object>;
+            byte[] resFrame = null;
+            byte cmd = reqFrame[1];
+
+            switch (cmd)
+            {
+                case 0x01:
+                case 0x02: resFrame = Request_GetReadCoils(cmd, reqFrame, reg); break;
+                case 0x03:
+                case 0x04: resFrame = Request_GetReadRegisters(cmd, reqFrame, reg); break;
+                default:
+                    //illegal Function
+                    //미사용 Function
+                    resFrame = new byte[] { reqFrame[0], (byte)(cmd | 0x80), 0x01 };
+                    break;
+            }
+
+            return resFrame;
         }
+
+        #region FuncCode Get Process
+
+        /// <summary>
+        /// 01(0x01), 02(0x02) ReadCoils Frame 읽기
+        /// </summary>
+        /// <param name="cmd">입력한 명령코드</param>
+        /// <param name="frame">Response Data</param>
+        protected virtual byte[] Request_GetReadCoils(byte cmd, byte[] frame, Dictionary<int, object> reg)
+        {
+            //Addres[1] + Command[1] + ByteCount[1] + Data[ByteCount]
+            int startAddr = (frame[2] << 8) | frame[3],
+                readCount = (frame[4] << 8) | frame[5];
+            byte[] resFrame = new byte[3 + ((readCount / 8) + 1)];
+            resFrame[0] = frame[0];
+            resFrame[1] = cmd;
+            resFrame[2] = (byte)((readCount / 8) + 1);
+
+            //Data Body
+            for (int i = 0; i < readCount; i++)
+            {
+                if (reg.ContainsKey(startAddr + i) == false)
+                {
+                    //illegal Data Address
+                    //Command에서 사용 불가능한 Data Address Error
+                    resFrame = new byte[] { frame[0], (byte)(cmd | 0x80), 0x02 };
+                    break;
+                }
+                else if (reg[startAddr + i] is bool == false)
+                {
+                    //illegal Data Value
+                    //Protocol과 맞지 않는 Data Value Type Error
+                    resFrame = new byte[] { frame[0], (byte)(cmd | 0x80), 0x03 };
+                    break;
+                }
+                else
+                {
+                    //정상 결과처리
+                    resFrame[3 + (i / 8)] += (byte)(((bool)reg[startAddr + i] ? 1 : 0) << (i % 8));
+                }
+            }
+
+            return resFrame;
+        }
+
+        protected virtual byte[] Request_GetReadRegisters(byte cmd, byte[] frame, Dictionary<int, object> reg)
+        {
+            //Addres[1] + Command[1] + ByteCount[1] + Data[ByteCount]
+            int startAddr = (frame[2] << 8) | frame[3],
+                readCount = (frame[4] << 8) | frame[5];
+            byte[] resFrame = new byte[3 + (readCount * 2)];
+            resFrame[0] = frame[0];
+            resFrame[1] = cmd;
+            resFrame[2] = (byte)(readCount * 2);
+
+            //Data Body
+            for (int i = 0; i < readCount; i++)
+            {
+                if (reg.ContainsKey(startAddr + i) == false)
+                {
+                    //illegal Data Address
+                    //Command에서 사용 불가능한 Data Address Error
+                    resFrame = new byte[] { frame[0], (byte)(cmd | 0x80), 0x02 };
+                    break;
+                }
+                else if (reg[startAddr + i] is Int16 == false)
+                {
+                    //illegal Data Value
+                    //Protocol과 맞지 않는 Data Value Type Error
+                    resFrame = new byte[] { frame[0], (byte)(cmd | 0x80), 0x03 };
+                    break;
+                }
+                else
+                {
+                    //정상 결과처리
+                    resFrame[3 + (i * 2)]     = (byte)(((Int16)reg[startAddr + i] >> 8) & 0xFF);
+                    resFrame[3 + (i * 2) + 1] = (byte)( (Int16)reg[startAddr + i]       & 0xFF);
+                }
+            }
+
+            return resFrame;
+        }
+
+        #endregion FuncCode Get Process End
+
+        #endregion Request End
+        #region ErrorCode
+
+        public override bool ConfirmErrCode(byte[] frame)
+        {
+            return true;
+        }
+
+        public override byte[] CreateErrCode(byte[] frame)
+        {
+            return null;
+        }
+
+        #endregion ErrorCode End
+
 
         /// <summary>
         /// 01(0x01) ReadCoils Request byte Array List 생성
@@ -385,20 +532,5 @@ namespace DotNet.Comm.Protocols
 
             return dataFrame;
         }
-
-        #endregion Request End
-        #region ErrorCode
-
-        public override bool ConfirmErrCode(byte[] frame)
-        {
-            return true;
-        }
-
-        public override byte[] CreateErrCode(byte[] frame)
-        {
-            return null;
-        }
-
-        #endregion ErrorCode End
     }
 }
