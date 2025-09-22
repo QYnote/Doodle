@@ -18,7 +18,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
     public class PCLink : ProtocolFrame
     {
-        public const string WhoCmd = "#02#30#31#57#48#4F#0D#0A";
+        public static readonly byte[] WhoCmd = new byte[] { 0x02, 0x30, 0x31, 0x57, 0x48, 0x4F, 0x0D, 0x0A, };
         public bool IsSUM { get; set; } = false;
         public bool IsTH3500 { get; set; } = false;
         public bool IsTD3500 { get; set; } = false;
