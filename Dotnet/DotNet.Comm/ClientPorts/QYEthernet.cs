@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DotNet.Comm.ClientPorts
 {
-    public class QYEthernet : PCPortBase
+    public class QYEthernet : CommPortFrame
     {
         #region Fields
         /// <summary>연결 Ethernet Socket</summary>

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DotNet.Comm.ClientPorts
 {
-    public class QYSerialPort : PCPortBase
+    public class QYSerialPort : CommPortFrame
     {
         private SerialPort _serialPort = new SerialPort();
         private string _comName;

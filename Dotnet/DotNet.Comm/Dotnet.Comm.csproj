@@ -45,7 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientPorts\PCPortBase.cs" />
+    <Compile Include="ClientPorts\CommPortFrame.cs" />
     <Compile Include="ClientPorts\QYEthernet.cs" />
     <Compile Include="ClientPorts\QYSerialPort.cs" />
     <Compile Include="Enums.cs" />

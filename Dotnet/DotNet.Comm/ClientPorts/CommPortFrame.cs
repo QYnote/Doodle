@@ -15,7 +15,7 @@ namespace DotNet.Comm.ClientPorts
 
     public delegate void PCPortLogHandler(string msg);
 
-    public abstract class PCPortBase
+    public abstract class CommPortFrame
     {
         /// <summary>
         /// PCPort Log Event
@@ -28,7 +28,7 @@ namespace DotNet.Comm.ClientPorts
         /// PC Port 기본형태
         /// </summary>
         /// <param name="type">Port 종류</param>
-        public PCPortBase(PortType type)
+        public CommPortFrame(PortType type)
         {
             this.PortType = type;
         }
