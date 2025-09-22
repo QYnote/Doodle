@@ -121,7 +121,9 @@
     <None Include="Resources\Stop_00_32x32.png" />
     <Content Include="Resources\YellowWarning_16x16.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Resources\DevExpress\20.2\" />
+  </ItemGroup>
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">
     <ItemGroup>
