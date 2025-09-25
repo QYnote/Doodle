@@ -68,7 +68,7 @@ namespace DotNetFrame.CustomComm.HYNux
         /// <summary>
         /// 통신 Port
         /// </summary>
-        private CommPortFrame _commPort = null;
+        private CommPortFrame _commPort = new QYSerialPort();
         /// <summary>
         /// 통신 Protocol
         /// </summary>
@@ -212,6 +212,7 @@ namespace DotNetFrame.CustomComm.HYNux
         internal HYCommTesterPort()
         {
             this.CommType = CommType.Serial;
+            this.ComPort.Log += (msg) => { this.Log?.Invoke("ComPortLog", new object[] { msg }); };
             this.ProtocolType = ProtocolType.None;
             this._bgWorker.WorkerSupportsCancellation = true;
             this._bgWorker.DoWork += _bgWorker_DoWork;
