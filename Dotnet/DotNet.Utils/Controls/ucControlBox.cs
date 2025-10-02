@@ -76,16 +76,16 @@ namespace DotNet.Utils.Controls
         /// <summary>
         /// Control 이름
         /// </summary>
-        public string Name
+        public new string Name
         { 
             get
             {
-                return name;
+                return this.name;
             }
             set
             {
                 ctrl.Name = value;
-                name = value;
+                this.name = value;
             }
         }
 

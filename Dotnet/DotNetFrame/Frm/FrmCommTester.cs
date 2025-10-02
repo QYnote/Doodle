@@ -1,6 +1,7 @@
 ﻿using Dotnet.Comm;
 using DotNet.Comm.ClientPorts;
 using DotNet.Utils.Controls;
+using DotNet.Utils.Controls.Utils;
 using DotNetFrame.CustomComm.HYNux;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Data;
 using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -216,7 +218,7 @@ namespace DotNetFrame.Frm
             this.gbxParity.Dock = DockStyle.Left;
             this.gbxParity.AutoSize = false;
             this.gbxParity.Text = "Parity";
-            foreach (Parity parity in DotNet.Utils.Controls.QYUtils.EnumToItems<Parity>())
+            foreach (Parity parity in Enum.GetValues(typeof(Parity)))
             {
                 RadioButton rdo = CreateRdo(parity);
                 rdo.CheckedChanged += (s, e) =>
@@ -235,7 +237,7 @@ namespace DotNetFrame.Frm
             this.gbxStopBits.Dock = DockStyle.Left;
             this.gbxStopBits.AutoSize = false;
             this.gbxStopBits.Text = "StopBits";
-            foreach (StopBits stopbit in DotNet.Utils.Controls.QYUtils.EnumToItems<StopBits>())
+            foreach (StopBits stopbit in Enum.GetValues(typeof(StopBits)))
             {
                 if (stopbit == StopBits.None
                     || stopbit == StopBits.OnePointFive
@@ -281,7 +283,7 @@ namespace DotNetFrame.Frm
             this.txtEthernetIP.Width = this.cboPortType.Width;
             this.txtEthernetIP.TextAlign = HorizontalAlignment.Center;
             this.txtEthernetIP.Text = "127.0.0.1";
-            this.txtEthernetIP.KeyPress += QYUtils.TextBox_IP;
+            this.txtEthernetIP.KeyPress += QYUtils.Event_KeyPress_IP;
             this.txtEthernetIP.TextChanged += (s, e) =>
             {
                 System.Net.IPAddress ip = null;
@@ -351,7 +353,7 @@ namespace DotNetFrame.Frm
             this.cboProtocolList.Width = this.cboPortList.Width;
             this.cboProtocolList.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cboProtocolList.DropDownWidth = (int)(this.cboProtocolList.CreateGraphics().MeasureString("PCLink_SUM_TD300500", this.cboProtocolList.Font).Width);
-            this.cboProtocolList.Items.AddRange(QYUtils.EnumToItems<ProtocolType>());
+            this.cboProtocolList.Items.AddRange(Enum.GetValues(typeof(ProtocolType)).OfType<object>().ToArray());
             if (this.cboProtocolList.Items.Count > 0) this.cboProtocolList.SelectedIndex = 0;
             this.cboProtocolList.SelectedIndexChanged += (s, e) =>
             {
@@ -851,7 +853,7 @@ namespace DotNetFrame.Frm
             this._recycleData = bytes.ToArray();
             if (this.chkAddErrChk.Checked)
             {
-                this._recycleData = QYUtils.BytesAppend(this._recycleData, this._port.Protocol.CreateErrCode(this._recycleData));
+                this._recycleData = QYUtils.Comm.BytesAppend(this._recycleData, this._port.Protocol.CreateErrCode(this._recycleData));
             }
 
             this._isRequesting = true;

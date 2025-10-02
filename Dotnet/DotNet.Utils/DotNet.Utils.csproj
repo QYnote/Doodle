@@ -55,8 +55,10 @@
     <Compile Include="Controls\QYLeftMenu.Designer.cs">
       <DependentUpon>QYLeftMenu.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Utils\QYComm.cs" />
+    <Compile Include="Controls\Utils\QYMath.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Controls\QYUtils.cs" />
+    <Compile Include="Controls\Utils\QYUtils.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

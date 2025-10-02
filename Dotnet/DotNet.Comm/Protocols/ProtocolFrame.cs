@@ -82,20 +82,22 @@ namespace DotNet.Comm.Protocols
             List<int> continuousAddr = new List<int>();
             List<int[]> frameList = new List<int[]>();
 
-            foreach (var curAddr in list)
+            for (int i = 0; i < list.Count; i++)
             {
+                int curAddr = list[i];
+
                 if (list.Count == 1)
                 {
                     //List가 1개만 있는경우
                     continuousAddr.Add(curAddr);
                     frameList.Add(continuousAddr.ToArray());
                 }
-                else if (list.IndexOf(curAddr) == 0)
+                else if (i == 0)
                 {
                     //첫번째 Address일 경우
                     continuousAddr.Add(curAddr);
                 }
-                else if (list.LastIndexOf(curAddr) == list.Count - 1)
+                else if (i == list.Count - 1)
                 {
                     //여러 Address 중 마지막 Address일 경우
                     if (curAddr - 1 == continuousAddr.Last())
