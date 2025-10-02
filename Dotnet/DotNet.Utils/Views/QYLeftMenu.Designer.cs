@@ -1,4 +1,4 @@
-﻿namespace DotNet.Utils.Controls
+﻿namespace DotNet.Utils.Views
 {
     partial class QYLeftMenu
     {

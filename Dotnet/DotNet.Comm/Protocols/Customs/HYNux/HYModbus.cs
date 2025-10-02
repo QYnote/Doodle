@@ -71,7 +71,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
             //Frame 검색
             while (idxHandle < buffer.Length - 1)
             {
-                startIdx = QYUtils.Find(buffer, headerBytes, idxHandle);
+                startIdx = Utils.Controls.Utils.QYUtils.Find(buffer, headerBytes, idxHandle);
                 if (startIdx < 0)
                 {
                     //Error Cmd가 날라온건지 검사
@@ -80,10 +80,10 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
                         cmd = (byte)(Convert.ToByte(Encoding.ASCII.GetString(new byte[] { headerBytes[3], headerBytes[4] }), 16) + 0x80);
                         byte[] errCmd = Encoding.ASCII.GetBytes(cmd.ToString("X2"));
 
-                        startIdx = QYUtils.Find(buffer, new byte[] { headerBytes[0], headerBytes[1], headerBytes[2], errCmd[0], errCmd[1], });
+                        startIdx = Utils.Controls.Utils.QYUtils.Find(buffer, new byte[] { headerBytes[0], headerBytes[1], headerBytes[2], errCmd[0], errCmd[1], });
                     }
                     else
-                        startIdx = QYUtils.Find(buffer, new byte[] { headerBytes[0], (byte)(headerBytes[1] + 0x80) });
+                        startIdx = Utils.Controls.Utils.QYUtils.Find(buffer, new byte[] { headerBytes[0], (byte)(headerBytes[1] + 0x80) });
                 }
 
                 idxHandle++;
@@ -681,7 +681,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
                 if (errCode != null)
                 {
-                    result = QYUtils.BytesAppend(frame, errCode);
+                    result = Utils.Controls.Utils.QYUtils.Comm.BytesAppend(frame, errCode);
 
                     if (this.IsAscii)
                     {
@@ -716,7 +716,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
                 tcpFrame[4] = (byte)((frame.Length >> 8) & 0xFF);
                 tcpFrame[5] = (byte)(frame.Length & 0xFF);
 
-                byte[] temp = QYUtils.BytesAppend(tcpFrame, frame);
+                byte[] temp = Utils.Controls.Utils.QYUtils.Comm.BytesAppend(tcpFrame, frame);
 
                 tcpList.Add(temp);
             }

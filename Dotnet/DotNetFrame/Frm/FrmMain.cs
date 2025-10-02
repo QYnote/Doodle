@@ -1,4 +1,4 @@
-﻿using DotNet.Utils.Controls;
+﻿using DotNet.Utils.Views;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,6 +16,8 @@ namespace DotNetFrame.Frm
     {
         #region UI Controls
 
+        QYTokenTextBox txtToken = new QYTokenTextBox();
+
         QYCircularProgressBar progressCPU = new QYCircularProgressBar();
         QYCircularProgressBar progressMemory = new QYCircularProgressBar();
         PerformanceCounter cpuCounter = new PerformanceCounter("Process", "% Processor Time", Process.GetCurrentProcess().ProcessName);
@@ -23,6 +25,9 @@ namespace DotNetFrame.Frm
         System.Threading.Timer timerUI = null;
 
         #endregion UI Controls
+
+        List<string> tokenList = new List<string>();
+        BindingList<string> bindingToken = null;
 
         public FrmMain()
         {
@@ -40,8 +45,16 @@ namespace DotNetFrame.Frm
             this.progressMemory.Location = new Point(this.progressCPU.Location.X + this.progressCPU.Width + 3, this.progressCPU.Location.Y);
             this.progressMemory.ValueUnit = "MB";
 
+            this.txtToken.Location = new Point(this.progressCPU.Location.X, this.progressCPU.Bottom + 3);
+            bindingToken = new BindingList<string>(this.tokenList);
+            this.tokenList.Add("Test1");
+            this.tokenList.Add("Test2");
+            this.txtToken.DataSource = bindingToken;
+            this.txtToken.Size = new Size(200, 80);
+
             this.Controls.Add(this.progressCPU);
             this.Controls.Add(this.progressMemory);
+            this.Controls.Add(this.txtToken);
         }
 
         private void UpdatUI(object state)

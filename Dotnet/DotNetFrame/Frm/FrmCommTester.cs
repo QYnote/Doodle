@@ -1,4 +1,4 @@
-﻿using Dotnet.Comm;
+﻿using DotNet.Comm;
 using DotNet.Comm.ClientPorts;
 using DotNet.Utils.Controls;
 using DotNet.Utils.Controls.Utils;

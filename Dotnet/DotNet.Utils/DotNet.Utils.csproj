@@ -43,16 +43,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls\QYCircularProgressBar.cs">
+    <Compile Include="Views\QYCircularProgressBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\QYCircularProgressBar.Designer.cs">
+    <Compile Include="Views\QYCircularProgressBar.Designer.cs">
       <DependentUpon>QYCircularProgressBar.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\QYLeftMenu.cs">
+    <Compile Include="Views\QYLeftMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\QYLeftMenu.Designer.cs">
+    <Compile Include="Views\QYLeftMenu.Designer.cs">
       <DependentUpon>QYLeftMenu.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Utils\QYComm.cs" />
@@ -90,6 +90,9 @@
     </Compile>
     <Compile Include="Views\Progress_Bar.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\QYTokenTextBox.cs">
+      <SubType>Component</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>

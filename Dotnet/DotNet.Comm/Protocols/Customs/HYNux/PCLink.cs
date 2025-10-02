@@ -107,11 +107,11 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
             while (idxHandle < buffer.Length - 1)
             {
                 //1. Header Receive 검사
-                startIdx = QYUtils.Find(buffer, headerBytes, idxHandle++);
+                startIdx = Utils.Controls.Utils.QYUtils.Find(buffer, headerBytes, idxHandle++);
                 if (startIdx < 0) continue;
 
                 //2. Tail Receive 검사
-                endStartIdx = QYUtils.Find(buffer, this.TailBytes, startIdx + 1);
+                endStartIdx = Utils.Controls.Utils.QYUtils.Find(buffer, this.TailBytes, startIdx + 1);
                 if (endStartIdx < 0) continue;
 
                 endLastIdx = endStartIdx + this.TailBytes.Length - 1;

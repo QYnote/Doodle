@@ -167,7 +167,7 @@ namespace DotNet.Comm.ClientPorts
                     }
                     else
                     {
-                        this._asyncBuffer = QYUtils.BytesAppend(this._asyncBuffer, e.Buffer);
+                        this._asyncBuffer = Utils.Controls.Utils.QYUtils.Comm.BytesAppend(this._asyncBuffer, e.Buffer);
                     }
                 }
 

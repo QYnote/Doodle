@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DotNet.Utils.Controls
+namespace DotNet.Utils.Views
 {
     public partial class QYLeftMenu : UserControl
     {

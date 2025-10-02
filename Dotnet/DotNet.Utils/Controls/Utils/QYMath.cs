@@ -6,10 +6,41 @@ using System.Threading.Tasks;
 
 namespace DotNet.Utils.Controls.Utils
 {
+
     public class QYMath
     {
-        public delegate bool ConvertCalcMidToPost(Queue<string> postQueue, string token);
-        public delegate void CalcAction(Stack<double> stack, string token);
+        /// <summary>
+        /// Token 후위 표기법 계산처리
+        /// </summary>
+        /// <param name="token">처리할 Regex값</param>
+        public delegate double CustomCalcNotaion_Postfix(string token);
+        /// <summary>
+        /// 중위 표기법 Custom 처리정보
+        /// </summary>
+        public class CustomInfixNotationArgs
+        {
+            private string _regex = string.Empty;
+            private CustomCalcNotaion_Postfix _calc = null;
+
+            /// <summary>
+            /// 숫자, 연산기호, Math함수를 제외한 특수 Token 추출 규칙 Regex
+            /// </summary>
+            public string Regex { get => this._regex;  }
+            /// <summary>
+            /// Regex 항목 후위식 계산 처리
+            /// </summary>
+            public CustomCalcNotaion_Postfix Calc { get => this._calc;  }
+            /// <summary>
+            /// 중위표기법 Custom 처리정보
+            /// </summary>
+            /// <param name="regex">추출 Regex</param>
+            /// <param name="calc">Regex 후위식 값 입력 Method</param>
+            public CustomInfixNotationArgs(string regex, CustomCalcNotaion_Postfix calc)
+            {
+                this._regex = regex;
+                this._calc = calc;
+            }
+        }
 
         private Dictionary<string, int> dicOper = new Dictionary<string, int>()
         {
@@ -48,18 +79,18 @@ namespace DotNet.Utils.Controls.Utils
         ///     stack.Push(결과값);
         /// }
         /// <returns>결과값</returns>
-        public double CalcString(string calc, string customRegex = "", ConvertCalcMidToPost customConvert = null, CalcAction customCalc = null)
+        public double CalcString_InfixNotation(string calc, CustomInfixNotationArgs e = null)
         {
             //1. Token 추출
-            string[] tokens = CalcString_GetTokens(calc, customRegex);
+            string[] tokens = CalcString_GetTokens(calc, e.Regex);
             if (tokens == null) return double.NaN;
 
             //2. 중위식 → 후위식 계산식 변환
-            Queue<string> postQueue = this.CalcString_ConvertMidToPost(tokens, customConvert);
+            Queue<string> postQueue = this.CalcString_ConvertMidToPost(tokens, e.Regex);
             if(postQueue == null) return double.NaN;
 
             //3. 후위식 계산
-            return this.CalcString_CalcPost(postQueue, customCalc);
+            return this.CalcString_CalcPost(postQueue, e.Calc);
         }
         /// <summary>
         /// 중위식 계산 - Token추출
@@ -96,25 +127,26 @@ namespace DotNet.Utils.Controls.Utils
         /// <param name="customConvert">후위식 변환 Custom Action</param>
         /// <returns>변환된 후위식 계산순서 Queue</returns>
         /// <exception cref="ArgumentException">변환 오류</exception>
-        private Queue<string> CalcString_ConvertMidToPost(string[] tokens, ConvertCalcMidToPost customConvert = null)
+        private Queue<string> CalcString_ConvertMidToPost(string[] tokens, string customRegex = "")
         {
-            Queue<string> postQueue = new Queue<string>();
-            Stack<string> operStack = new Stack<string>();
+            Queue<string> postQueue = new Queue<string>();//후위식 작업순서 Queue
+            Stack<string> operStack = new Stack<string>();//연산자 순서 임시보관용 Stack
 
             for (int i = 0; i < tokens.Length; i++)
             {
                 string token = tokens[i];
 
-                if(double.TryParse(token, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
+                if (double.TryParse(token, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
                     //일반 숫자형으로 변환 - 실패시 다음 if
                     postQueue.Enqueue(token);
-                else if(customConvert != null && customConvert.Invoke(postQueue, token))
+                else if(customRegex != "" && System.Text.RegularExpressions.Regex.IsMatch(token, customRegex))
                 {
-                    //Custom 변환 우선 처리
+                    //Custom Regex에 일치하는 항목 
+                    postQueue.Enqueue(token);
                 }
                 else if (this._func.Contains(token.ToLowerInvariant()))
                 {
-                    //Math 기능
+                    //Math 기능 연산자 검사
                     operStack.Push(token.ToLowerInvariant());
                 }
                 else if(token == ",")
@@ -161,7 +193,7 @@ namespace DotNet.Utils.Controls.Utils
                     operStack.Push(curToken);
                 }
                 else if (token == "(")
-                    postQueue.Enqueue(token);
+                    operStack.Push(token);
                 else if (token == ")")
                 {
                     //괄호 닫기 처리
@@ -180,6 +212,16 @@ namespace DotNet.Utils.Controls.Utils
                 }
             }
 
+            //남은 연산자 뒤에 붙이기
+            while(operStack.Count > 0)
+            {
+                string oper = operStack.Pop();
+                if(oper == "(" || oper == ")")
+                    throw new ArgumentException("수식오류: 괄호 짝이 안맞음");
+
+                postQueue.Enqueue(oper);
+            }
+
             if (postQueue.Count == 0) return null;
             else return postQueue;
         }
@@ -190,7 +232,7 @@ namespace DotNet.Utils.Controls.Utils
         /// <param name="customCalc">후위식 Custom 계산식</param>
         /// <returns>계산 결과값</returns>
         /// <exception cref="ArgumentException">계산 오류</exception>
-        private double CalcString_CalcPost(Queue<string> postQueue, CalcAction customCalc = null)
+        private double CalcString_CalcPost(Queue<string> postQueue, CustomCalcNotaion_Postfix customCalc = null)
         {
             Stack<double> postStack = new Stack<double>();
 
@@ -201,10 +243,12 @@ namespace DotNet.Utils.Controls.Utils
                 if (double.TryParse(token, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double v))
                     //일반 숫자형으로 변환 - 실패시 다음 if
                     postStack.Push(v);
-                else if (customCalc != null && this.dicOper.ContainsKey(token) == false)
+                else if (customCalc != null &&
+                         this.dicOper.ContainsKey(token) == false &&
+                         this._func.Contains(token) == false)
                 {
-                    //Token이 Custom규칙에 의해 추출된 string일 경우
-                    customCalc.Invoke(postStack, token);
+                    //Regex에 속한 Token 처리
+                    postStack.Push(customCalc.Invoke(token));
                 }
                 else if (this.dicOper.ContainsKey(token) || this._func.Contains(token))
                 {
@@ -229,7 +273,10 @@ namespace DotNet.Utils.Controls.Utils
                             case "min": rst = Math.Min(v2, v1); break;
                             case "max": rst = Math.Max(v2, v1); break;
                             case "pow": rst = Math.Pow(v2, v1); break;
-                            case "log": rst = Math.Log(v2, v1); break;
+                            /*Log(밑, 값)
+                             * Excel과 C#에서는 (값, 밑)을 사용하지만 사용자 입력 편의성을 위해 뒤바꿈
+                             */
+                            case "log": rst = Math.Log(v1, v2); break;
                             default: throw new ArgumentException($"미설정 연산자 - {token}");
                         }
 

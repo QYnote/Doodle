@@ -69,7 +69,7 @@ namespace DotNetFrame.Frm
             this.txtIP_Address.Location = new Point(3, (int)(this.CreateGraphics().MeasureString(this.gbxSetting.Text, this.gbxSetting.Font).Height) + 3);
             this.txtIP_Address.Text = "127.0.0.1";
             this.txtIP_Address.TextAlign = HorizontalAlignment.Center;
-            this.txtIP_Address.KeyPress += QYUtils.TextBox_IP;
+            this.txtIP_Address.KeyPress += DotNet.Utils.Controls.Utils.QYUtils.Event_KeyPress_IP;
 
             this.txtIP_PortNo.Location = new Point(this.txtIP_Address.Location.X, this.txtIP_Address.Bottom + 3);
             this.txtIP_PortNo.TextAlign = HorizontalAlignment.Center;
@@ -302,7 +302,7 @@ namespace DotNetFrame.Frm
 
                 int startIdx = -1;
                 if (startIdx < 0) return null;
-                int endIdx = data.Find(pcLink.TailBytes, startIdx);
+                int endIdx = DotNet.Utils.Controls.Utils.QYUtils.Find(data, pcLink.TailBytes, startIdx);
 
                 byte[] frame = new byte[endIdx - (startIdx + 1)];
                 Buffer.BlockCopy(data, 1, frame, 0, frame.Length);

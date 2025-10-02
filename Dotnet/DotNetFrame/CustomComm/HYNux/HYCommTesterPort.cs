@@ -1,4 +1,4 @@
-﻿using Dotnet.Comm;
+﻿using DotNet.Comm;
 using DotNet.Comm.ClientPorts;
 using DotNet.Comm.Protocols;
 using DotNet.Comm.Protocols.Customs.HYNux;

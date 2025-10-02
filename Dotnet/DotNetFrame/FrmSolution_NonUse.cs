@@ -286,9 +286,9 @@ namespace DotNetFramework
 
             for (int i = startIdx; i < list.Count; i++)
             {
-                QYUtils.Swap(list, startIdx, i);
-                Permute(list, startIdx + 1, rst);
-                QYUtils.Swap(list, startIdx, i);
+                //DotNet.Utils.Controls.Utils.QYUtils.Swap(list, startIdx, i);
+                //Permute(list, startIdx + 1, rst);
+                //QYUtils.Swap(list, startIdx, i);
             }
         }
     }
