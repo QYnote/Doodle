@@ -8,7 +8,6 @@ namespace DotNet.Utils.Controls.Utils
     public static class QYUtils
     {
         public static QYMath Math = new QYMath();
-
         public static QYComm Comm = new QYComm();
 
         /// <summary>
@@ -107,6 +106,34 @@ namespace DotNet.Utils.Controls.Utils
         static public object[] EnumToItems<Tenum>()
         {
             return Enum.GetValues(typeof(Tenum)).OfType<object>().ToArray();
+        }
+
+        /// <summary>
+        /// 숫자형 변환
+        /// </summary>
+        /// <param name="obj">변환할 object</param>
+        /// <returns>true: 숫자형 / false: 숫자형이 아님</returns>
+        static public bool IsNumeric(this object obj)
+        {
+            if (obj == null) return false;
+
+            TypeCode code = Type.GetTypeCode(obj.GetType());
+
+            switch (code)
+            {
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                case TypeCode.Single:
+                case TypeCode.Double:
+                case TypeCode.Decimal:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         #region Event

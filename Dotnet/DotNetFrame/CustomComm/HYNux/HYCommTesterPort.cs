@@ -12,6 +12,12 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.CustomComm.HYNux
 {
+    /// <summary>
+    /// Application Protocol
+    /// </summary>
+    /// <remarks>
+    /// OSI 7계층 App Layer에서 확인하는 Protocol
+    /// </remarks>
     internal enum ProtocolType
     {
         None,

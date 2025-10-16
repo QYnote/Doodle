@@ -1,5 +1,4 @@
-﻿using DotNet.Utils.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,24 +13,36 @@ namespace DotNet.Comm.ClientPorts
     {
         #region Fields
         /// <summary>연결 Ethernet Socket</summary>
-        private Socket _clientSocket;
-        private byte[] _asyncBuffer;
+        private Socket _clientSocket = null;
+        private byte[] _asyncBuffer = null;
         private System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);    //Method 실행 순서 처리기
+        private DateTime _async_LastReceive = DateTime.MaxValue;
+
+        private ProtocolType _socketProtocol = ProtocolType.Tcp;
+        private string _ip = "127.0.0.1";
+        private int _portNo = 5000;
+        private int _maxBufferSize = 64000;//UDP Packet 제한 최대치(64KB)
+        private bool _isSync = false;
+        private int _async_Timeout = 3000;
 
         #endregion Fields
         #region 설정용 Property
 
         /// <summary>Ethernet IP</summary>
-        public string IP { get; set; } = "127.0.0.1";
+        public string IP { get => this._ip; set => this._ip = value; }
         /// <summary>Ethernet Port번호</summary>
-        public int PortNo { get; set; } = 5000;
+        public int PortNo { get => _portNo; set => _portNo = value; }
+        /// <summary>
+        /// Socket Protocol 종류
+        /// </summary>
+        public ProtocolType SocketProtocol { get => _socketProtocol; set => _socketProtocol = value; }
         /// <summary>받을 Buffer 크기</summary>
-        public int MaxBufferSize { get; set; } = 1024;
+        public int MaxBufferSize { get => _maxBufferSize; set => _maxBufferSize = value; }
         /// <summary>동기/비동기 통신 여부</summary>
-        /// <remarks>true : 동기통신 / false : 비동기통신</remarks>
-        public bool IsSync { get; set; } = false;
+        /// <returns>true : 동기통신 / false : 비동기통신</returns>
+        public bool IsSync { get => _isSync; set => _isSync = value; }
         /// <summary>비동기통신 Timeout 시간[ms]</summary>
-        public int AsyncTimeout { get; set; } = 3000;
+        public int Async_Timeout { get => _async_Timeout; set => _async_Timeout = value; }
 
         #endregion 설정용 Property
         #region 편의용 Property
@@ -56,9 +67,19 @@ namespace DotNet.Comm.ClientPorts
                 }
                 else
                 {
-                    if (this._clientSocket == null
-                        || (this._clientSocket != null && this._clientSocket.Connected == false))
+                    if (this._clientSocket == null)
                         return false;
+                    else
+                    {
+                        if (this._clientSocket.Connected == false)
+                            return false;
+                        else if ((DateTime.Now - this._async_LastReceive).TotalMilliseconds > this._async_Timeout)
+                        {
+                            //비동기 Timeout 처리
+                            this.Close();
+                            return false;
+                        }
+                    }
                 }
 
                 return true;
@@ -77,6 +98,8 @@ namespace DotNet.Comm.ClientPorts
             set => throw new NotImplementedException();
         }
 
+        
+
         #endregion 편의용 Property
         /// <summary>
         /// Ethernet PCPort
@@ -94,7 +117,7 @@ namespace DotNet.Comm.ClientPorts
         {
             if (this.IsOpen == false)
             {
-                this._clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                this._clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, this._socketProtocol);
 
                 try
                 {
@@ -105,11 +128,12 @@ namespace DotNet.Comm.ClientPorts
                     else
                     {
                         var asyncResult = this._clientSocket.BeginConnect(this.IPAddress, this.PortNo, null, this._clientSocket);  //연결 시도
-                        bool connectResult = asyncResult.AsyncWaitHandle.WaitOne(this.AsyncTimeout); //최대 3초간 연결 대기
+                        bool connectResult = asyncResult.AsyncWaitHandle.WaitOne(this._async_Timeout); //최대 3초간 연결 대기
 
                         if (connectResult == true)
                         {
                             this._clientSocket.EndConnect(asyncResult);//연결시도 종료
+                            this._async_LastReceive = DateTime.Now;
 
                             //비동기 이벤트 설정
                             SocketAsyncEventArgs asyncEvent = new SocketAsyncEventArgs();
@@ -167,8 +191,14 @@ namespace DotNet.Comm.ClientPorts
                     }
                     else
                     {
-                        this._asyncBuffer = Utils.Controls.Utils.QYUtils.Comm.BytesAppend(this._asyncBuffer, e.Buffer);
+                        byte[] temp = new byte[this._asyncBuffer.Length + e.BytesTransferred];
+                        Buffer.BlockCopy(this._asyncBuffer, 0, temp, 0, this._asyncBuffer.Length);
+                        Buffer.BlockCopy(e.Buffer, 0, temp, this._asyncBuffer.Length, e.BytesTransferred);
+                        
+                        this._asyncBuffer = temp;
                     }
+
+                    this._async_LastReceive = DateTime.Now;
                 }
 
                 this._clientSocket.ReceiveAsync(e);

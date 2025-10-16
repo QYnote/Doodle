@@ -24,14 +24,33 @@ namespace DotNet.Utils.Views
 
         public QYTokenTextBox()
         {
+            InitPopup();
+
             base.Multiline = true;
             base.KeyPress += txt_KeyPress_Token;
             base.KeyDown += txt_KeyDown_DelToken;
             base.KeyDown += txt_KeyDown_ArrowFocusPopup;
             base.Leave += txt_LeaveFocus;
             base.TextChanged += QYTokenTextBox_TextChanged;
+        }
 
-            InitPopup();
+        /// <summary>
+        /// Token Popup 목록
+        /// </summary>
+        private void InitPopup()
+        {
+            this.popup.FormBorderStyle = FormBorderStyle.None;
+            this.popup.StartPosition = FormStartPosition.Manual;
+            this.popup.ShowInTaskbar = false;
+            this.popup.TopMost = true;
+            this.popup.MinimumSize = new Size(50, 50);
+            this.popup.MaximumSize = new Size(200, 150);
+
+            this.listBox.Dock = DockStyle.Fill;
+            this.listBox.Click += ListBox_Click;
+            this.listBox.KeyDown += ListBox_KeyDown;
+
+            this.popup.Controls.Add(this.listBox);
         }
 
         /// <summary>
@@ -236,22 +255,6 @@ namespace DotNet.Utils.Views
 
                 base.Focus();
             }
-        }
-
-        private void InitPopup()
-        {
-            this.popup.FormBorderStyle = FormBorderStyle.None;
-            this.popup.StartPosition = FormStartPosition.Manual;
-            this.popup.ShowInTaskbar = false;
-            this.popup.TopMost = true;
-            this.popup.MinimumSize = new Size(50, 50);
-            this.popup.MaximumSize = new Size(200, 150);
-
-            this.listBox.Dock = DockStyle.Fill;
-            this.listBox.Click += ListBox_Click;
-            this.listBox.KeyDown += ListBox_KeyDown;
-
-            this.popup.Controls.Add(this.listBox);
         }
 
         /// <summary>

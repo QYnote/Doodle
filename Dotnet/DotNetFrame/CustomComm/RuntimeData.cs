@@ -8,6 +8,8 @@ using System.Xml;
 
 namespace DotNet.Comm
 {
+    internal delegate void UpdateUI();
+
     //프로그램 실행동안 가질 데이터
     internal static class RuntimeData
     {

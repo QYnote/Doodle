@@ -130,6 +130,16 @@ namespace DotNetFrame.Frm
                     //Server Protocol 지정
                     this._protocol = new Modbus(false);
                 }
+                else if ((string)this.cboProtocol.SelectedItem == "TeraHz")
+                {
+                    TCPServer server = new TCPServer();
+                    server.IP = this.txtIP_Address.Text;
+                    server.PortNo = Convert.ToInt32(this.txtIP_PortNo.Value);
+                    server.Log += (msg) => { this.UIUpdate(msg); };
+                    server.PeriodicSendEvent += Server_PeriodicSendEvent_TeraHz;
+
+                    this._server = server;
+                }
                 else
                 {
                     this._protocol = null;
@@ -163,6 +173,7 @@ namespace DotNetFrame.Frm
                 this._stackBuffer = null;
             }
         }
+
         private byte[] Server_CreateResponseEvent_Modbus(byte[] buffer)
         {
             if (buffer == null) return null;
@@ -231,43 +242,52 @@ namespace DotNetFrame.Frm
             }
         }
 
-        #region HY Device
-
-        private void HYDevice()
-        {
-            this._server = new TCPServer();
-            (this._server as TCPServer).IP = "127.0.0.1";
-            (this._server as TCPServer).PortNo = 5000;
-            (this._server as TCPServer).CreateResponseEvent += ClientActiveEvent_HYDevice; ;
-            this._protocol = new DotNet.Comm.Protocols.Customs.HYNux.HYModbus(false);
-            (this._protocol as DotNet.Comm.Protocols.Customs.HYNux.HYModbus).IsTCP = true;
-        }
-
-
-        Dictionary<int, object> Register = new Dictionary<int, object>();
-        private byte[] ClientActiveEvent_HYDevice(byte[] data)
-        {
-            byte[] req = this._protocol.Request_ExtractFrame(data);
-            //byte[] res = this._protocol.CreateResponse(Register, req);
-
-            return null;
-        }
-
-        #endregion End HY Device
         #region HY TeraFast Device 역할
 
         int SensorCount = 64;
-        int framewidth = 8;
-        
-
-        private void InfinityWrite()
+        Int16 value = 0;
+        bool _isVectorUp = true;
+        private byte[] Server_PeriodicSendEvent_TeraHz()
         {
-            this._server = new TCPServer();
-            (this._server as TCPServer).IP = "127.0.0.1";
-            (this._server as TCPServer).PortNo = 5000;
-            (this._server as TCPServer).CreateResponseEvent += FrmServer_ClientActiveEvent;
-            this._protocol = new DotNet.Comm.Protocols.Customs.HYNux.PCLink(false);
+            byte[] returnBuffer = new byte[SensorCount * sizeof(Int16)];
+            Int16[] sensorData = new Int16[SensorCount];
+
+            for (int i = 0; i < SensorCount; i++)
+            {
+                if(value + (i * 10) > Int16.MaxValue)
+                    sensorData[i] = Int16.MaxValue;
+                else
+                    sensorData[i] = (Int16)(value + (i * 10));
+            }
+
+            if (_isVectorUp)
+            {
+                if(value + 100 > 0x7FFF)
+                {
+                    value = 0x7FFF;
+                    _isVectorUp = false;
+                }
+                else
+                    value += 100;
+            }
+            else
+            {
+                if (value - 100 <= 0)
+                {
+                    value = 0;
+                    _isVectorUp = true;
+                }
+                    value -= 100;
+            }
+
+            Buffer.BlockCopy(sensorData, 0, returnBuffer, 0, returnBuffer.Length);
+
+            System.Threading.Thread.Sleep(2);
+
+            return returnBuffer;
         }
+
+        int framewidth = 8;
 
         private byte[] FrmServer_ClientActiveEvent(byte[] data)
         {
