@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 
 namespace DotNet.Comm.ClientPorts
 {
+    /*개발Log
+     * 비동기 Timeout은 Application Port에서 판단하도록 한다
+     * 사유: 정말로 연결하고 Timeout안주고 무한정 연결할 수도 있기때문
+     */
     public class QYEthernet : CommPortFrame
     {
         #region Fields
@@ -16,14 +20,12 @@ namespace DotNet.Comm.ClientPorts
         private Socket _clientSocket = null;
         private byte[] _asyncBuffer = null;
         private System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);    //Method 실행 순서 처리기
-        private DateTime _async_LastReceive = DateTime.MaxValue;
 
         private ProtocolType _socketProtocol = ProtocolType.Tcp;
         private string _ip = "127.0.0.1";
         private int _portNo = 5000;
         private int _maxBufferSize = 64000;//UDP Packet 제한 최대치(64KB)
         private bool _isSync = false;
-        private int _async_Timeout = 3000;
 
         #endregion Fields
         #region 설정용 Property
@@ -41,8 +43,6 @@ namespace DotNet.Comm.ClientPorts
         /// <summary>동기/비동기 통신 여부</summary>
         /// <returns>true : 동기통신 / false : 비동기통신</returns>
         public bool IsSync { get => _isSync; set => _isSync = value; }
-        /// <summary>비동기통신 Timeout 시간[ms]</summary>
-        public int Async_Timeout { get => _async_Timeout; set => _async_Timeout = value; }
 
         #endregion 설정용 Property
         #region 편의용 Property
@@ -67,19 +67,8 @@ namespace DotNet.Comm.ClientPorts
                 }
                 else
                 {
-                    if (this._clientSocket == null)
+                    if (this._clientSocket == null || this._clientSocket.Connected == false)
                         return false;
-                    else
-                    {
-                        if (this._clientSocket.Connected == false)
-                            return false;
-                        else if ((DateTime.Now - this._async_LastReceive).TotalMilliseconds > this._async_Timeout)
-                        {
-                            //비동기 Timeout 처리
-                            this.Close();
-                            return false;
-                        }
-                    }
                 }
 
                 return true;
@@ -98,7 +87,12 @@ namespace DotNet.Comm.ClientPorts
             set => throw new NotImplementedException();
         }
 
-        
+        public void InitComm()
+        {
+            this.Close();
+            this._clientSocket = null;
+            this._asyncBuffer = null;
+        }
 
         #endregion 편의용 Property
         /// <summary>
@@ -128,12 +122,11 @@ namespace DotNet.Comm.ClientPorts
                     else
                     {
                         var asyncResult = this._clientSocket.BeginConnect(this.IPAddress, this.PortNo, null, this._clientSocket);  //연결 시도
-                        bool connectResult = asyncResult.AsyncWaitHandle.WaitOne(this._async_Timeout); //최대 3초간 연결 대기
+                        bool connectResult = asyncResult.AsyncWaitHandle.WaitOne(3000); //최대 3초간 연결 대기
 
                         if (connectResult == true)
                         {
                             this._clientSocket.EndConnect(asyncResult);//연결시도 종료
-                            this._async_LastReceive = DateTime.Now;
 
                             //비동기 이벤트 설정
                             SocketAsyncEventArgs asyncEvent = new SocketAsyncEventArgs();
@@ -168,19 +161,19 @@ namespace DotNet.Comm.ClientPorts
         private async void AsyncEvent_Completed(object sender, SocketAsyncEventArgs e)
         {
             //연결 끊김 확인
-            if (this._clientSocket == null || this._clientSocket.Connected == false) return;
+            Socket client = sender as Socket;
+            if (client == null || client.Connected == false) return;
 
-            await this.Async_SocketRead(sender, e);
+            await this.Async_SocketRead(client, e);
         }
 
-        private async Task Async_SocketRead(object sender, SocketAsyncEventArgs e)
+        private async Task Async_SocketRead(Socket client, SocketAsyncEventArgs e)
         {
             await this.semaphore.WaitAsync();//Method 실행 순서 대기
 
             try
             {
-                if (this._clientSocket == null && this._clientSocket.Connected == false) return;
-                Socket client = sender as Socket;
+                if (client == null || client.Connected == false) return;
 
                 if (client.Connected && e.BytesTransferred > 0)
                 {
@@ -197,15 +190,9 @@ namespace DotNet.Comm.ClientPorts
                         
                         this._asyncBuffer = temp;
                     }
-
-                    this._async_LastReceive = DateTime.Now;
                 }
 
-                this._clientSocket.ReceiveAsync(e);
-            }
-            catch
-            {
-                this.Close();
+                client.ReceiveAsync(e);
             }
             finally
             {

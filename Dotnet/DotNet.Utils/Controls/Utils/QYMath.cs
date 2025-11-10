@@ -63,23 +63,9 @@ namespace DotNet.Utils.Controls.Utils
         /// 중위식 string 계산
         /// </summary>
         /// <param name="calc">중위식 계산식</param>
-        /// <param name="customRegex">Token 추출 Custom Regex</param>
-        /// ex) [Token] 추출 = (\([\w+\])
-        /// <param name="customConvert">중위식 → 후위식 변환 Custom식</param>
-        /// ex)
-        /// if (token.StartsWith("[") && token.EndsWith("]"))
-        /// {
-        ///     postQueue.Enqueue(token);
-        /// }
-        /// <param name="customCalc">후위식 계산 Custom Token 처리 Method</param>
-        /// ex)
-        /// if (token.StartsWith("[") && token.EndsWith("]"))
-        /// {
-        ///     처리식
-        ///     stack.Push(결과값);
-        /// }
+        /// <param name="e">중위식 계산식</param>
         /// <returns>결과값</returns>
-        public double CalcString_InfixNotation(string calc, CustomInfixNotationArgs e = null)
+        public double CalcString_InfixNotation(string calc, CustomInfixNotationArgs e)
         {
             //1. Token 추출
             string[] tokens = CalcString_GetTokens(calc, e.Regex);
@@ -315,6 +301,41 @@ namespace DotNet.Utils.Controls.Utils
             if(postStack.Count > 0) new ArgumentException("수식오류: 미완전 수식");
 
             return postStack.Pop();
+        }
+
+        /// <summary>
+        /// 선형회귀 계산식
+        /// </summary>
+        /// <param name="ary">(x, y)데이터 Array</param>
+        /// <returns>(기울기, 절편)</returns>
+        public (double, double) LinearRegression((double, double)[] ary)
+        {
+            double xSum = 0, xAvg,
+                    ySum = 0, yAvg;
+
+            for (int i = 0; i < ary.Length; i++)
+            {
+                xSum += ary[i].Item1;
+                ySum += ary[i].Item2;
+            }
+
+            xAvg = xSum / ary.Length;
+            yAvg = ySum / ary.Length;
+
+            double c = 0, p = 0;
+            for (int i = 0; i < ary.Length; i++)
+            {
+                double xCal = ary[i].Item1 - xAvg,
+                       yCal = ary[i].Item2 - yAvg;
+
+                c += xCal * yCal;   //분자
+                p += Math.Pow(yCal, 2); //분모
+            }
+
+            double slope = c / p,   //기울기
+                    intercept = yAvg - (slope * xAvg);  //절편
+
+            return (slope, intercept);
         }
     }
 }

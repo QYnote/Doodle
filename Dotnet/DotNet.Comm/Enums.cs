@@ -11,9 +11,4 @@ namespace DotNet.Comm
         Serial,
         Ethernet
     }
-    public enum CommStatus
-    {
-        DisConnect,
-        Connect,
-    }
 }

@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 
 namespace DotNet.Database
 {
+    public enum DataBaseType
+    {
+        SQLCe,
+        SQLite,
+    }
 
     public abstract class DBCommon
     {
@@ -19,12 +24,24 @@ namespace DotNet.Database
 
         protected abstract string ConnectionString { get; }
 
-        public abstract T ExcuteQuery<T>(string query) where T : class;
+        public virtual DataTable ExecuteQuery(string query, int idx = 0)
+        {
+            DataSet ds = this.ExecuteQuery(query);
 
-        public abstract bool ExcuteNonQuery(string query);
+            if (ds.Tables.Count > idx)
+                return ds.Tables[idx];
+            else if (ds.Tables.Count > 0)
+                return ds.Tables[0];
+            else
+                return null;
+        }
 
-        public abstract bool ExcuteNonQuery<TParam>(string query, List<TParam> parameters);
-        
+        public abstract DataSet ExecuteQuery(string query);
+
+        public abstract bool ExecuteNonQuery(string query);
+
+        public abstract bool ExecuteNonQuery<T>(string query, List<T> parameters);
+
         public abstract void BeginTransaction();
 
         public abstract void EndTransaction(bool result);

@@ -159,7 +159,8 @@ namespace DotNetFrame.Frm
 
                 this.chart.ChartAreas[0].AxisX.Maximum = now.ToOADate();    
                 this.chart.ChartAreas[0].AxisX.Minimum = minDate.ToOADate();
-                this.chart.ChartAreas[0].AxisY.Minimum = min_CPU - (Math.Abs(max_CPU - min_CPU) / 10);
+                double defaultAxisYMin = min_CPU - (Math.Abs(max_CPU - min_CPU) / 10);
+                this.chart.ChartAreas[0].AxisY.Minimum = defaultAxisYMin < 0 ? 0 : defaultAxisYMin;
                 this.chart.ChartAreas[0].AxisY.Maximum = max_CPU + (Math.Abs(max_CPU - min_CPU) / 10);
                 this.chart.ChartAreas[0].AxisY2.Minimum = min_Mem - (Math.Abs(max_Mem - min_Mem) / 10);
                 this.chart.ChartAreas[0].AxisY2.Maximum = max_Mem + (Math.Abs(max_Mem - min_Mem) / 10);

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNet.Server.Servers
+namespace DotNet.Comm.Servers
 {
     public abstract class ServerBase
     {

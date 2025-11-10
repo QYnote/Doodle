@@ -267,41 +267,47 @@ namespace DotNet.Utils.Controls.Utils
 
         #endregion 공통Type Control생성 End
 
-        public class Collection<TOwner, TItem> where TOwner : Control
-                                               where TItem : Control
+        public class QYCollection<T>
         {
-            public TOwner Owner { get; }
-            internal Collection(TOwner owner)
-            {
-                this.Owner = owner;
-            }
+            protected List<T> items = new List<T>();
 
-            public TItem this[int idx]
-            {
-                get { return this.Owner.Controls[idx] as TItem; }
-            }
             /// <summary>
-            /// Item 추가
+            /// Collection Item
             /// </summary>
-            /// <param name="item">추가할 item</param>
-            public virtual void Add(TItem item) => this.Owner.Controls.Add(item);
+            /// <param name="idx">Item Index</param>
+            /// <returns>해당 Index의 Item</returns>
+            public virtual T this[int idx] => this.items[idx];
             /// <summary>
-            /// Item 수
+            /// Collection Item 추가
             /// </summary>
-            public int Count => this.Owner.Controls.Count;
+            /// <param name="item">추가할 Item</param>
+            public virtual void Add(T item) => this.items.Add(item);
             /// <summary>
-            /// foreach 지원용 Enumratable
+            /// Collection Item 제거
             /// </summary>
-            /// <returns>이번차례 Item</returns>
-            public IEnumerator<TItem> GetEnumerator()
-            {
-                foreach (Control ctrl in this.Owner.Controls)
-                {
-                    if (ctrl is TItem item)
-                        yield return item;
-                }
-            }
+            /// <param name="item">제거할 Item</param>
+            public virtual void Remove(T item) => this.items.Remove(item);
+            /// <summary>
+            /// Collection Item 제거
+            /// </summary>
+            /// <param name="idx">제거 할 Item Index번호</param>
+            public virtual void Remove(int idx) => this.items.RemoveAt(idx);
+            /// <summary>
+            /// Collection Item 검사
+            /// </summary>
+            /// <param name="item">검사할 Item</param>
+            /// <returns>true: 존재/false: 없음</returns>
+            public virtual bool Contains(T item) => this.items.Contains(item);
+            /// <summary>
+            /// Collection Item 수
+            /// </summary>
+            public int Count => this.items.Count;
+            /// <summary>
+            /// foreach 발동용 Enumerator
+            /// </summary>
+            public IEnumerator<T> GetEnumerator() => this.items.GetEnumerator();
         }
+
     }
     /// <summary>
     /// Thread 동시접근 처리기

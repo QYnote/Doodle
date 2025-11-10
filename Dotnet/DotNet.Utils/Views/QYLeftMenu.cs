@@ -161,24 +161,44 @@ namespace DotNet.Utils.Views
         }
     }
 
-    public class QYLeftMenuItemCollection : QYUtils.Collection<Panel, QYLeftMenuItem>
+    public class QYLeftMenuItemCollection : QYUtils.QYCollection<QYLeftMenuItem>
     {
+        private QYLeftMenu _owner = null;
 
-        internal QYLeftMenuItemCollection(QYLeftMenu owner) : base(owner.pnlBody)
+        private Panel Panel { get => this._owner.pnlBody; }
+
+        internal QYLeftMenuItemCollection(QYLeftMenu owner)
         {
-
+            this._owner = owner;
         }
 
         public override void Add(QYLeftMenuItem item)
         {
-            item.Click += (base.Owner.Parent as QYLeftMenu).ItemClick;
+            item.Click += this._owner.ItemClick;
+
+            this.Panel.Controls.Add(item);
             base.Add(item);
+        }
+
+        public override void Remove(QYLeftMenuItem item)
+        {
+            this.Panel.Controls.Remove(item);
+
+            base.Remove(item);
+        }
+
+        public override void Remove(int idx)
+        {
+            this.Panel.Controls.Remove(base[idx]);
+
+            base.Remove(idx);
         }
     }
 
     public class QYLeftMenuItem : Button
     {
         private string _text = string.Empty;
+
         public QYLeftMenuItem()
         {
             InitUI();

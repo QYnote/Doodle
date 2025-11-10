@@ -1,6 +1,6 @@
 ﻿using DotNet.Comm.Protocols;
-using DotNet.Server.Servers;
-using DotNet.Utils.Controls;
+using DotNet.Comm.Servers;
+using DotNet.Utils.Controls.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -97,6 +97,7 @@ namespace DotNetFrame.Frm
             this.txtServerLog.Multiline = true;
             this.txtServerLog.Width = this.ClientSize.Width - 3;
             this.txtServerLog.Height = this.ClientSize.Height - this.txtServerLog.Location.Y;
+            this.txtServerLog.ScrollBars = new ScrollBars();
             this.txtServerLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             this.Controls.Add(this.pnlSplit);
@@ -132,11 +133,7 @@ namespace DotNetFrame.Frm
                 }
                 else if ((string)this.cboProtocol.SelectedItem == "TeraHz")
                 {
-                    TCPServer server = new TCPServer();
-                    server.IP = this.txtIP_Address.Text;
-                    server.PortNo = Convert.ToInt32(this.txtIP_PortNo.Value);
-                    server.Log += (msg) => { this.UIUpdate(msg); };
-                    server.PeriodicSendEvent += Server_PeriodicSendEvent_TeraHz;
+                    TCPServer server = this.CreateServer_TeraHz();
 
                     this._server = server;
                 }
@@ -172,6 +169,30 @@ namespace DotNetFrame.Frm
 
                 this._stackBuffer = null;
             }
+        }
+
+        delegate void UIHandler(string text);
+        private void UIUpdate(string txt)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UIHandler(UIUpdate), txt);
+            else
+            {
+                this.txtServerLog.AppendText(string.Format("{0}: {1}\r\n", DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff"), txt));
+            }
+        }
+
+        private string ByteToString(byte[] bytes)
+        {
+            string str = string.Empty;
+
+            if (bytes != null && bytes.Length != 0)
+            {
+                foreach (var b in bytes)
+                    str += string.Format(" {0:X2}", b);
+            }
+
+            return str;
         }
 
         private byte[] Server_CreateResponseEvent_Modbus(byte[] buffer)
@@ -218,134 +239,189 @@ namespace DotNetFrame.Frm
             return null;
         }
 
-        private string ByteToString(byte[] bytes)
-        {
-            string str = string.Empty;
-
-            if (bytes != null && bytes.Length != 0)
-            {
-                foreach (var b in bytes)
-                    str += string.Format(" {0:X2}", b);
-            }
-
-            return str;
-        }
-
-        delegate void UIHandler(string text);
-        private void UIUpdate(string txt)
-        {
-            if (this.InvokeRequired)
-                this.BeginInvoke(new UIHandler(UIUpdate), txt);
-            else
-            {
-                this.txtServerLog.AppendText(string.Format("{0}: {1}\r\n", DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff"), txt));
-            }
-        }
-
         #region HY TeraFast Device 역할
 
-        int SensorCount = 64;
-        Int16 value = 0;
-        bool _isVectorUp = true;
+        const int SensorCount = 64;
+        Int16[] baseValue = null;
+        Int16[] caliValue = null;
+        bool[] _isVectorUp = null;
+        bool allowSend = false;
+        bool creatingResponse = false;
+        bool _isEditSend = false;
+
+        private TCPServer CreateServer_TeraHz()
+        {
+            TCPServer server = new TCPServer();
+            server.IP = this.txtIP_Address.Text;
+            server.PortNo = Convert.ToInt32(this.txtIP_PortNo.Value);
+            server.Log += (msg) => { this.UIUpdate(msg); };
+            server.PeriodicSendEvent += Server_PeriodicSendEvent_TeraHz;
+            server.CreateResponseEvent += Server_CreateResponseEvent_TeraHz;
+
+            this.baseValue = new Int16[SensorCount];
+            this.caliValue = new Int16[SensorCount];
+            this._isVectorUp = new bool[SensorCount];
+            Random rnd = new Random();
+            for (int i = 0; i < SensorCount; i++)
+            {
+                this.baseValue[i] = (Int16)(0x7FFF * (i / (float)SensorCount));
+                Int16 rndValue = Convert.ToInt16((rnd.Next(-10000, 10000) / 10000f) * 2000);
+                if (this.baseValue[i] + rndValue < 0)
+                    this.baseValue[i] = 0;
+                else if (this.baseValue[i] + rndValue > 0x7FFF)
+                    this.baseValue[i] = 0x7FFF;
+                else
+                    this.baseValue[i] += rndValue;
+                this._isVectorUp[i] = true;
+
+                this.caliValue[i] = (Int16)i;
+                if (i == SensorCount - 1)
+                    this.caliValue[i] = 0x7FFF - 0x7CCC;
+            }
+
+            return server;
+        }
+
         private byte[] Server_PeriodicSendEvent_TeraHz()
         {
+            if (this.allowSend == false || this.creatingResponse) return null;
+
             byte[] returnBuffer = new byte[SensorCount * sizeof(Int16)];
-            Int16[] sensorData = new Int16[SensorCount];
+            int addValue = 50;
 
             for (int i = 0; i < SensorCount; i++)
             {
-                if(value + (i * 10) > Int16.MaxValue)
-                    sensorData[i] = Int16.MaxValue;
-                else
-                    sensorData[i] = (Int16)(value + (i * 10));
-            }
-
-            if (_isVectorUp)
-            {
-                if(value + 100 > 0x7FFF)
+                if (_isVectorUp[i])
                 {
-                    value = 0x7FFF;
-                    _isVectorUp = false;
+                    if(baseValue[i] + addValue > 0x7FFF)
+                    {
+                        baseValue[i] = 0x7FFF;
+                        _isVectorUp[i] = false;
+                    }
+                    else
+                        baseValue[i] += (Int16)addValue;
                 }
                 else
-                    value += 100;
-            }
-            else
-            {
-                if (value - 100 <= 0)
                 {
-                    value = 0;
-                    _isVectorUp = true;
+                    if (baseValue[i] - addValue <= 0)
+                    {
+                        baseValue[i] = 0;
+                        _isVectorUp[i] = true;
+                    }
+                    else
+                        baseValue[i] -= (Int16)addValue;
                 }
-                    value -= 100;
             }
 
-            Buffer.BlockCopy(sensorData, 0, returnBuffer, 0, returnBuffer.Length);
+            Buffer.BlockCopy(baseValue, 0, returnBuffer, 0, returnBuffer.Length);
 
             System.Threading.Thread.Sleep(2);
 
             return returnBuffer;
         }
 
-        int framewidth = 8;
-
-        private byte[] FrmServer_ClientActiveEvent(byte[] data)
+        private byte[] Server_CreateResponseEvent_TeraHz(byte[] request)
         {
-            if (data == null)
-            {
-                byte[] returnBytes = new byte[SensorCount * framewidth * sizeof(short)];
-                short[] shortFrameLength = new short[SensorCount * framewidth];
+            if (request == null) return null;
+            this.creatingResponse = true;
 
-                Random rnd = new Random();
+            //0. Test용 수신 Buffer 표기
+            this.UIUpdate(string.Format("buffer: {0}", ByteToString(request)));
 
-                for (int i = 0; i < SensorCount; i++)
-                {
-                    for (int j = 0; j < framewidth; j++)
-                    {
-                        float value = (0x7FFF * (i / (float)SensorCount)) * (rnd.Next(9000, 11000) / 10000f);
-                        if (value < 0) value = 0;
-                        else if (value > 0x7FFF) value = 0x7FFF;
-
-                        shortFrameLength[i + (j * SensorCount)] = Convert.ToInt16(value);
-                    }
-                }
-
-                Buffer.BlockCopy(shortFrameLength, 0, returnBytes, 0, returnBytes.Length);
-
-                System.Threading.Thread.Sleep(5);
-
-                return returnBytes;
-            }
+            //1. Buffer 보관
+            if (this._stackBuffer == null)
+                this._stackBuffer = request;
             else
             {
-                DotNet.Comm.Protocols.Customs.HYNux.PCLink pcLink = this._protocol as DotNet.Comm.Protocols.Customs.HYNux.PCLink;
+                byte[] temp = new byte[this._stackBuffer.Length + request.Length];
+                Buffer.BlockCopy(this._stackBuffer, 0, temp, 0, this._stackBuffer.Length);
+                Buffer.BlockCopy(request, 0, temp, this._stackBuffer.Length, request.Length);
 
-                int startIdx = -1;
-                if (startIdx < 0) return null;
-                int endIdx = DotNet.Utils.Controls.Utils.QYUtils.Find(data, pcLink.TailBytes, startIdx);
+                this._stackBuffer = temp;
+            }
 
-                byte[] frame = new byte[endIdx - (startIdx + 1)];
-                Buffer.BlockCopy(data, 1, frame, 0, frame.Length);
-                string strFrame = Encoding.ASCII.GetString(frame);
-                string cmd = strFrame.Substring(0, strFrame.IndexOf(','));
+            //2. Reqeust Frame 추출
+            if (this._stackBuffer != null)
+            {
+                if (this._stackBuffer.Length < 6) return null;
 
-                if(cmd == "FrameLength")
+                int handle = QYUtils.Find(this._stackBuffer, Encoding.ASCII.GetBytes("TS"));
+                if (handle < 0)
                 {
-                    int valueIdx = strFrame.IndexOf(',') + 1;
-                    //framewidth = Convert.ToInt32(strFrame.Substring(valueIdx, strFrame.Length - valueIdx));
+                    this._stackBuffer = null;
+                    this.UIUpdate($"비정상 Request: {ByteToString(this._stackBuffer)}");
 
-                    byte[] cmdByte = Encoding.ASCII.GetBytes(string.Format("{0},OK", cmd));
-                    byte[] returnFrame = new byte[cmdByte.Length + 3];
-
-                    Buffer.BlockCopy(new byte[] { 0x02 }, 0, returnFrame, 0, 1);
-                    Buffer.BlockCopy(cmdByte, 0, returnFrame, 1, cmdByte.Length);
-                    Buffer.BlockCopy(new byte[] { 0x0D, 0x0A }, 0, returnFrame, cmdByte.Length + 1, 2);
-
+                    this.creatingResponse = false;
+                    this._stackBuffer = null;
                     return null;
                 }
 
-                return null;
+                byte[] reqBytes = new byte[6];
+                Buffer.BlockCopy(this._stackBuffer, handle, reqBytes, 0, reqBytes.Length);
+                string reqStr = Encoding.ASCII.GetString(reqBytes);
+                string cmdG = reqStr.Substring(0, 3);
+                int cmdN = Convert.ToInt32(reqStr.Substring(4, 2));
+                string resStr = string.Empty;
+
+                if(cmdG == "TSN")
+                {
+                    if(cmdN == 0)
+                    {
+                        resStr = $"TSN,OK,01,{(this._isEditSend ? "0001" : "0000")}";
+                    }
+                    else if(cmdN == 1)
+                    {
+                        resStr = "TSN,OK";
+                        this.allowSend = true;
+                    }
+                    else if (cmdN == 2)
+                    {
+                        resStr = "TSN,OK";
+                        this.allowSend = false;
+                    }
+                    else if (cmdN == 3)
+                    {
+                        this._isEditSend = true;
+                        resStr = "TSN,OK";
+                    }
+                    else if (cmdN == 4)
+                    {
+                        this._isEditSend = false;
+                        resStr = "TSN,OK";
+                    }
+                    else if (cmdN == 5)
+                    {
+                        resStr = $"TSN,OK,{SensorCount.ToString("D4")}";
+                        for (int i = 0; i < SensorCount; i++)
+                            resStr += string.Format(",{0:X4}", this.caliValue[i]);
+                    }
+                    else if (cmdN == 6)
+                    {
+                        resStr = $"TSN,OK,{SensorCount.ToString("D4")}";
+                        for (int i = 0; i < SensorCount; i++)
+                            resStr += string.Format(",{0:X4}", 0x7FFF - this.caliValue[i]);
+                    }
+                }
+                else if(cmdG == "TST")
+                {
+                    resStr = "TST,OK";
+                }
+
+                if(resStr != string.Empty)
+                {
+                    byte[] resBytes = Encoding.ASCII.GetBytes(resStr);
+                    this.UIUpdate(string.Format("Response Bytes: {0}", ByteToString(resBytes)));
+
+                    this.creatingResponse = false;
+                    this._stackBuffer = null;
+                    return resBytes;
+                }
+
+                //초기화
+                this._stackBuffer = null;
             }
+
+            return null;
         }
 
         #endregion 무한 전송 서버

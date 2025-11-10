@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlServerCe;
-using System.Diagnostics;
+using System.Linq;
 
 namespace DotNet.Database
 {
@@ -63,76 +63,112 @@ namespace DotNet.Database
 
             return this._conn;
         }
-        /// <summary>
-        /// 반환이 있는 Query 실행<br/>
-        /// DataSet or DataTable만 사용가능
-        /// </summary>
-        /// <typeparam name="T">반환 받을 Type - DataSet or DataTable</typeparam>
-        /// <param name="query">실행 Query</param>
-        /// <returns>반환받은 Data</returns>
-        /// <exception cref="InvalidOperationException">DataSet, Table이 아님</exception>
-        /// <remarks>
-        /// SQL Compact CE는 미지원하는 기능
-        /// </remarks>
-        public override T ExcuteQuery<T>(string query)
-        {
-            if (typeof(T) != typeof(DataTable)
-                && typeof(T) != typeof(DataSet))
-                throw new InvalidOperationException("DataType is not DataSet or DataTable");
 
+        public override DataTable ExecuteQuery(string query, int idx = 0)
+        {
+            string[] spltQuery = query.Split(';');
+            DataSet ds = new DataSet();
+
+            for (int i = 0; i < spltQuery.Length; i++)
+            {
+                DataSet readDs = this.ExecuteQuery(spltQuery[i].Trim());
+
+                if (readDs != null)
+                    ds.Tables.Add(readDs.Tables[0]);
+                else
+                    break;
+            }
+
+            if (ds.Tables.Count > idx)
+                return ds.Tables[idx];
+            else if (ds.Tables.Count > 0)
+                return ds.Tables[0];
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// 반환이 있는 Query 실행
+        /// </summary>
+        /// <param name="query">실행 Query</param>
+        /// <returns>반환 받은 Table</returns>
+        public override DataSet ExecuteQuery(string query)
+        {
+            string[] spltQuery = query.Split(';');
             SqlCeDataAdapter adapter = null;
             DataSet ds = null;
-            int idx = 0;
 
-            try
+            if (spltQuery.Length == 1)
             {
-                SqlCeConnection conn = this.GetConnection();
+                try
+                {
+                    SqlCeConnection conn = this.GetConnection();
 
+                    ds = new DataSet();
+                    adapter = new SqlCeDataAdapter(query, conn);
+                    adapter.Fill(ds);
+
+                }
+                catch (Exception ex)
+                {
+                    base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{2}", ex.Message, query));
+                }
+                finally
+                {
+                    if (adapter != null)
+                        adapter.Dispose();
+                }
+            }
+            else
+            {
                 ds = new DataSet();
-                adapter = new SqlCeDataAdapter(query, conn);
-                adapter.Fill(ds);
 
-                string[] queryAry = query.Split(';');
+                for (int i = 0; i < spltQuery.Length; i++)
+                {
+                    DataSet runDs = ExecuteQuery(spltQuery[i]);
 
-            }
-            catch (Exception ex)
-            {
-                base.RunLogEvent(string.Format("Query Error: {0}\r\nQuery Index - {1}\r\n\r\nLog:{2}", ex.Message, idx, query));
-            }
-            finally
-            {
-                if (adapter != null)
-                    adapter.Dispose();
+                    if (runDs != null)
+                    {
+                        foreach (DataTable table in runDs.Tables)
+                            ds.Tables.Add(table);
+                    }
+                }
             }
 
-            if (typeof(T) == typeof(DataTable))
-            {
-                return ds.Tables.Count > 0 ? ds.Tables[0] as T : null;
-            }
-            else if (typeof(T) == typeof(DataSet))
-            {
-                return ds as T;
-            }
-
-            return null;
+            return ds;
         }
+
         /// <summary>
         /// 반환이 없는 Query 실행
         /// </summary>
         /// <param name="query">query</param>
         /// <returns>실행성공여부</returns>
-        public override bool ExcuteNonQuery(string query)
+        public override bool ExecuteNonQuery(string query)
         {
             SqlCeCommand cmd = null;
             bool result = false;
 
             try
             {
-                cmd = new SqlCeCommand(query, this.GetConnection());
-                if (this._transaction != null) cmd.Transaction = this._transaction;
+                string[] spltQuery = query.Split(';');
 
-                cmd.CommandText = query;
-                cmd.ExecuteNonQuery();
+                cmd = new SqlCeCommand();
+                cmd.Connection = this.GetConnection();
+                if (this._transaction != null)
+                    cmd.Transaction = this._transaction;
+
+                for (int i = 0; i < spltQuery.Length; i++)
+                {
+                    spltQuery[i] = spltQuery[i].Replace("\r\n", " ").Trim();
+                    if (spltQuery[i] == string.Empty) continue;
+
+                    //주석 Row 스킵
+                    if (spltQuery[i][0] == '-' && spltQuery[i][1] == '-') continue;
+
+
+                    cmd.CommandText = spltQuery[i];
+                    cmd.ExecuteNonQuery();
+                }
 
                 result = true;
             }
@@ -158,9 +194,8 @@ namespace DotNet.Database
         /// <param name="query">@변수를 사용하는 Query</param>
         /// <param name="parameters">변수목록</param>
         /// <returns>실행성공여부</returns>
-        public override bool ExcuteNonQuery<T>(string query, List<T> parameters)
+        public override bool ExecuteNonQuery<SqlCeParameter>(string query, List<SqlCeParameter> parameters)
         {
-            if (typeof(T) != typeof(SqlCeParameter)) return false;
             //Parametr 지정값 @가 없으면 false처리
             if (query.Contains("@") == false) return false;
 
