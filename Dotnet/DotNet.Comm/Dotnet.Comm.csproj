@@ -7,8 +7,8 @@
     <ProjectGuid>{51E53D22-AD2C-4C18-99D5-6B6D73FDD404}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Dotnet.Comm</RootNamespace>
-    <AssemblyName>Dotnet.Comm</AssemblyName>
+    <RootNamespace>DotNet.Comm</RootNamespace>
+    <AssemblyName>DotNet.Comm</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
