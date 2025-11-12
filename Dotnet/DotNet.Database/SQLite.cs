@@ -7,8 +7,8 @@ namespace DotNet.Database
 {
     public class SQLite : DBCommon
     {
-        private SQLiteConnection _conn = null;
-        private SQLiteTransaction _transaction = null;
+        private SQLiteConnection Conn { get { return (SQLiteConnection)GetConnection(); } }
+        private SQLiteTransaction Transaction { get { return (SQLiteTransaction)base._transaction; } }
 
         protected override string ConnectionString
         {
@@ -17,53 +17,49 @@ namespace DotNet.Database
                 if (base._dataSource == string.Empty)
                     return string.Empty;
 
-                return $"Data Source={base._dataSource};Password={base._password};";
+                if (base._password == string.Empty || base._password == "")
+                    return $"Data Source={base._dataSource}";
+
+                return $"Data Source={base._dataSource};Password={base._password}";
             }
         }
 
-        public SQLite(string connStr, string password)
+        public SQLite(string filePath, string password)
         {
-            base._dataSource = connStr;
+            base._dataSource = filePath;
             base._password = password;
-            GetConnection();
+            base._conn = this.GetConnection();
         }
 
-        private SQLiteConnection GetConnection()
+        protected override IDbConnection GetConnection()
         {
-            if(this._conn == null)
+            if(base._conn == null)
             {
-                if (System.IO.File.Exists(base._dataSource))
-                    this._conn = new SQLiteConnection(this.ConnectionString);
-                else
-                {
-                    this._conn = new SQLiteConnection($"Data Source={base._dataSource};");
-                    this._conn.SetPassword(base._password);
-                }
-
+                base._conn = new SQLiteConnection(this.ConnectionString);
             }
             else
             {
-                if (this._conn.State == ConnectionState.Closed)
-                    this._conn.Open();
+                if(base._conn.State == System.Data.ConnectionState.Closed)
+                    base._conn.Open();
             }
 
-            return this._conn;
+            return (SQLiteConnection)base._conn;
         }
 
         public override DataSet ExecuteQuery(string query)
         {
-            SQLiteDataAdapter adapter = null;
             DataSet ds = null;
+            SQLiteDataAdapter adapter = null;
 
             try
             {
                 ds = new DataSet();
-                adapter = new SQLiteDataAdapter(query, this.GetConnection());
+                adapter = new SQLiteDataAdapter(query, this.Conn);
                 adapter.Fill(ds);
             }
             catch (Exception ex)
             {
-                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{2}", ex.Message, query));
+                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
             }
             finally
             {
@@ -77,15 +73,13 @@ namespace DotNet.Database
         public override bool ExecuteNonQuery(string query)
         {
             SQLiteCommand cmd = null;
-            bool result = false;
+            bool result;
 
             try
             {
-                cmd = new SQLiteCommand(query, this.GetConnection());
-                if (this._transaction != null)
-                    cmd.Transaction = this._transaction;
+                cmd = new SQLiteCommand(query, this.Conn);
+                if(base._transaction != null) cmd.Transaction = this.Transaction;
 
-                cmd.CommandText = query;
                 cmd.ExecuteNonQuery();
 
                 result = true;
@@ -98,25 +92,26 @@ namespace DotNet.Database
             finally
             {
                 if (cmd != null)
-                    if (this._transaction == null)
+                {
+                    if (base._transaction == null)
                         cmd.Dispose();
+                }
             }
 
             return result;
         }
 
-        public override bool ExecuteNonQuery<SQLiteParameter>(string query, List<SQLiteParameter> parameters)
+        public override bool ExecuteNonQuery<SqliteParameter>(string query, IList<SqliteParameter> parameters)
         {
-            if (query.Contains("@") == false) return false;
+            if (query.Contains("@") == false) throw new Exception("Query에 Parameter 지정값이 없음");
 
             SQLiteCommand cmd = null;
-            bool result = false;
+            bool result;
 
             try
             {
-                cmd = new SQLiteCommand(query, this.GetConnection());
-                if (this._transaction != null)
-                    cmd.Transaction = this._transaction;
+                cmd = new SQLiteCommand(query, this.Conn);
+                if (base._transaction != null) cmd.Transaction = this.Transaction;
 
                 foreach (var param in parameters)
                     cmd.Parameters.Add(param);
@@ -133,32 +128,13 @@ namespace DotNet.Database
             finally
             {
                 if (cmd != null)
-                    if (this._transaction == null)
+                {
+                    if (base._transaction == null)
                         cmd.Dispose();
+                }
             }
 
             return result;
-        }
-
-        public override void BeginTransaction()
-        {
-            GetConnection();
-
-            if(this._conn.State == ConnectionState.Open)
-                this._transaction = this._conn.BeginTransaction();
-        }
-
-        public override void EndTransaction(bool result)
-        {
-            if(this._transaction != null)
-            {
-                if (result)
-                    this._transaction.Commit();
-                else
-                    this._transaction.Rollback();
-
-                this._transaction.Dispose();
-            }
         }
     }
 }

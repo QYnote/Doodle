@@ -579,6 +579,11 @@ namespace DotNetFrame.Frm
             this.gvDataLog.AllowUserToAddRows = false;
             this.gvDataLog.AllowUserToResizeColumns = false;
             this.gvDataLog.AllowUserToResizeRows = false;
+            this.gvDataLog.RowsAdded += (s, e) =>
+            {
+                if (this.gvDataLog.Rows.Count > 0)
+                    this.gvDataLog.FirstDisplayedScrollingRowIndex = this.gvDataLog.Rows.Count - 1;
+            };
 
             DataGridViewTextBoxColumn colType = new DataGridViewTextBoxColumn();
             colType.Name = "Type";
@@ -646,6 +651,7 @@ namespace DotNetFrame.Frm
 
             
             this.gbxLog.Text = "Log";
+            
 
             #endregion Log Grid
 
@@ -710,7 +716,13 @@ namespace DotNetFrame.Frm
             #endregion Visible Index
 
             InitPort();
-            this._port.Log += UpdateUI;
+            this._port.ComPortLog += this.UpdateUI_ComPortLog;
+            this._port.AfterSendRequest += this.UpdateUI_AfterSendRequest;
+            this._port.PortCurrentBuffer += this.UpdateUI_PortCurrentBuffer;
+            this._port.Error_ErrorCode += this.UpdateUI_Error_ErrorCode;
+            this._port.Error_Protocol += this.UpdateUI_Error_Protocol;
+            this._port.RequestComplete += this.UpdateUI_RequestComplete;
+            this._port.RequestTimeout += this.UpdateUI_RequestTimeout;
 
             this.txtEthernetIP.Visible = false;
             this.txtPortNo.Visible = false;
@@ -908,167 +920,192 @@ namespace DotNetFrame.Frm
             }
 
             this._isRequesting = false;
-            UpdateUI("EndSending");
+            UpdateUI("SendComplete");
         }
 
-        private void UpdateUI(string logName, params object[] data)
+        private void UpdateUI_ComPortLog(params object[] obj)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_ComPortLog), new object[] { obj });
+            else
+            {
+                this.txtLog.AppendText($"Port Log: {obj[0] as string}\r\n");
+            }
+        }
+
+        private void UpdateUI_AfterSendRequest(params object[] obj)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_AfterSendRequest), new object[] { obj });
+            else
+            {
+                byte[] req = obj[0] as byte[];
+                //송신 Grid Log Update
+                DataRow dr = this._dtDataLog.NewRow();
+                dr["Type"] = "Req";
+                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                for (int i = 0; i < req.Length; i++)
+                {
+                    if ((i != 0) && ((i % rstColCount) == 0))
+                    {
+                        this._dtDataLog.Rows.Add(dr);
+                        dr = this._dtDataLog.NewRow();
+                    }
+
+                    dr[string.Format("Col{0}", i)] = req[i].ToString("X2");
+                }
+                this._dtDataLog.Rows.Add(dr);
+
+                //시도횟수 증가
+                this._dtDataResult.Rows[0]["TryCount"] = this._curReq;
+
+                //TextLog Update
+                this.txtLog.AppendText($"Req:{ByteToString(req)}\r\n");
+            }
+        }
+
+        private void UpdateUI_PortCurrentBuffer(params object[] obj)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_PortCurrentBuffer), new object[] { obj });
+            else
+            {
+                byte[] buffer = obj[0] as byte[];
+                this._dtBuffer.Rows.Clear();
+
+                DataRow dr = null;
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    string fieldName = string.Format("col{0}", i % this._bufferColCount);
+                    if (i % this._bufferColCount == 0)
+                    {
+                        if (i != 0)
+                            this._dtBuffer.Rows.Add(dr);
+
+                        dr = this._dtBuffer.NewRow();
+                    }
+
+                    dr[fieldName] = buffer[i].ToString("X2");
+                }
+
+                if (dr != null)
+                    this._dtBuffer.Rows.Add(dr);
+            }
+        }
+
+        private void UpdateUI_Error_ErrorCode(params object[] obj)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_Error_ErrorCode), new object[] { obj });
+            else
+            {
+                byte[] frame = obj[0] as byte[];
+                //수신 Grid Log Update
+                AddRcvDataLog(frame, true);
+
+                //TextLog Update
+                this.txtLog.AppendText($"Res Error - ErrorCode:{ByteToString(obj[0] as byte[])}\r\n");
+
+                //Result Grid Update
+                this._dtProtocolResult.Rows[0]["ErrChk"] = (uint)(this._dtProtocolResult.Rows[0]["ErrChk"]) + 1;
+            }
+        }
+
+        private void UpdateUI_Error_Protocol(params object[] obj)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_Error_Protocol), new object[] { obj });
+            else
+            {
+                byte[] frame = obj[0] as byte[];
+                //수신 Grid Log Update
+                AddRcvDataLog(frame, true);
+
+                //TextLog Update
+                this.txtLog.AppendText($"Res Error - Protocol:{ByteToString(obj[0] as byte[])}\r\n");
+
+                //Result Grid Update
+                this._dtProtocolResult.Rows[0]["ProtocolErr"] = (uint)(this._dtProtocolResult.Rows[0]["ProtocolErr"]) + 1;
+            }
+        }
+
+        private void UpdateUI_RequestComplete(params object[] obj)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_RequestComplete), new object[] { obj });
+            else
+            {
+                byte[] frame = obj[1] as byte[];
+                //수신 Grid Log Update
+                AddRcvDataLog(frame, false);
+                //TextLog Update
+                this.txtLog.AppendText($"Res:{ByteToString(frame)}\r\n\r\n");
+
+                //Result Grid Update
+                this._dtDataResult.Rows[0]["Success"] = (uint)(this._dtDataResult.Rows[0]["Success"]) + 1;
+            }
+        }
+
+        private void UpdateUI_RequestTimeout(params object[] obj)
+        {
+            if (this.InvokeRequired)
+                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_RequestTimeout), new object[] { obj });
+            else
+            {
+                string type = obj[0] as string;
+
+                if(type == "None Response")
+                {
+                    //수신 Grid Log Update
+                    DataRow dr = this._dtDataLog.NewRow();
+                    dr["Type"] = "Rcv";
+                    dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
+                    this._dtDataLog.Rows.Add(dr);
+                    this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Salmon;
+
+                    //TextLog Update
+                    this.txtLog.AppendText(string.Format("Res Timeover - None: -\r\n"));
+
+                    //Result Grid Update
+                    this._dtDataResult.Rows[0]["None Receive"] = (uint)(this._dtDataResult.Rows[0]["None Receive"]) + 1;
+                }
+                else if(type == "Stop Response")
+                {
+                    byte[] frame = obj[1] as byte[];
+                    //수신 Grid Log Update
+                    AddRcvDataLog(frame, true);
+
+                    //TextLog Update
+                    this.txtLog.AppendText($"Res Timeover - Stop:{ByteToString(frame)}\r\n");
+
+                    //Result Grid Update
+                    this._dtDataResult.Rows[0]["Receive Stop"] = (uint)(this._dtDataResult.Rows[0]["Receive Stop"]) + 1;
+                }
+                else if (type == "Long Response")
+                {
+                    byte[] frame = obj[1] as byte[];
+                    //수신 Grid Log Update
+                    AddRcvDataLog(frame, true);
+
+                    //TextLog Update
+                    this.txtLog.AppendText($"Res Timeover - Long:{ByteToString(frame)}\r\n");
+
+                    //Result Grid Update
+                    this._dtDataResult.Rows[0]["Receive Too Long"] = (uint)(this._dtDataResult.Rows[0]["Receive Too Long"]) + 1;
+                }
+            }
+        }
+
+        private void UpdateUI(params object[] obj)
         {
             try
             {
                 if (this.InvokeRequired)
-                    this.BeginInvoke(new HYCommTesterPort.HYPortLogHandler(UpdateUI), logName, data);
+                    this.BeginInvoke(new UpdateUI_WithParam(UpdateUI), new object[] { obj });
                 else
                 {
-                    string str = string.Empty;
-                    switch (logName)
-                    {
-                        case "ComPortLog":
-                            str = data[0] as string;
-                            this.txtLog.AppendText(string.Format("Port Log: {0}\r\n", str));
-                            break;
-                        case "Request":
-                            {
-                                byte[] req = data[0] as byte[];
-                                //송신 Grid Log Update
-                                DataRow dr = this._dtDataLog.NewRow();
-                                dr["Type"] = "Req";
-                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-                                for (int i = 0; i < req.Length; i++)
-                                {
-                                    if((i != 0) && ((i % rstColCount) == 0))
-                                    {
-                                        this._dtDataLog.Rows.Add(dr);
-                                        dr = this._dtDataLog.NewRow();
-                                    }
-
-                                    dr[string.Format("Col{0}", i)] = req[i].ToString("X2");
-                                }
-                                this._dtDataLog.Rows.Add(dr);
-
-                                //시도횟수 증가
-                                this._dtDataResult.Rows[0]["TryCount"] = this._curReq;
-
-                                //TextLog Update
-                                str = ByteToString(req);
-                                this.txtLog.AppendText(string.Format("Req:{0}\r\n", str));
-                            }
-                            break;
-                        case "StackBuffer":
-                            {
-                                byte[] buffer = data[0] as byte[];
-                                this._dtBuffer.Rows.Clear();
-
-                                DataRow dr = null;
-                                for (int i = 0; i < buffer.Length; i++)
-                                {
-                                    string fieldName = string.Format("col{0}", i % this._bufferColCount);
-                                    if(i % this._bufferColCount == 0)
-                                    {
-                                        if (i != 0)
-                                            this._dtBuffer.Rows.Add(dr);
-
-                                        dr = this._dtBuffer.NewRow();
-                                    }
-
-                                    dr[fieldName] = buffer[i].ToString("X2");
-                                }
-
-                                if(dr != null)
-                                    this._dtBuffer.Rows.Add(dr);
-                            }
-                            break;
-                        case "Error-ErrorCode":
-                            {
-                                byte[] frame = data[0] as byte[];
-                                //수신 Grid Log Update
-                                AddRcvDataLog(frame, true);
-
-                                //TextLog Update
-                                str = ByteToString(data[0] as byte[]);
-                                this.txtLog.AppendText(string.Format("Res Error - ErrorCode:{0}\r\n", str));
-
-                                //Result Grid Update
-                                this._dtProtocolResult.Rows[0]["ErrChk"] = (uint)(this._dtProtocolResult.Rows[0]["ErrChk"]) + 1;
-                            }
-                            break;
-                        case "Error-Protocol":
-                            {
-                                byte[] frame = data[0] as byte[];
-                                //수신 Grid Log Update
-                                AddRcvDataLog(frame, true);
-
-                                //TextLog Update
-                                str = ByteToString(data[0] as byte[]);
-                                this.txtLog.AppendText(string.Format("Res Error - Protocol:{0}\r\n", str));
-
-                                //Result Grid Update
-                                this._dtProtocolResult.Rows[0]["ProtocolErr"] = (uint)(this._dtProtocolResult.Rows[0]["ProtocolErr"]) + 1;
-                            }
-                            break;
-                        case "Receive End":
-                            {
-                                byte[] frame = data[1] as byte[];
-                                //수신 Grid Log Update
-                                AddRcvDataLog(frame, false);
-                                //TextLog Update
-                                str = ByteToString(frame);
-                                this.txtLog.AppendText(string.Format("Res:{0}\r\n\r\n", str));
-
-                                //Result Grid Update
-                                this._dtDataResult.Rows[0]["Success"] = (uint)(this._dtDataResult.Rows[0]["Success"]) + 1;
-                            }
-                            break;
-                        case "None Response":
-                            {
-                                //수신 Grid Log Update
-                                DataRow dr = this._dtDataLog.NewRow();
-                                dr["Type"] = "Rcv";
-                                dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-                                this._dtDataLog.Rows.Add(dr);
-                                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Salmon;
-
-                                //TextLog Update
-                                this.txtLog.AppendText(string.Format("Res Timeover - None: -\r\n"));
-
-                                //Result Grid Update
-                                this._dtDataResult.Rows[0]["None Receive"] = (uint)(this._dtDataResult.Rows[0]["None Receive"]) + 1;
-                            }
-                            break;
-                        case "Stop Response":
-                            {
-                                byte[] frame = data[0] as byte[];
-                                //수신 Grid Log Update
-                                AddRcvDataLog(frame, true);
-
-                                //TextLog Update
-                                str = ByteToString(frame);
-                                this.txtLog.AppendText(string.Format("Res Timeover - Stop:{0}\r\n", str));
-
-                                //Result Grid Update
-                                this._dtDataResult.Rows[0]["Receive Stop"] = (uint)(this._dtDataResult.Rows[0]["Receive Stop"]) + 1;
-                            }
-                            break;
-                        case "Long Response":
-                            {
-                                byte[] frame = data[0] as byte[];
-                                //수신 Grid Log Update
-                                AddRcvDataLog(frame, true);
-
-                                //TextLog Update
-                                str = ByteToString(data[0] as byte[]);
-                                this.txtLog.AppendText(string.Format("Res Timeover - Long:{0}\r\n", str));
-
-                                //Result Grid Update
-                                this._dtDataResult.Rows[0]["Receive Too Long"] = (uint)(this._dtDataResult.Rows[0]["Receive Too Long"]) + 1;
-                            }
-                            break;
-                        case "EndSending":
-                            this.btnSend.Text = "Send";
-                            break;
-                    }
-
-                    if(this.gvDataLog.Rows.Count > 0)
-                        this.gvDataLog.FirstDisplayedScrollingRowIndex = this.gvDataLog.Rows.Count - 1;
+                    if(obj[0] as string == "SendComplete")
+                        this.btnSend.Text = "Send";
                 }
             }
             catch (Exception ex)

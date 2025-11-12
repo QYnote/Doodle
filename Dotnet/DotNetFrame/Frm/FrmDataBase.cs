@@ -1,4 +1,5 @@
 ﻿using DotNet.Database;
+using DotNet.Utils.Controls.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,7 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace DotNetFrame.Frm
 {
@@ -69,23 +69,11 @@ namespace DotNetFrame.Frm
             this.lblDBType.Text = "DB 종류";
             this.cboDBType.Location = new Point(this.lblDBType.Location.X + this.lblDBType.Width, this.lblDBType.Location.Y);
             this.cboDBType.Height = this.lblDBType.Height;
-            this.cboDBType.Items.AddRange(new string[] { "SQL CE ~3.0", "SQLite" });
+            this.cboDBType.DataSource = QYUtils.GetEnumItems<DataBaseType>();
+            this.cboDBType.ValueMember = "Value";
+            this.cboDBType.DisplayMember = "Name";
             this.cboDBType.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.cboDBType.SelectedIndexChanged += (s, e) =>
-            {
-                if(this.cboDBType.SelectedIndex == 0)
-                {
-                    this.txtDBPath.ReadOnly = true;
-                    this.btnSelectPath.Visible = true;
-                    this.txtID.ReadOnly = true;
-                }
-                else if (this.cboDBType.SelectedIndex == 1)
-                {
-                    this.txtDBPath.ReadOnly = true;
-                    this.btnSelectPath.Visible = true;
-                    this.txtID.ReadOnly = true;
-                }
-            };
+            this.cboDBType.SelectedValueChanged += CboDBType_SelectedValueChanged;
 
             this.lblDBPath.Location = new Point(this.lblDBType.Location.X, this.lblDBType.Location.Y + this.lblDBType.Height + 3);
             this.lblDBPath.Width = this.lblDBType.Width;
@@ -97,19 +85,7 @@ namespace DotNetFrame.Frm
             this.btnSelectPath.Height = this.txtDBPath.Height + 2;
             this.btnSelectPath.Width = this.btnSelectPath.Height;
             this.btnSelectPath.Text = "...";
-            this.btnSelectPath.Click += (s, e) =>
-            {
-                OpenFileDialog ofd = new OpenFileDialog();
-                ofd.Multiselect = false;
-                ofd.DefaultExt = "sdf";
-                ofd.Filter = "SQL Server Compact Edition Database Files(*.sdf)|*.sdf";
-                ofd.RestoreDirectory = true;
-
-                if(ofd.ShowDialog() == DialogResult.OK)
-                {
-                    this.txtDBPath.Text = ofd.FileName;
-                }
-            };
+            this.btnSelectPath.Click += BtnSelectPath_Click;
 
             this.lblID.Location = new Point(this.lblDBType.Location.X, this.lblDBPath.Location.Y + this.lblDBPath.Height + 3);
             this.lblID.Width = this.lblDBType.Width;
@@ -128,17 +104,7 @@ namespace DotNetFrame.Frm
             this.btnConnect.Location = new Point(this.txtPassword.Location.X - 1, this.txtPassword.Location.Y + this.txtPassword.Height + 3);
             this.btnConnect.Width = (this.btnSelectPath.Location.X + this.btnSelectPath.Width) - this.btnConnect.Location.X;
             this.btnConnect.Text = "Connect";
-            this.btnConnect.Click += (s, e) =>
-            {
-                if (this.cboDBType.SelectedIndex == 0)
-                {
-                    ConnectDB(DataBaseType.SQLCe, this.txtDBPath.Text, this.txtPassword.Text);
-                }
-                else if (this.cboDBType.SelectedIndex == 1)
-                {
-                    ConnectDB(DataBaseType.SQLite, this.txtDBPath.Text, this.txtPassword.Text);
-                }
-            };
+            this.btnConnect.Click += BtnConnect_Click;
 
             this.gbxDatabase.Location = new Point(3, 3);
             this.gbxDatabase.Text = "Database 설정";
@@ -158,17 +124,7 @@ namespace DotNetFrame.Frm
             this.btnSelectSavepath.Height = this.txtSavepath.Height + 2;
             this.btnSelectSavepath.Width = this.btnSelectSavepath.Height;
             this.btnSelectSavepath.Text = "...";
-            this.btnSelectSavepath.Click += (s, e) =>
-            {
-                FolderBrowserDialog dialog = new FolderBrowserDialog();
-                dialog.SelectedPath = "C:\\";
-                dialog.ShowNewFolderButton = true;
-
-                if(dialog.ShowDialog() == DialogResult.OK)
-                {
-                    this.txtSavepath.Text = dialog.SelectedPath;
-                }
-            };
+            this.btnSelectSavepath.Click += BtnSelectSavepath_Click;
 
 
 
@@ -179,16 +135,13 @@ namespace DotNetFrame.Frm
 
             this.btnQuery.Dock = DockStyle.Bottom;
             this.btnQuery.Text = "Query";
-            this.btnQuery.Click += (s, e) => { SendQuery(); };
+            this.btnQuery.Click += BtnQuery_Click;
 
 
 
             this.cboTable.Location = new Point(3, 3);
             this.cboTable.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.cboTable.SelectedIndexChanged += (s, e) =>
-            {
-                ChangeTable();
-            };
+            this.cboTable.SelectedIndexChanged += CboTable_SelectedIndexChanged;
 
             this.spltPnl.Location = new Point(this.gbxDatabase.Location.X, this.gbxDatabase.Location.Y + this.gbxDatabase.Height + 3);
             this.spltPnl.Width = this.ClientSize.Width - (this.spltPnl.Location.X + 3);
@@ -237,141 +190,237 @@ namespace DotNetFrame.Frm
             this.txtSavepath.Text = $"{defaultDir}";
         }
 
-        private void ConnectDB(DataBaseType type, string datasource, string password)
-        {
-            string[] pathSplit = datasource.Split('.');
-            string extention = pathSplit[pathSplit.Length - 1];
+        #region UI Event
+        //이벤트 모음
+        //UI 변경요소만 이곳에서 진행
+        //UI외적으로 다른 class나 계산 Method 같은 경우는 따로 Method를 빼서 UI값을 던져주도록 작성
 
-            this._DB = null;
+        private void CboDBType_SelectedValueChanged(object sender, EventArgs e)
+        {
+            ComboBox cbo = sender as ComboBox;
+            if (cbo.SelectedValue is DataBaseType type == false) return;
 
             if (type == DataBaseType.SQLCe)
             {
-                if ((extention == "sdf") == false)
-                {
-                    MessageBox.Show("호환하는 파일이 아닙니다.");
-                    return;
-                }
-
-                this._DB = new SQLCe(this.txtDBPath.Text, this.txtPassword.Text);
+                this.txtDBPath.ReadOnly = true;
+                this.btnSelectPath.Visible = true;
+                this.txtID.ReadOnly = true;
             }
             else if (type == DataBaseType.SQLite)
             {
-                if ((extention == "sqlite" || extention == "db") == false)
-                {
-                    MessageBox.Show("호환하는 파일이 아닙니다.");
-                    return;
-                }
+                this.txtDBPath.Text = $"{Directory.GetCurrentDirectory()}\\QYDB.sqlite";
+                this.txtPassword.Text = string.Empty;
 
-                this._DB = new SQLite(this.txtDBPath.Text, this.txtPassword.Text);
+                this.txtDBPath.ReadOnly = true;
+                this.btnSelectPath.Visible = true;
+                this.txtID.ReadOnly = true;
             }
-
-            if (this._DB != null)
-                this._DB.LogEvent += (log) => { MessageBox.Show(log); };
         }
 
-        private void SendQuery()
+        private void BtnSelectPath_Click(object sender, EventArgs e)
         {
-            if(this._DB == null)
+            if (this.cboDBType.SelectedValue is DataBaseType dbType == false) return;
+
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Multiselect = false;
+            ofd.RestoreDirectory = true;
+
+            if (dbType == DataBaseType.SQLCe)
+            {
+                ofd.DefaultExt = "sdf";
+                ofd.Filter = "SQL Server Compact Edition Database Files(*.sdf)|*.sdf";
+            }
+            else if(dbType == DataBaseType.SQLite)
+            {
+                ofd.DefaultExt = "sqlite";
+                ofd.Filter = "SQLite Database Files(*.sqlite)|*.sqlite" +
+                            "|SQLite Database Files(*.db)|*.db";
+            }
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                this.txtDBPath.Text = ofd.FileName;
+            }
+        }
+
+        private void BtnConnect_Click(object sender, EventArgs e)
+        {
+            if (this.cboDBType.SelectedValue is DataBaseType dbType == false) return;
+            string dbPath = this.txtDBPath.Text,
+                   id = this.txtID.Text,
+                   pw = this.txtPassword.Text;
+            string extention = dbPath.Split('.').Last();
+            bool enable = false;
+
+            switch (dbType)
+            {
+                case DataBaseType.SQLCe:
+                    if (extention == "sdf") enable = true;
+                    break;
+                case DataBaseType.SQLite:
+                    if (extention == "sqlite" || extention == "db" || extention == string.Empty) enable = true;
+                    break;
+            }
+
+            if(enable == false)
+            {
+                MessageBox.Show("호환하는 파일이 아닙니다.");
+                return;
+            }
+
+            this._DB = null;
+
+            switch (dbType)
+            {
+                case DataBaseType.SQLCe:
+                    this._DB = new SQLCe(dbPath, pw);
+                    break;
+                case DataBaseType.SQLite:
+                    this._DB = new SQLite(dbPath, pw);
+                    break;
+                //case DataBaseType.MySQL:
+                //    this._DB = new MySQL(dbPath, id, pw);
+                //    break;
+            }
+
+            if(this._DB != null)
+            {
+                this._DB.LogEvent += (msg) => { MessageBox.Show(msg); };
+            }
+        }
+
+        private void BtnSelectSavepath_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = "C:\\";
+            dialog.ShowNewFolderButton = true;
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                this.txtSavepath.Text = dialog.SelectedPath;
+            }
+        }
+
+        private void BtnQuery_Click(object sender, EventArgs e)
+        {
+            if (this._DB == null)
             {
                 MessageBox.Show(string.Format("DB 미연결"));
                 return;
             }
 
+            string query = this.txtQuery.Text;
+
+            if ((query.ToUpper().Contains("INSERT") || query.ToUpper().Contains("UPDATE") || query.ToUpper().Contains("DELETE"))
+                    && query.ToUpper().Contains("SELECT"))
+            {
+                MessageBox.Show("SELECT와 INSERT, UPDATE, DELETE는 동시에 사용 불가능" +
+                    "-기술 부족");
+                return;
+            }
+
+            if (query.ToUpper().Contains("SELECT"))
+            {
+                if (this.SendQuery(query))
+                {
+                    this.cboTable.Items.Clear();
+
+                    for (int i = 0; i < this._ds.Tables.Count; i++)
+                        this.cboTable.Items.Add(this._ds.Tables[i].TableName);
+
+                    if(this.cboTable.Items.Count > 0)
+                    {
+                        if (this.cboTable.SelectedIndex == 0)
+                            this.UpdateGrid(0);
+                        else
+                            this.cboTable.SelectedIndex = 0;
+                    }
+                }
+            }
+            else
+            {
+                if (this.SendQuery(query))
+                {
+                    MessageBox.Show("Query 완료");
+                }
+            }
+        }
+
+        private void CboTable_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ComboBox cbo = sender as ComboBox;
+
+            this.UpdateGrid(cbo.SelectedIndex);
+        }
+
+        private void UpdateGrid(int tableIndex)
+        {
+            this.gvTable.Columns.Clear();
+
+            if (this._ds != null)
+                this.gvTable.DataSource = this._ds.Tables[this.cboTable.SelectedIndex];
+        }
+
+        #endregion UI UI EventEvent End
+
+        #region Run Method
+
+        private bool SendQuery(string query)
+        {
             bool result = false;
-            DataSet ds = null;
+            
             try
             {
-                string userText = this.txtQuery.Text;
-                string logTxt = string.Empty;
-
-                this.cboTable.Items.Clear();
-                this._ds.Tables.Clear();
-                this.gvTable.DataSource = null;
-
-                if (userText.Trim() == string.Empty) return;
-
-                if ((userText.ToUpper().Contains("INSERT") ||
-                    userText.ToUpper().Contains("UPDATE") ||
-                    userText.ToUpper().Contains("DELETE"))
-                    && userText.ToUpper().Contains("SELECT"))
+                if (query.ToUpper().Contains("INSERT") ||
+                    query.ToUpper().Contains("UPDATE") ||
+                    query.ToUpper().Contains("DELETE"))
                 {
-                    MessageBox.Show("SELECT와 INSERT, UPDATE, DELETE는 동시에 사용 불가능" +
-                        "-기술 부족");
-                    return;
-                }
-                else
-                {
-                    if (userText.ToUpper().Contains("INSERT") ||
-                    userText.ToUpper().Contains("UPDATE") ||
-                    userText.ToUpper().Contains("DELETE"))
+                    this._DB.BeginTransaction();
+
+                    result = this._DB.ExecuteNonQuery(query);
+
+                    this._DB.EndTransaction(result);
+
+                    if (result)
                     {
-                        this._DB.BeginTransaction();
+                        //Query 로그 저장
+                        string logText =
+                            $"============================================================{Environment.NewLine}" +
+                            $"{DateTime.Now}{Environment.NewLine}" +
+                            $"{query}{Environment.NewLine}" +
+                            $"============================================================{Environment.NewLine}" +
+                            $"{Environment.NewLine}";
+                        string logpath = $"{this.txtSavepath.Text}\\sqlLog.txt";
 
-                        result = this._DB.ExecuteNonQuery(userText);
+                        Directory.CreateDirectory(Path.GetDirectoryName(logpath));
 
-                        if (result)
-                        {
-                            //Query 로그 저장
-                            string logText =
-                                $"============================================================{Environment.NewLine}" +
-                                $"{DateTime.Now}{Environment.NewLine}" +
-                                $"{userText}" +
-                                $"============================================================{Environment.NewLine}" +
-                                $"{Environment.NewLine}";
-                            string logpath = $"{this.txtSavepath.Text}\\sqlLog.txt";
-
-                            Directory.CreateDirectory(Path.GetDirectoryName(logpath));
-
-                            File.AppendAllText(logpath, logText);
-                        }
-                    }
-                    else if (userText.ToUpper().Contains("SELECT"))
-                    {
-                        ds = this._DB.ExecuteQuery(userText);
-
-                        if (ds != null)
-                        {
-                            for (int i = 0; i < ds.Tables.Count; i++)
-                            {
-                                ds.Tables[i].TableName = $"Table{i + 1}";
-
-                                this.cboTable.Items.Add(ds.Tables[i].TableName);
-                            }
-
-                            result = true;
-                        }
-
-                        if (this.cboTable.Items.Count > 0)
-                        {
-                            if (this.cboTable.SelectedIndex == 0)
-                                ChangeTable();
-                            else
-                                this.cboTable.SelectedIndex = 0;
-                        }
+                        File.AppendAllText(logpath, logText);
                     }
                 }
+                else if (query.ToUpper().Contains("SELECT"))
+                {
+                    DataSet ds = null;
 
+                    ds = this._DB.ExecuteQuery(query);
 
-                if (result)
-                    MessageBox.Show("Query 완료");
+                    if(ds != null)
+                    {
+                        this._ds = ds;
+
+                        result = true;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 result = false;
-                MessageBox.Show(string.Format("[Error]{0}\r\nTract:{1}", ex.Message, ex.StackTrace));
-            }
-            finally
-            {
+                MessageBox.Show($"[Error]{ex.Message}\r\nTrace:{ex.StackTrace}");
                 this._DB.EndTransaction(result);
             }
+
+            return result;
         }
 
-        private void ChangeTable()
-        {
-            this.gvTable.Columns.Clear();
-
-            if(this._ds != null)
-                this.gvTable.DataSource = this._ds.Tables[this.cboTable.SelectedItem.ToString()];
-        }
+        #endregion Run Method
     }
 }

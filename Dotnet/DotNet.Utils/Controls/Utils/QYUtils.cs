@@ -107,6 +107,43 @@ namespace DotNet.Utils.Controls.Utils
         {
             return Enum.GetValues(typeof(Tenum)).OfType<object>().ToArray();
         }
+        /// <summary>
+        /// Enum을 DataItem으로 변환
+        /// </summary>
+        /// <typeparam name="T">변환할 Enum</typeparam>
+        /// <returns>변환된 DataItem 목록</returns>
+        static public EnumItem<T>[] GetEnumItems<T>() where T : Enum
+        {
+            T[] values = Enum.GetValues(typeof(T)).OfType<T>().ToArray();//Enum 목록 추출
+            if (values.Length == 0) return null;
+
+            EnumItem<T>[] items = new EnumItem<T>[values.Length];
+            for (int i = 0; i < items.Length; i++)
+                items[i] = new EnumItem<T>(values[i]);
+
+            return items;
+        }
+        /// <summary>
+        /// Enum Item 목록
+        /// </summary>
+        /// <typeparam name="T">사용된 Enum</typeparam>
+        public class EnumItem<T> where T : Enum
+        {
+            /// <summary>
+            /// Enum값
+            /// </summary>
+            public T Value { get; }
+            /// <summary>
+            /// Enum Text
+            /// </summary>
+            public string Name { get; }
+
+            public EnumItem(T item)
+            {
+                this.Value = item;
+                this.Name = item.ToString();
+            }
+        }
 
         /// <summary>
         /// 숫자형 변환
@@ -382,4 +419,7 @@ namespace DotNet.Utils.Controls.Utils
             this._pauseEvent.Dispose();
         }
     }
+
+    public delegate void UpdateUI_WithParam(params object[] obj);
+    public delegate void UpdateUI_WithoutParam();
 }

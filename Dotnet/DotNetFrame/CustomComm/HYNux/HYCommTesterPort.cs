@@ -2,6 +2,7 @@
 using DotNet.Comm.ClientPorts;
 using DotNet.Comm.Protocols;
 using DotNet.Comm.Protocols.Customs.HYNux;
+using DotNet.Utils.Controls.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -42,15 +43,61 @@ namespace DotNetFrame.CustomComm.HYNux
     public class HYCommTesterPort
     {
         /// <summary>
-        /// HYPort Log Event Handler
+        /// 통신 Port Log
         /// </summary>
-        /// <param name="logName">log 이름</param>
-        /// <param name="data">추가적으로 가질 Data</param>
-        public delegate void HYPortLogHandler(string logName, params object[] data);
+        /// <remarks>
+        /// 이 이벤트가 있는 Class는 통신 Port가 아닌 Application Port임<br/>
+        /// Param[0] = Log 내용
+        /// </remarks>
+        public event UpdateUI_WithParam ComPortLog;
         /// <summary>
-        /// HYCommTester Port Log Event
+        /// Request 전송 후 이벤트
         /// </summary>
-        public event HYPortLogHandler Log;
+        /// <remarks>
+        /// Param[0] = RequestByte
+        /// </remarks>
+        public event UpdateUI_WithParam AfterSendRequest;
+        /// <summary>
+        /// 데이터 읽은 후 Port에 누적된 Buffer
+        /// </summary>
+        /// <remarks>
+        /// Param[0]: Port의 현재 누적 Buffer
+        /// </remarks>
+        public event UpdateUI_WithParam PortCurrentBuffer;
+        /// <summary>
+        /// Request 에러코드 미일치
+        /// </summary>
+        /// <remarks>
+        /// Param[0]: Response Data
+        /// </remarks>
+        public event UpdateUI_WithParam Error_ErrorCode;
+        /// <summary>
+        /// Request Protocol 에러
+        /// </summary>
+        /// <remarks>
+        /// Param[0]: Response Data
+        /// </remarks>
+        public event UpdateUI_WithParam Error_Protocol;
+        /// <summary>
+        /// Request 정상종료
+        /// </summary>
+        /// <remarks>
+        /// Param[0]: Request Data<br/>
+        /// Param[1]: Response Data
+        /// </remarks>
+        public event UpdateUI_WithParam RequestComplete;
+        /// <summary>
+        /// Request Timeout
+        /// </summary>
+        /// <remarks>
+        /// Param[0]:<br/>
+        /// None Response: Request 응답없음<br/>
+        /// Long Response: Receive Data가 끊임없이 들어올 경우<br/>
+        /// Stop Response: Receive 중단됨<br/>
+        /// <br/>
+        /// Param[1]: Port의 누적된 Buffer
+        /// </remarks>
+        public event UpdateUI_WithParam RequestTimeout;
 
         //Setting Fields
         /// <summary>
@@ -82,7 +129,7 @@ namespace DotNetFrame.CustomComm.HYNux
         /// <summary>
         /// Port에서 최근 전송한 byte Array
         /// </summary>
-        private byte[] _sendingBytes = null;
+        private CommFrame _sendingFrame = null;
         /// <summary>
         /// Port에서 수신한 누적 Buffer
         /// </summary>
@@ -140,7 +187,7 @@ namespace DotNetFrame.CustomComm.HYNux
                         this._commPort = new QYEthernet(false);
 
                     if(this.ComPort != null)
-                        this.ComPort.Log += (msg) => { this.Log?.Invoke("ComPortLog", new object[] { msg }); };
+                        this.ComPort.Log += (msg) => { this.ComPortLog?.Invoke(msg); };
                 }
 
                 this._commType = value;
@@ -163,7 +210,7 @@ namespace DotNetFrame.CustomComm.HYNux
             {
                 this.RegularQueue.Clear();
                 this.WriteQueue.Clear();
-                this._sendingBytes = null;
+                this._sendingFrame = null;
 
                 //변경될 value가 기존 Type과 다를경우 Protocol 재지정
                 if (this._protocolType != value)
@@ -218,7 +265,7 @@ namespace DotNetFrame.CustomComm.HYNux
         internal HYCommTesterPort()
         {
             this.CommType = CommType.Serial;
-            this.ComPort.Log += (msg) => { this.Log?.Invoke("ComPortLog", new object[] { msg }); };
+            this.ComPort.Log += (msg) => { this.ComPortLog?.Invoke(msg); };
             this.ProtocolType = ProtocolType.None;
             this._bgWorker.WorkerSupportsCancellation = true;
             this._bgWorker.DoWork += _bgWorker_DoWork;
@@ -267,23 +314,20 @@ namespace DotNetFrame.CustomComm.HYNux
                         continue;
                     }
 
-                    if (this._sendingBytes == null)
+                    if (this._sendingFrame == null)
                     {
                         //비정기 전송
                         if (this.WriteQueue.Count > 0)
-                        {
-                            this._sendingBytes = this.WriteQueue.Peek();
-                        }
+                            this._sendingFrame = new CommFrame(this.WriteQueue.Peek());
                         //정기 전송
                         else if (this.RegularQueue.Count > 0)
-                        {
-                            this._sendingBytes = this.RegularQueue.Peek();
-                        }
+                            this._sendingFrame = new CommFrame(this.RegularQueue.Peek());
 
-                        if (this._sendingBytes != null)
+                        if (this._sendingFrame != null)
                         {
-                            this.SendData(this._sendingBytes);
-                            this.Log?.Invoke("Request", new object[] { this._sendingBytes });
+                            this.SendData(this._sendingFrame);
+
+                            this.AfterSendRequest?.Invoke(this._sendingFrame.ReqBytes);
                         }
                     }
                     else
@@ -292,15 +336,22 @@ namespace DotNetFrame.CustomComm.HYNux
                         //1. Timeout
                         if (this.IsTimeout())
                         {
-                            if (this.WriteQueue.Count != 0 && this._sendingBytes == this.WriteQueue.Peek())
-                                this.WriteQueue.Dequeue();
-                            else if (this.RegularQueue.Count != 0 && this._sendingBytes == this.RegularQueue.Peek())
-                                this.RegularQueue.Dequeue();
+                            if (this._sendingFrame.TryCount >= 3)
+                            {
+                                //최대 시도횟수 초과
+                                if (this.WriteQueue.Count != 0 && this._sendingFrame.ReqBytes == this.WriteQueue.Peek())
+                                    this.WriteQueue.Dequeue();
+                                else if (this.RegularQueue.Count != 0 && this._sendingFrame.ReqBytes == this.RegularQueue.Peek())
+                                    this.RegularQueue.Dequeue();
 
-                            this._sendingBytes = null;
-                            this._stackBuffer = null;
-                            this.ComPort.InitPort();
-                            continue;
+                                this._sendingFrame = null;
+                                this._stackBuffer = null;
+
+                                this.ComPort.InitPort();
+                                continue;
+                            }
+                            else
+                                this.SendData(this._sendingFrame);
                         }
 
                         //2. 수신처리
@@ -321,29 +372,27 @@ namespace DotNetFrame.CustomComm.HYNux
 
                             this._recentReadTime = DateTime.Now;
                             this._curBufferLen = this._stackBuffer.Length;
-                            this.Log?.Invoke("StackBuffer", new object[] { this._stackBuffer });
+                            this.PortCurrentBuffer?.Invoke(this._stackBuffer);
 
                             //3. Protocol 처리
-                            if (this.Protocol == null)
+                            if (this.Protocol != null)
                             {
-
-                            }
-                            else
-                            {
-                                byte[] frameBytes = this.Protocol.Response_ExtractFrame(this._stackBuffer, this._sendingBytes);
+                                byte[] frameBytes = this.Protocol.Response_ExtractFrame(this._stackBuffer, this._sendingFrame.ReqBytes);
 
                                 if (frameBytes != null)
                                 {
+                                    this._sendingFrame.ResBytes = frameBytes;
+
                                     //ErrorCode 확인
                                     bool isErr = false;
-                                    if (this.Protocol.ConfirmErrCode(frameBytes) == false)
+                                    if (this.Protocol.ConfirmErrCode(this._sendingFrame.ResBytes) == false)
                                     {
                                         isErr = true;
-                                        this.Log?.Invoke("Error-ErrorCode", new object[] { frameBytes });
+                                        this.Error_ErrorCode?.Invoke(this._sendingFrame.ResBytes);
                                     }
                                     else
                                     {
-                                        List<object> readItems = this.Protocol.Response_ExtractData(frameBytes, this._sendingBytes);
+                                        List<object> readItems = this.Protocol.Response_ExtractData(this._sendingFrame.ResBytes, this._sendingFrame.ReqBytes);
 
                                         if (readItems != null && readItems.Count > 0)
                                         {
@@ -355,7 +404,7 @@ namespace DotNetFrame.CustomComm.HYNux
                                                     {
                                                         //Protocol Error 처리
                                                         isErr = true;
-                                                        this.Log?.Invoke("Error-Protocol", new object[] { frameBytes });
+                                                        this.Error_Protocol?.Invoke(this._sendingFrame.ResBytes);
                                                         break;
                                                     }
                                                 }
@@ -368,12 +417,12 @@ namespace DotNetFrame.CustomComm.HYNux
                                     }
                                     //수신 최종 완료처리
                                     if(isErr == false)
-                                        this.Log?.Invoke("Receive End", new object[] { this._sendingBytes, frameBytes });
-                                    if (this.WriteQueue.Count != 0 && this._sendingBytes == this.WriteQueue.Peek())
+                                        this.RequestComplete?.Invoke(this._sendingFrame.ReqBytes, this._sendingFrame.ResBytes);
+                                    if (this.WriteQueue.Count != 0 && this._sendingFrame.ReqBytes == this.WriteQueue.Peek())
                                         this.WriteQueue.Dequeue();
-                                    else if (this.RegularQueue.Count != 0 && this._sendingBytes == this.RegularQueue.Peek())
+                                    else if (this.RegularQueue.Count != 0 && this._sendingFrame.ReqBytes == this.RegularQueue.Peek())
                                         this.RegularQueue.Dequeue();
-                                    this._sendingBytes = null;
+                                    this._sendingFrame = null;
                                     this._stackBuffer = null;
                                 }
                             }//Protocol 처리 End
@@ -382,8 +431,17 @@ namespace DotNetFrame.CustomComm.HYNux
                 }
                 catch
                 {
-                    this._sendingBytes = null;
-                    System.Threading.Thread.Sleep(3000);
+                    if (this._sendingFrame != null)
+                    {
+                        if (this.WriteQueue.Count != 0 && this._sendingFrame.ReqBytes == this.WriteQueue.Peek())
+                            this.WriteQueue.Dequeue();
+                        else if (this.RegularQueue.Count != 0 && this._sendingFrame.ReqBytes == this.RegularQueue.Peek())
+                            this.RegularQueue.Dequeue();
+
+                        this._sendingFrame = null;
+                    }
+                    this._stackBuffer = null;
+                    System.Threading.Thread.Sleep(1000);
                 }
                 finally
                 {
@@ -394,27 +452,29 @@ namespace DotNetFrame.CustomComm.HYNux
 
         private bool IsTimeout()
         {
+            if (this._sendingFrame == null) return false;
+
             TimeSpan ts;
             if (this._recentBufferLen <= 0)
             {
                 //None Receive Timeout
-                ts = DateTime.Now - this._sendingTime;
+                ts = DateTime.Now - this._sendingFrame.SendingTime;
 
                 if (ts.TotalMilliseconds > 3000)
                 {
                     //Receive 없음
-                    this.Log?.Invoke("None Response");
+                    this.RequestTimeout?.Invoke("None Response");
                     return true;
                 }
             }
             else
             {
-                ts = DateTime.Now - this._sendingTime;
+                ts = DateTime.Now - this._sendingFrame.SendingTime;
                 //Sending시간 > 10초전 && 계속 StackBuffer가 증가중일 경우
                 if(ts.TotalMilliseconds > 10000 && (this._recentBufferLen != this._curBufferLen))
                 {
                     //Receie가 너무 김
-                    this.Log?.Invoke("Long Response", new object[] { this._stackBuffer });
+                    this.RequestTimeout?.Invoke("Long Response", this._stackBuffer);
 
                     return true;
                 }
@@ -424,7 +484,7 @@ namespace DotNetFrame.CustomComm.HYNux
                 if(ts.TotalMilliseconds > 5000)
                 {
                     //Receive 중단됨
-                    this.Log?.Invoke("Stop Response", new object[] { this._stackBuffer });
+                    this.RequestTimeout?.Invoke("Stop Response", this._stackBuffer);
 
                     return true;
                 }
@@ -435,14 +495,41 @@ namespace DotNetFrame.CustomComm.HYNux
             return false;
         }
 
-        private void SendData(byte[] bytes)
+        private void SendData(CommFrame frame)
         {
-            this._sendingTime = DateTime.Now;
+            frame.TryCount++;
+            frame.SendingTime = DateTime.Now;
+
             this._curBufferLen = 0;
             this._recentBufferLen = 0;
             this._stackBuffer = null;
 
-            this.ComPort.Write(bytes);
+            this.ComPort.Write(frame.ReqBytes);
+        }
+    }
+
+    public class CommFrame
+    {
+        /// <summary>
+        /// 요청(Request) Data
+        /// </summary>
+        public byte[] ReqBytes { get; }
+        /// <summary>
+        /// 응답(Response) Data
+        /// </summary>
+        public byte[] ResBytes { get; set; }
+        /// <summary>
+        /// 요청 시도 수
+        /// </summary>
+        public int TryCount { get; set; } = 0;
+        /// <summary>
+        /// 최근 요청 시간
+        /// </summary>
+        public DateTime SendingTime { get; set; }
+
+        public CommFrame(byte[] reqFrame)
+        {
+            this.ReqBytes = reqFrame;
         }
     }
 }
