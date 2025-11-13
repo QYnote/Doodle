@@ -108,9 +108,11 @@
     <!--복사할 Item목록-->
 			<_CopySQLite64 Include="$(ProjectDir)Resources\SQLite\x64\*.dll;"/>
 			<_CopySQLite32 Include="$(ProjectDir)Resources\SQLite\x86\*.dll;"/>
+			<_CopySQLiteDB Include="$(ProjectDir)Resources\SQLite\*.sqlite;"/>
 		</ItemGroup>
     <!--복사 진행-->
 		<Copy SourceFiles="@(_CopySQLite64)" DestinationFolder="$(SolutionDir)DotNetFrame\bin\$(ConfigurationName)\SQLite\x64" />
 		<Copy SourceFiles="@(_CopySQLite32)" DestinationFolder="$(SolutionDir)DotNetFrame\bin\$(ConfigurationName)\SQLite\x86" />
+		<Copy SourceFiles="@(_CopySQLiteDB)" DestinationFolder="$(SolutionDir)DotNetFrame\bin\$(ConfigurationName)\" />
 	</Target>
 </Project>

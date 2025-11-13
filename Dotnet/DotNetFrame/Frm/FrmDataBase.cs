@@ -1,5 +1,6 @@
 ﻿using DotNet.Database;
 using DotNet.Utils.Controls.Utils;
+using DotNetFrame.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -66,7 +67,7 @@ namespace DotNetFrame.Frm
             this.lblDBType.Location = new Point(3, 18);
             this.lblDBType.Width = 55;
             this.lblDBType.TextAlign = ContentAlignment.MiddleCenter;
-            this.lblDBType.Text = "DB 종류";
+            this.lblDBType.Text = AppData.Lang("frmdb.dbproperty.type");
             this.cboDBType.Location = new Point(this.lblDBType.Location.X + this.lblDBType.Width, this.lblDBType.Location.Y);
             this.cboDBType.Height = this.lblDBType.Height;
             this.cboDBType.DataSource = QYUtils.GetEnumItems<DataBaseType>();
@@ -78,7 +79,7 @@ namespace DotNetFrame.Frm
             this.lblDBPath.Location = new Point(this.lblDBType.Location.X, this.lblDBType.Location.Y + this.lblDBType.Height + 3);
             this.lblDBPath.Width = this.lblDBType.Width;
             this.lblDBPath.TextAlign = ContentAlignment.MiddleCenter;
-            this.lblDBPath.Text = "경로";
+            this.lblDBPath.Text = AppData.Lang("frmdb.dbproperty.filepath");
             this.txtDBPath.Location = new Point(this.lblDBPath.Location.X + this.lblDBPath.Width, this.lblDBPath.Location.Y);
             this.txtDBPath.Height = this.lblDBPath.Height;
             this.btnSelectPath.Location = new Point(this.txtDBPath.Location.X + this.txtDBPath.Width, this.txtDBPath.Location.Y - 1);
@@ -90,14 +91,14 @@ namespace DotNetFrame.Frm
             this.lblID.Location = new Point(this.lblDBType.Location.X, this.lblDBPath.Location.Y + this.lblDBPath.Height + 3);
             this.lblID.Width = this.lblDBType.Width;
             this.lblID.TextAlign = ContentAlignment.MiddleCenter;
-            this.lblID.Text = "ID";
+            this.lblID.Text = AppData.Lang("frmdb.dbproperty.id");
             this.txtID.Location = new Point(this.lblID.Location.X + this.lblID.Width, this.lblID.Location.Y);
             this.txtID.Height = this.lblID.Height;
 
             this.lblPassword.Location = new Point(this.lblDBType.Location.X, this.lblID.Location.Y + this.lblID.Height + 3);
             this.lblPassword.Width = this.lblDBType.Width;
             this.lblPassword.TextAlign = ContentAlignment.MiddleCenter;
-            this.lblPassword.Text = "PW";
+            this.lblPassword.Text = AppData.Lang("frmdb.dbproperty.pw");
             this.txtPassword.Location = new Point(this.lblPassword.Location.X + this.lblPassword.Width, this.lblPassword.Location.Y);
             this.txtPassword.Height = this.lblPassword.Height;
 
@@ -107,7 +108,7 @@ namespace DotNetFrame.Frm
             this.btnConnect.Click += BtnConnect_Click;
 
             this.gbxDatabase.Location = new Point(3, 3);
-            this.gbxDatabase.Text = "Database 설정";
+            this.gbxDatabase.Text = AppData.Lang("frmdb.dbproperty.title");
             this.gbxDatabase.Width = this.btnSelectPath.Location.X + this.btnSelectPath.Width + 3;
             this.gbxDatabase.Height = this.btnConnect.Location.Y + this.btnConnect.Height + 4;
 
@@ -116,7 +117,7 @@ namespace DotNetFrame.Frm
             this.lblSavePath.Location = new Point(this.gbxDatabase.Location.X + this.gbxDatabase.Width + 3, this.lblDBType.Location.Y + 2);
             this.lblSavePath.Width = 80;
             this.lblSavePath.TextAlign = ContentAlignment.MiddleCenter;
-            this.lblSavePath.Text = "Log파일 경로";
+            this.lblSavePath.Text = AppData.Lang("frmdb.dbproperty.logpath");
             this.txtSavepath.Location = new Point(this.lblSavePath.Location.X + this.lblSavePath.Width, this.lblSavePath.Location.Y);
             this.txtSavepath.Height = this.lblDBPath.Height;
             this.txtSavepath.ReadOnly = true;
@@ -208,7 +209,14 @@ namespace DotNetFrame.Frm
             }
             else if (type == DataBaseType.SQLite)
             {
-                this.txtDBPath.Text = $"{Directory.GetCurrentDirectory()}\\QYDB.sqlite";
+                DirectoryInfo runDir = new DirectoryInfo(Directory.GetCurrentDirectory());
+                DirectoryInfo binDir = runDir.Parent;
+                DirectoryInfo runProjectDir = binDir.Parent;
+                DirectoryInfo solutionDir = runProjectDir.Parent;
+                string path = $"{solutionDir.FullName}\\DotNet.Database\\Resources\\SQLite";
+
+                this.txtDBPath.Text = $"{path}\\QYDB.sqlite";
+                this.txtSavepath.Text = path;
                 this.txtPassword.Text = string.Empty;
 
                 this.txtDBPath.ReadOnly = true;
@@ -371,7 +379,10 @@ namespace DotNetFrame.Frm
             
             try
             {
-                if (query.ToUpper().Contains("INSERT") ||
+                if (query.ToUpper().Contains("CREATE") ||
+                    query.ToUpper().Contains("ALTER") ||
+                    query.ToUpper().Contains("DROP") ||
+                    query.ToUpper().Contains("INSERT") ||
                     query.ToUpper().Contains("UPDATE") ||
                     query.ToUpper().Contains("DELETE"))
                 {

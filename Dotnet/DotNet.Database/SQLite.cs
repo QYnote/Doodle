@@ -24,7 +24,7 @@ namespace DotNet.Database
             }
         }
 
-        public SQLite(string filePath, string password)
+        public SQLite(string filePath, string password = "")
         {
             base._dataSource = filePath;
             base._password = password;

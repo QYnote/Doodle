@@ -1,4 +1,5 @@
 ﻿using DotNet.Utils.Views;
+using DotNetFrame.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,7 +32,7 @@ namespace DotNetFrame
         #endregion UI Controls End
 
         private Form _curForm = null;
-        private string txtTitle = "QYDoodleProgram";
+        private string txtTitle = AppData.Lang("sol.title");
 
         public FrmSolution()
         {
@@ -57,15 +58,15 @@ namespace DotNetFrame
 
             this.btnCommTester.Name = "CommTest";
             this.btnCommTester.Image = DotNet.Utils.Properties.Resources.Connect_32x32;
-            this.btnCommTester.Text = "통신 테스터기";
+            this.btnCommTester.Text = AppData.Lang("sol.leftmenu.button.commtester.text");
 
             this.btnDataBase.Name = "DBConnector";
             this.btnDataBase.Image = DotNet.Utils.Properties.Resources.Server_32x32;
-            this.btnDataBase.Text = "Database 접속기";
+            this.btnDataBase.Text = AppData.Lang("sol.leftmenu.button.dbconnector.text");
 
             this.btnServer.Name = "Server";
             this.btnServer.Image = DotNet.Utils.Properties.Resources.Comm_32x32;
-            this.btnServer.Text = "임시서버 생성기";
+            this.btnServer.Text = AppData.Lang("sol.leftmenu.button.server.text");
 
             #endregion Left Menu End
             #region Title Bar
@@ -158,7 +159,7 @@ namespace DotNetFrame
                     && frm.Name == frmName)
                 {
                     this._curForm = frm;
-                    this.lblTitleText.Text = string.Format("{0} - {1}", this.txtTitle, frmName);
+                    this.lblTitleText.Text = string.Format("{0} - {1}", this.txtTitle, frm.Text);
                     frm.Show();
                     return;
                 }
@@ -167,15 +168,15 @@ namespace DotNetFrame
             //3. 신규 Form 생성
             switch(frmName)
             {
-                case "Main": this._curForm = new Frm.FrmMain() { Name = frmName }; break;
-                case "CommTest": this._curForm = new Frm.FrmCommTester() { Name = frmName }; break;
-                case "DBConnector": this._curForm = new Frm.FrmDataBase() { Name = frmName }; break;
-                case "Server": this._curForm = new Frm.FrmServer() { Name = frmName }; break;
+                case "Main": this._curForm = new Frm.FrmMain() { Name = frmName, Text = AppData.Lang("메인화면") }; break;
+                case "CommTest": this._curForm = new Frm.FrmCommTester() { Name = frmName, Text = AppData.Lang("sol.leftmenu.button.commtester.text") }; break;
+                case "DBConnector": this._curForm = new Frm.FrmDataBase() { Name = frmName, Text = AppData.Lang("sol.leftmenu.button.dbconnector.text") }; break;
+                case "Server": this._curForm = new Frm.FrmServer() { Name = frmName, Text = AppData.Lang("sol.leftmenu.button.server.text") }; break;
             }
 
             if(this._curForm != null)
             {
-                this.lblTitleText.Text = string.Format("{0} - {1}", this.txtTitle, frmName);
+                this.lblTitleText.Text = string.Format("{0} - {1}", this.txtTitle, this._curForm.Text);
 
                 this._curForm.Dock = DockStyle.Fill;
                 this._curForm.FormBorderStyle = FormBorderStyle.None;

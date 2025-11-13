@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\AppData.cs" />
     <Compile Include="CustomComm\HYNux\HYCommTesterPort.cs" />
     <Compile Include="CustomComm\RuntimeData.cs" />
     <Compile Include="FrmSolution.cs">
