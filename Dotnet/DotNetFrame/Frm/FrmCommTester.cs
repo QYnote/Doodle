@@ -517,12 +517,12 @@ namespace DotNetFrame.Frm
         {
             Panel pnl = new Panel();
             pnl.Dock = DockStyle.Top;
-            pnl.Height = 200;
+            pnl.Height = 173;
             pnl.Padding = new Padding(3);
 
             this.gbxPortSet.Dock = DockStyle.Left;
-            this.gbxPortSet.Padding = new Padding(3);
-            this.gbxPortSet.Width = 432;
+            this.gbxPortSet.Padding = new Padding(0, 0, 5, 3);
+            this.gbxPortSet.Width = 425;
 
             InitUI_Property_Port(this.gbxPortSet);
 
@@ -532,10 +532,10 @@ namespace DotNetFrame.Frm
 
         private void InitUI_Property_Port(GroupBox gbx)
         {
-            Panel pnlCommon = new Panel();
-            pnlCommon.Dock = DockStyle.Left;
-            pnlCommon.Padding = new Padding(0, 0, 3, 3);
-            pnlCommon.Width = 100;
+            Panel pnlPort = new Panel();
+            pnlPort.Dock = DockStyle.Left;
+            pnlPort.Padding = new Padding(0, 0, 3, 3);
+            pnlPort.Width = 100;
 
             this.cboPortType.Location = new Point(3, 8);
             this.cboPortType.Dock = DockStyle.Top;
@@ -545,8 +545,11 @@ namespace DotNetFrame.Frm
             this.cboPortType.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cboPortType.SelectedValueChanged += CboPortType_SelectedValueChanged;
 
-            this.InitUI_Property_Port_Serial(gbx);
-            this.InitUI_Property_Port_Ethernet(gbx);
+            Panel pnlCommon = new Panel();
+            pnlCommon.Dock = DockStyle.Fill;
+
+            this.InitUI_Property_Port_Serial(gbx, pnlCommon);
+            this.InitUI_Property_Port_Ethernet(pnlCommon);
 
             Panel pnlConnect = new Panel();
             pnlConnect.Dock = DockStyle.Bottom;
@@ -557,10 +560,11 @@ namespace DotNetFrame.Frm
             this.lblConnState.Width = pnlConnect.Height;
             this.lblConnState.BackColor = Color.Red;
 
-            pnlCommon.Controls.Add(this.cboPortType);
+            pnlPort.Controls.Add(this.cboPortType);
+            pnlPort.Controls.Add(pnlCommon);
             pnlConnect.Controls.Add(this.btnConnect);
             pnlConnect.Controls.Add(this.lblConnState);
-            pnlCommon.Controls.Add(pnlConnect);
+            pnlPort.Controls.Add(pnlConnect);
 
             gbx.Controls.Add(pnlCommon);
         }
@@ -597,7 +601,7 @@ namespace DotNetFrame.Frm
             InitPort();
         }
 
-        private void InitUI_Property_Port_Serial(GroupBox gbx)
+        private void InitUI_Property_Port_Serial(GroupBox gbx, Panel pnlCommon)
         {
             Panel pnl = new Panel();
             pnl.Dock = DockStyle.Fill;
@@ -668,12 +672,12 @@ namespace DotNetFrame.Frm
                 rdo.BringToFront();
             }
 
-            pnl.Controls.Add(this.cboPortList);
             pnl.Controls.Add(this.gbxBaudRate);
             pnl.Controls.Add(this.gbxParity);
             pnl.Controls.Add(this.gbxStopBits);
             pnl.Controls.Add(this.gbxDataBits);
             gbx.Controls.Add(pnl);
+            pnlCommon.Controls.Add(this.cboPortList);
         }
 
         private void CboPortList_SelectedValueChanged(object sender, EventArgs e)
@@ -733,15 +737,12 @@ namespace DotNetFrame.Frm
         }
 
 
-        private void InitUI_Property_Port_Ethernet(GroupBox gbx)
+        private void InitUI_Property_Port_Ethernet(Panel pnl)
         {
-            Panel pnl = new Panel();
-            pnl.Dock = DockStyle.Fill;
-            pnl.Visible = false;
-
             this.txtEthernetIP.Dock = DockStyle.Top;
             this.txtEthernetIP.TextAlign = HorizontalAlignment.Center;
             this.txtEthernetIP.Text = "127.0.0.1";
+            this.txtEthernetIP.Visible = false;
             this.txtEthernetIP.KeyPress += QYUtils.Event_KeyPress_IP;
             this.txtEthernetIP.TextChanged += TxtEthernetIP_TextChanged;
 
@@ -751,11 +752,11 @@ namespace DotNetFrame.Frm
             this.txtPortNo.Minimum = 0;
             this.txtPortNo.Maximum = int.MaxValue;
             this.txtPortNo.Value = 5000;
+            this.txtPortNo.Visible = false;
             this.txtPortNo.ValueChanged += TxtPortNo_ValueChanged;
 
             pnl.Controls.Add(this.txtEthernetIP);
             pnl.Controls.Add(this.txtPortNo);
-            gbx.Controls.Add(pnl);
         }
 
         private void TxtEthernetIP_TextChanged(object sender, EventArgs e)
