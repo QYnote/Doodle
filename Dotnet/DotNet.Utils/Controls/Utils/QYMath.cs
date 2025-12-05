@@ -10,7 +10,7 @@ namespace DotNet.Utils.Controls.Utils
     public class QYMath
     {
         /// <summary>
-        /// Token 후위 표기법 계산처리
+        /// Token 후위 표기법 계산처리 Process
         /// </summary>
         /// <param name="token">처리할 Regex값</param>
         public delegate double CustomCalcNotaion_Postfix(string token);
@@ -65,14 +65,29 @@ namespace DotNet.Utils.Controls.Utils
         /// <param name="calc">중위식 계산식</param>
         /// <param name="e">중위식 계산식</param>
         /// <returns>결과값</returns>
-        public double CalcString_InfixNotation(string calc, CustomInfixNotationArgs e)
+        public double CalcString_InfixNotation(string calc, CustomInfixNotationArgs e = null)
         {
             //1. Token 추출
-            string[] tokens = CalcString_GetTokens(calc, e.Regex);
-            if (tokens == null) return double.NaN;
+            string[] tokens;
+            Queue<string> postQueue;
+            if (e == null)
+            {
+                //1. Token 추출
+                tokens = this.CalcString_GetTokens(calc);
+                if (tokens == null) return double.NaN;
 
-            //2. 중위식 → 후위식 계산식 변환
-            Queue<string> postQueue = this.CalcString_ConvertMidToPost(tokens, e.Regex);
+                //2. 중위식 → 후위식 계산식 변환
+                postQueue = this.CalcString_ConvertMidToPost(tokens);
+            }
+            else
+            {
+                //1. Token 추출
+                tokens = this.CalcString_GetTokens(calc, e.Regex);
+                if (tokens == null) return double.NaN;
+
+                //2. 중위식 → 후위식 계산식 변환
+                postQueue = this.CalcString_ConvertMidToPost(tokens, e.Regex);
+            }
             if(postQueue == null) return double.NaN;
 
             //3. 후위식 계산
@@ -308,6 +323,10 @@ namespace DotNet.Utils.Controls.Utils
         /// </summary>
         /// <param name="ary">(x, y)데이터 Array</param>
         /// <returns>(기울기, 절편)</returns>
+        /// <remarks>
+        /// 기울기: 선의 기울기, 0에 가까울수록 수평<br/>
+        /// 절편: 선의 시작점
+        /// </remarks>
         public (double, double) LinearRegression((double, double)[] ary)
         {
             double xSum = 0, xAvg,
@@ -333,9 +352,64 @@ namespace DotNet.Utils.Controls.Utils
             }
 
             double slope = c / p,   //기울기
-                    intercept = yAvg - (slope * xAvg);  //절편
+                   intercept = yAvg - (slope * xAvg);  //절편
 
             return (slope, intercept);
+        }
+
+        /// <summary>
+        /// 2D 행렬 곱셈
+        /// </summary>
+        /// <param name="a">전위 2D 행렬</param>
+        /// <param name="b">후위 2D 행렬</param>
+        /// <returns>곱셈 결과 행렬</returns>
+        /// <exception cref="InvalidOperationException">곱셈 불가처리</exception>
+        public double[,] Multiply2DArray(double[,] a, double[,] b)
+        {
+            int aRow = a.GetLength(0),
+                aCol = a.GetLength(1),
+                bRow = b.GetLength(0),
+                bCol = b.GetLength(1);
+
+            if (aCol != bCol)
+                throw new InvalidOperationException($"첫번째 행렬의 열({aCol})이 두번째 행열의 행({bRow})과 일치하지 않습니다.");
+
+            double[,] result = new double[aRow, bCol];
+
+            //i: 전위 Array Index
+            for (int i = 0; i < aRow; i++)
+            {
+                //j: 후위 Array Index
+                for (int j = 0; j < bCol; j++)
+                {
+                    double sum = 0;
+
+                    //k: 결과 Index
+                    for(int k = 0;k < aCol; k++)
+                        sum += a[i, k] * b[k, j];
+
+                    result[i, j] = sum;
+                }
+            }
+
+            return result;
+        }
+        /// <summary>
+        /// 전치(Pivot)행렬 전환
+        /// </summary>
+        /// <param name="ary">전환할 행렬</param>
+        /// <returns>전환된 행렬</returns>
+        public double[,] Pivot2DArray(double[,] ary)
+        {
+            int row = ary.GetLength(0),
+                col = ary.GetLength(1);
+
+            double[,] pivot = new double[col, row];
+            for (int i = 0; i < row; i++)
+                for (int j = 0; j < col; j++)
+                    pivot[j, i] = ary[i, j];
+
+            return pivot;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -7,8 +8,8 @@ namespace DotNet.Utils.Controls.Utils
 {
     public static class QYUtils
     {
-        public static QYMath Math = new QYMath();
-        public static QYComm Comm = new QYComm();
+        public static QYMath QYMath = new QYMath();
+        public static QYComm QTComm = new QYComm();
 
         /// <summary>
         /// 원본에 손상이 가지 않도록 복제품 생성
@@ -173,6 +174,167 @@ namespace DotNet.Utils.Controls.Utils
             }
         }
 
+        /// <summary>
+        /// Rectange 안에서 시작, 종료 Point로 Rectangle 안의 Rectangle 구하기
+        /// </summary>
+        /// <remarks>
+        /// Point가 기준 Rect밖에 있을 경우 기준 Rect 끝으로 취급
+        /// </remarks>
+        /// <param name="baseRect">기준 Rectangle</param>
+        /// <param name="sp">시작 Point</param>
+        /// <param name="ep">종료 Point</param>
+        /// <returns>기준 Rectangle 속 Rectangle</returns>
+        static public Rectangle RectInRect(Rectangle baseRect, Point sp, Point ep)
+        {
+            int spx, spy, epx, epy, x, y, width, height;
+
+            //시작 X좌표 변경
+            if (sp.X < baseRect.X)
+                //Diagram 좌측 밖 시작
+                spx = baseRect.X;
+            else if (sp.X > baseRect.X + baseRect.Width)
+            {
+                //Diagram 우측 밖 시작
+                if (ep.X < baseRect.X)
+                    //Diagram 좌측 밖 종료
+                    spx = baseRect.X;
+                else if (ep.X > baseRect.X + baseRect.Width)
+                    //Diagram 우측 밖 종료
+                    spx = baseRect.X + baseRect.Width;
+                else
+                    //Diagram 내부 종료
+                    spx = ep.X;
+            }
+            else
+            {
+                //Diagram 내부 시작
+                if (ep.X < baseRect.X)
+                    //Diagram 좌측 밖 종료
+                    spx = baseRect.X;
+                else if (ep.X > baseRect.X + baseRect.Width)
+                    //Diagram 우측 밖 종료
+                    spx = sp.X;
+                else if (sp.X < ep.X)
+                    //내부 종료 - 시작X < 종료X
+                    spx = sp.X;
+                else
+                    //내부 종료 - 시작X > 종료X
+                    spx = ep.X;
+            }
+            //시작 Y좌표 변경
+            if (sp.Y < baseRect.Y)
+                //Diagram 상단 밖 시작
+                spy = baseRect.Y;
+            else if (sp.Y > baseRect.Y + baseRect.Height)
+            {
+                //Diagram 하단 밖 시작
+                if (ep.Y < baseRect.Y)
+                    //Diagram 상단 밖 종료
+                    spy = baseRect.Y;
+                else if (ep.Y > baseRect.Y + baseRect.Height)
+                    //Diagram 하단 밖 종료
+                    spy = baseRect.Y + baseRect.Height;
+                else
+                    //Diagram 내부 종료
+                    spy = ep.Y;
+            }
+            else
+            {
+                //Diagram 내부 시작
+                if (ep.Y < baseRect.Y)
+                    //Diagram 상단 밖 종료
+                    spy = baseRect.Y;
+                else if (ep.Y > baseRect.Y + baseRect.Height)
+                    //Diagram 하단 밖 종료
+                    spy = sp.Y;
+                else if (sp.Y < ep.Y)
+                    //내부 종료 - 시작Y < 종료Y
+                    spy = sp.Y;
+                else
+                    //내부 종료 - 시작Y > 종료Y
+                    spy = ep.Y;
+            }
+            //종료 X좌표 변경
+            if (sp.X < baseRect.X)
+            {
+                //Diagram 좌측 밖 시작
+                if (ep.X < baseRect.X)
+                    //Diagram 좌측 밖 종료
+                    epx = baseRect.X;
+                else if (ep.X > baseRect.X + baseRect.Width)
+                    //Diagram 우측 밖 종료
+                    epx = baseRect.X + baseRect.Width;
+                else
+                    //Diagram 내부 종료
+                    epx = ep.X;
+            }
+            else if (sp.X > baseRect.X + baseRect.Width)
+                //Diagram 우측 밖 시작
+                epx = baseRect.X + baseRect.Width;
+            else
+            {
+                //Diagram 내부 시작
+                if (ep.X < baseRect.X)
+                    //Diagram 좌측 밖 종료
+                    epx = sp.X;
+                else if (ep.X > baseRect.X + baseRect.Width)
+                    //Diagram 우측 밖 종료
+                    epx = baseRect.X + baseRect.Width;
+                else if (sp.X < ep.X)
+                    //내부 종료 - 시작X < 종료X
+                    epx = ep.X;
+                else
+                    //내부 종료 - 시작X > 종료X
+                    epx = sp.X;
+            }
+            //종료 Y좌표 변경
+            if (sp.Y < baseRect.Y)
+            {
+                //Diagram 상단 밖 시작
+                if (ep.Y < baseRect.Y)
+                    //Diagram 상단 밖 종료
+                    epy = baseRect.Y;
+                else if (ep.Y > baseRect.Y + baseRect.Height)
+                    //Diagram 하단 밖 종료
+                    epy = baseRect.Y + baseRect.Height;
+                else
+                    //Diagram 내부 종료
+                    epy = ep.Y;
+            }
+            else if (sp.Y > baseRect.Y + baseRect.Height)
+                //Diagram 하단 밖 시작
+                epy = baseRect.Y + baseRect.Height;
+            else
+            {
+                //Diagram 내부 시작
+                if (ep.Y < baseRect.Y)
+                    //Diagram 상단 밖 종료
+                    epy = baseRect.Y;
+                else if (ep.Y > baseRect.Y + baseRect.Height)
+                    //Diagram 하단 밖 종료
+                    epy = baseRect.Y + baseRect.Height;
+                else if (sp.Y < ep.Y)
+                    //내부 종료 - 시작Y < 종료Y
+                    epy = ep.Y;
+                else
+                    //내부 종료 - 시작Y > 종료Y
+                    epy = sp.Y;
+            }
+
+            x = Math.Min(spx, epx);
+            y = Math.Min(spy, epy);
+            width = spx < epx ? Math.Abs(spx - epx) : 0;
+            height = spy < epy ? Math.Abs(spy - epy) : 0;
+
+
+            return new Rectangle(
+                x,
+                y,
+                width,
+                height
+                );
+        }
+
         #region Event
 
         /// <summary>
@@ -272,6 +434,7 @@ namespace DotNet.Utils.Controls.Utils
             }
         }
 
+
         #endregion Event End
 
         #region 공통Type Control생성
@@ -306,43 +469,52 @@ namespace DotNet.Utils.Controls.Utils
 
         public class QYCollection<T>
         {
-            protected List<T> items = new List<T>();
+            protected int _maxItemCount = 0;
+            protected List<T> _items = new List<T>();
+
+            public int MaxCount { get => this._maxItemCount; set => this._maxItemCount = value; }
 
             /// <summary>
             /// Collection Item
             /// </summary>
             /// <param name="idx">Item Index</param>
             /// <returns>해당 Index의 Item</returns>
-            public virtual T this[int idx] => this.items[idx];
+            public T this[int idx] => this._items[idx];
             /// <summary>
             /// Collection Item 추가
             /// </summary>
             /// <param name="item">추가할 Item</param>
-            public virtual void Add(T item) => this.items.Add(item);
+            public virtual void Add(T item)
+            {
+                if (this._maxItemCount > 0
+                    && this._items.Count >= this._maxItemCount) return;
+
+                this._items.Add(item);
+            }
             /// <summary>
             /// Collection Item 제거
             /// </summary>
             /// <param name="item">제거할 Item</param>
-            public virtual void Remove(T item) => this.items.Remove(item);
+            public virtual void Remove(T item) => this._items.Remove(item);
             /// <summary>
             /// Collection Item 제거
             /// </summary>
             /// <param name="idx">제거 할 Item Index번호</param>
-            public virtual void Remove(int idx) => this.items.RemoveAt(idx);
+            public virtual void Remove(int idx) => this._items.RemoveAt(idx);
             /// <summary>
             /// Collection Item 검사
             /// </summary>
             /// <param name="item">검사할 Item</param>
             /// <returns>true: 존재/false: 없음</returns>
-            public virtual bool Contains(T item) => this.items.Contains(item);
+            public virtual bool Contains(T item) => this._items.Contains(item);
             /// <summary>
             /// Collection Item 수
             /// </summary>
-            public int Count => this.items.Count;
+            public int Count => this._items.Count;
             /// <summary>
             /// foreach 발동용 Enumerator
             /// </summary>
-            public IEnumerator<T> GetEnumerator() => this.items.GetEnumerator();
+            public IEnumerator<T> GetEnumerator() => this._items.GetEnumerator();
         }
 
     }

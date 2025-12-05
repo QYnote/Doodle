@@ -28,10 +28,10 @@ namespace DotNet.Comm.Protocols
         /// <summary>
         /// Response Frame에서 추출한 Data 목록
         /// </summary>
-        /// <typeparam name="T">Protocol별 추출 Data Type</typeparam>
         /// <param name="frame">추출할 Response Frame</param>
         /// <param name="subData">추출에 필요한 Sub Data</param>
         /// <returns>추출한 Data 목록</returns>
+        /// T를 사용하고 싶지만 사용 불가능하여 object로 처리
         public abstract List<object> Response_ExtractData(byte[] frame, params object[] subData);
 
         #endregion Response End

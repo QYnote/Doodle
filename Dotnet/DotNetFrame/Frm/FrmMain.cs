@@ -30,16 +30,49 @@ namespace DotNetFrame.Frm
         #endregion UI Controls
 
         BackgroundWorker _bgWorker = new BackgroundWorker();
+        private PerformanceCounter _cpuCounter = new PerformanceCounter("Process", "% Processor Time", "_Total");
+        private System.Collections.Concurrent.ConcurrentQueue<(DateTime, float)> cpuQueue = new System.Collections.Concurrent.ConcurrentQueue<(DateTime, float)>();
+        private System.Timers.Timer _timer = null;
+        private const int CPU_GET_INTERVAL = 100;
+        private const int CPU_MAX_POINTS = 100;
 
         public FrmMain()
         {
             InitializeComponent();
             InitUI();
+            InitComponent();
 
             this._bgWorker.WorkerSupportsCancellation = true;
             this._bgWorker.DoWork += _bgWorker_DoWork;
             this._bgWorker.RunWorkerAsync();
             timerUI = new System.Threading.Timer(UpdatProcess, null, 0, 1000);
+        }
+
+        private void InitComponent()
+        {
+            this._timer = new System.Timers.Timer(CPU_GET_INTERVAL);
+            this._timer.Elapsed += _timer_Elapsed;
+
+            this._cpuCounter.NextValue();
+            System.Threading.Thread.Sleep(CPU_GET_INTERVAL / 2);
+            this._timer.Start();
+        }
+
+        private void _timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                float curUsage = this._cpuCounter.NextValue();
+
+                this.cpuQueue.Enqueue((DateTime.Now, curUsage));
+
+                while(this.cpuQueue.Count > CPU_MAX_POINTS)
+                    this.cpuQueue.TryDequeue(out var oldData);
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"CPU 데이터 수집 에러: {ex.Message}\r\nTrace:{ex.StackTrace}");
+            }
         }
 
         private void InitUI()
@@ -120,28 +153,11 @@ namespace DotNetFrame.Frm
             else
             {
                 DateTime now = DateTime.Now;
-                this.chart.Series["CPU"].Points.AddXY(now, this.cpuCounter.NextValue() / Environment.ProcessorCount);
                 this.chart.Series["Memory"].Points.AddXY(now, Process.GetCurrentProcess().PrivateMemorySize64 / (1024 * 1024f));
 
                 DateTime minDate = now.AddSeconds(-60);
                 double min_Mem = double.MaxValue,
-                       max_Mem = double.MinValue,
-                       min_CPU = double.MaxValue,
-                       max_CPU = double.MinValue;
-                for (int i = 0; i < this.chart.Series["CPU"].Points.Count; i++)
-                {
-                    DataPoint p = this.chart.Series["CPU"].Points[i];
-                    if ((DateTime.FromOADate(p.XValue)-minDate).TotalSeconds < -1)
-                    {
-                        this.chart.Series["CPU"].Points.Remove(p);
-                        i--;
-                        continue;
-                    }
-
-                    //AxisY 최대 최소 설정
-                    if (min_CPU > p.YValues[0]) min_CPU = p.YValues[0];
-                    if (max_CPU < p.YValues[0]) max_CPU = p.YValues[0];
-                }
+                       max_Mem = double.MinValue;
 
                 for (int i = 0; i < this.chart.Series["Memory"].Points.Count; i++)
                 {
@@ -157,15 +173,49 @@ namespace DotNetFrame.Frm
                     if (max_Mem < p.YValues[0]) max_Mem = p.YValues[0];
                 }
 
+                if (min_Mem == max_Mem) return;
                 this.chart.ChartAreas[0].AxisX.Maximum = now.ToOADate();    
                 this.chart.ChartAreas[0].AxisX.Minimum = minDate.ToOADate();
-                double defaultAxisYMin = min_CPU - (Math.Abs(max_CPU - min_CPU) / 10);
-                this.chart.ChartAreas[0].AxisY.Minimum = defaultAxisYMin < 0 ? 0 : defaultAxisYMin;
-                if(max_CPU != double.MinValue)
-                    this.chart.ChartAreas[0].AxisY.Maximum = max_CPU + (Math.Abs(max_CPU - min_CPU) / 10);
                 this.chart.ChartAreas[0].AxisY2.Minimum = min_Mem - (Math.Abs(max_Mem - min_Mem) / 10);
                 this.chart.ChartAreas[0].AxisY2.Maximum = max_Mem + (Math.Abs(max_Mem - min_Mem) / 10);
+
+                UpdateUI_CPUChart();
             }
+        }
+
+        private void UpdateUI_CPUChart()
+        {
+            this.chart.BeginInit();
+
+            Series series = this.chart.Series["CPU"];
+            ChartArea area = this.chart.ChartAreas[series.ChartArea];
+            (DateTime, float)[] values = this.cpuQueue.ToArray();
+
+            double min_CPU = double.MaxValue,
+                   max_CPU = double.MinValue;
+
+            series.Points.Clear();
+            foreach (var pair in values)
+            {
+                series.Points.AddXY(pair.Item1, pair.Item2);
+
+                if (min_CPU > pair.Item2) min_CPU = pair.Item2;
+                if (max_CPU < pair.Item2) max_CPU = pair.Item2;
+            }
+
+            if(min_CPU < max_CPU)
+            {
+                double range = max_CPU - min_CPU,
+                       offset = range / 10;
+
+                if (series.YAxisType == AxisType.Primary)
+                {
+                    area.AxisY.Minimum = min_CPU < offset ? 0 : min_CPU - offset;
+                    area.AxisY.Maximum = max_CPU + offset;
+                }
+            }
+
+            this.chart.EndInit();
         }
     }
 }

@@ -96,7 +96,13 @@ namespace DotNetFrame
             this.btnClose.ImageAlign = ContentAlignment.MiddleCenter;
             this.btnClose.Size = new Size(22, 22);
             this.btnClose.Location = new Point(this.pnlTitleBar.Width - this.btnClose.Width, 0);
-            this.btnClose.Click += (s, e) => { Application.Exit(); };
+            this.btnClose.Click += (s, e) =>
+            {
+                if (this._curForm == null)
+                    Application.Exit();
+                else
+                    this._curForm.Close();
+            };
 
             this.btnSize.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             this.btnSize.FlatAppearance.BorderSize = 0;

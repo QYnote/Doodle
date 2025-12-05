@@ -45,7 +45,7 @@ namespace DotNetFrame.Data
             if (_lang.ContainsKey(key))
                 return _lang[key];
             else
-                return key;
+                return "Text Empty";
         }
     }
 }

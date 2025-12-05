@@ -239,12 +239,12 @@ namespace DotNetFrame.Frm
             return null;
         }
 
+        Random globalRnd = new Random();
         #region HY TeraFast Device 역할
 
-        const int SensorCount = 64;
+        int _sensorCount = 64;
         Int16[] baseValue = null;
-        Int16[] caliValue = null;
-        bool[] _isVectorUp = null;
+        Int16[] outputValue = null;
         bool allowSend = false;
         bool creatingResponse = false;
         bool _isEditSend = false;
@@ -258,25 +258,26 @@ namespace DotNetFrame.Frm
             server.PeriodicSendEvent += Server_PeriodicSendEvent_TeraHz;
             server.CreateResponseEvent += Server_CreateResponseEvent_TeraHz;
 
-            this.baseValue = new Int16[SensorCount];
-            this.caliValue = new Int16[SensorCount];
-            this._isVectorUp = new bool[SensorCount];
+            this._sensorCount = 64;
+            this.baseValue = new Int16[this._sensorCount];
+            this.outputValue = new Int16[this._sensorCount];
             Random rnd = new Random();
-            for (int i = 0; i < SensorCount; i++)
+            double rndValue = 0;
+            for (int i = 0; i < this._sensorCount; i++)
             {
-                this.baseValue[i] = (Int16)(0x7FFF * (i / (float)SensorCount));
-                Int16 rndValue = Convert.ToInt16((rnd.Next(-10000, 10000) / 10000f) * 2000);
-                if (this.baseValue[i] + rndValue < 0)
-                    this.baseValue[i] = 0;
-                else if (this.baseValue[i] + rndValue > 0x7FFF)
-                    this.baseValue[i] = 0x7FFF;
-                else
-                    this.baseValue[i] += rndValue;
-                this._isVectorUp[i] = true;
+                //this.baseValue[i] = (Int16)(0x7FFF * (i / (float)this._sensorCount));
+                this.baseValue[i] = (Int16)(0x7FFF);
 
-                this.caliValue[i] = (Int16)i;
-                if (i == SensorCount - 1)
-                    this.caliValue[i] = 0x7FFF - 0x7CCC;
+                //센서별 난수 적용
+                if (i % 16 == 0)
+                    rndValue = rnd.Next(0, 10000) / 10000d;
+
+                this.baseValue[i] = Convert.ToInt16(0x7FFF * rndValue);
+
+                if (this.baseValue[i] < 0)
+                    this.baseValue[i] = 0;
+                else if (this.baseValue[i] > 0x7FFF)
+                    this.baseValue[i] = 0x7FFF;
             }
 
             return server;
@@ -286,34 +287,31 @@ namespace DotNetFrame.Frm
         {
             if (this.allowSend == false || this.creatingResponse) return null;
 
-            byte[] returnBuffer = new byte[SensorCount * sizeof(Int16)];
-            int addValue = 50;
+            byte[] returnBuffer = new byte[this._sensorCount * sizeof(Int16)];
+            int bounceScale = 200;
+            Int16 blockingValue = 500;
+            Int16 sensorValue = 1000;
 
-            for (int i = 0; i < SensorCount; i++)
+            for (int i = 0; i < this._sensorCount; i++)
             {
-                if (_isVectorUp[i])
-                {
-                    if(baseValue[i] + addValue > 0x7FFF)
-                    {
-                        baseValue[i] = 0x7FFF;
-                        _isVectorUp[i] = false;
-                    }
-                    else
-                        baseValue[i] += (Int16)addValue;
-                }
+                Int16 bounceValue = Convert.ToInt16(bounceScale * (this.globalRnd.Next(-1000, 1000) / 1000d));
+                int temp = this.baseValue[i] + bounceValue;
+
+                //Max교정값 전송
+                //temp += sensorValue;
+
+                //물체 감지변화 적용
+                //temp += blockingValue;
+
+                if (temp > 0x7FFF)
+                    outputValue[i] = 0x7FFF;
+                else if (temp < 0)
+                    outputValue[i] = 0;
                 else
-                {
-                    if (baseValue[i] - addValue <= 0)
-                    {
-                        baseValue[i] = 0;
-                        _isVectorUp[i] = true;
-                    }
-                    else
-                        baseValue[i] -= (Int16)addValue;
-                }
+                    outputValue[i] = (Int16)temp;
             }
 
-            Buffer.BlockCopy(baseValue, 0, returnBuffer, 0, returnBuffer.Length);
+            Buffer.BlockCopy(outputValue, 0, returnBuffer, 0, returnBuffer.Length);
 
             System.Threading.Thread.Sleep(2);
 
@@ -389,17 +387,11 @@ namespace DotNetFrame.Frm
                         this._isEditSend = false;
                         resStr = "TSN,OK";
                     }
-                    else if (cmdN == 5)
+                    else if (cmdN == 5 || cmdN == 6)
                     {
-                        resStr = $"TSN,OK,{SensorCount.ToString("D4")}";
-                        for (int i = 0; i < SensorCount; i++)
-                            resStr += string.Format(",{0:X4}", this.caliValue[i]);
-                    }
-                    else if (cmdN == 6)
-                    {
-                        resStr = $"TSN,OK,{SensorCount.ToString("D4")}";
-                        for (int i = 0; i < SensorCount; i++)
-                            resStr += string.Format(",{0:X4}", 0x7FFF - this.caliValue[i]);
+                        resStr = $"TSN,OK,{this._sensorCount.ToString("D4")}";
+                        for (int i = 0; i < this._sensorCount; i++)
+                            resStr += string.Format(",0000");
                     }
                 }
                 else if(cmdG == "TST")

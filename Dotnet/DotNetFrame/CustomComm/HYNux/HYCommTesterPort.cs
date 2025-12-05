@@ -37,7 +37,7 @@ namespace DotNetFrame.CustomComm.HYNux
     /// <summary>
     /// HY Port
     /// </summary>
-    /// <remarks>
+    /// <remarks>   
     /// 1Port - (1 Request ↔ 1Response) 처리방식
     /// </remarks>
     public class HYCommTesterPort
@@ -429,8 +429,14 @@ namespace DotNetFrame.CustomComm.HYNux
                         }//read 처리 End
                     }//수신 End
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine(string.Format(
+                        "HYCommTestport.cs - bgWorkerDoWork()\r\n" +
+                        "{0}\r\n\r\n" +
+                        "{1}",
+                        ex.Message, ex.StackTrace));
+
                     if (this._sendingFrame != null)
                     {
                         if (this.WriteQueue.Count != 0 && this._sendingFrame.ReqBytes == this.WriteQueue.Peek())

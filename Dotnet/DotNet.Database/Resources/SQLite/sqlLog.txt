@@ -48,3 +48,61 @@ INSERT INTO LANG VALUES('commtester.log.protocolresult.protocolerror','Protocol 
 
 ============================================================
 
+============================================================
+2025-11-17 오후 3:29:42
+INSERT INTO LANG
+VALUES('commtester.commproperty.checkbox.repeat.count.text',
+'전송 횟수', NULL)
+============================================================
+
+============================================================
+2025-11-19 오후 12:20:45
+INSERT INTO LANG VALUES('commtester.portproperty.ethernet.ip.title', 'IP 주소', 'IP Address');
+INSERT INTO LANG VALUES('commtester.portproperty.ethernet.portno.title', 'Port 번호', 'Port No');
+
+UPDATE LANG SET
+KEY = 'commtester.portproperty.connect.text'
+WHERE KEY = 'commtester.portproperty.button.connect'
+;
+UPDATE LANG SET
+KEY = 'commtester.portproperty.disconnect.text'
+WHERE KEY = 'commtester.portproperty.button.disconnect'
+;
+UPDATE LANG SET
+KEY = 'commtester.protocolproperty.errorcode.create.title'
+WHERE KEY = 'commtester.protocolproperty.checkbox.errorcode.create.text'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.enable.title'
+WHERE KEY = 'commtester.commproperty.checkbox.repeat.enable.text'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.countunit.text'
+WHERE KEY = 'commtester.commproperty.label.repeat.countunit.text'
+;
+============================================================
+
+============================================================
+2025-11-19 오후 12:23:00
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.infinity.title'
+WHERE KEY = 'commtester.commproperty.checkbox.repeat.infinity.text'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.tooltip.text'
+WHERE KEY = 'commtester.commproperty.label.tooltip'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.send.text'
+WHERE KEY = 'commtester.commproperty.button.send'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.stop.text'
+WHERE KEY = 'commtester.commproperty.button.stop'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.count.title'
+WHERE KEY = 'commtester.commproperty.checkbox.repeat.count.text'
+;
+============================================================
+

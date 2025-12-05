@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Views\Events\QYEvents.cs" />
     <Compile Include="Views\QYCircularProgressBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
