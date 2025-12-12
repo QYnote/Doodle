@@ -45,9 +45,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientPorts\CommPortFrame.cs" />
-    <Compile Include="ClientPorts\QYEthernet.cs" />
-    <Compile Include="ClientPorts\QYSerialPort.cs" />
+    <Compile Include="ClientPorts\AppPort\AppPort.cs" />
+    <Compile Include="ClientPorts\OSPort\OSPortBase.cs" />
+    <Compile Include="ClientPorts\OSPort\QYEthernet.cs" />
+    <Compile Include="ClientPorts\OSPort\QYSerialPort.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -58,7 +59,7 @@
     <Compile Include="Protocols\Customs\HYNux\HYModbus.cs" />
     <Compile Include="Protocols\Customs\HYNux\PCLink.cs" />
     <Compile Include="Protocols\Modbus.cs" />
-    <Compile Include="Protocols\ProtocolFrame.cs" />
+    <Compile Include="Protocols\ProtocolBase.cs" />
     <Compile Include="Servers\ServerBase.cs" />
     <Compile Include="Servers\TCPServer.cs" />
     <Compile Include="Servers\UDPServer.cs" />
