@@ -58,5 +58,12 @@ namespace DotNet.Utils.Views.Events
         }
 
         #endregion 마우스 선택 영역  Rectangle 가져오기
+
+        /// <summary>
+        /// GroupBox의 Caption 높이 가져오기
+        /// </summary>
+        /// <param name="gbx">확인할 GroupBox</param>
+        /// <returns>Caption 높이</returns>
+        public static float GetCaptionHeight(GroupBox gbx) =>  gbx.CreateGraphics().MeasureString(gbx.Text, gbx.Font).Height;
     }
 }

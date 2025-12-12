@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNet.Utils.Controls.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,14 +16,14 @@ namespace DotNet.Comm.Servers
         /// <returns>Client에게 전송할 Data</returns>
         public delegate byte[] ResponseHandler(byte[] request);
         /// <summary>
-        /// Request에따른 Response 이벤트
-        /// </summary>
-        public event ResponseHandler CreateResponseEvent;
-        /// <summary>
         /// Client에 주기적으로 Data를 전송하기위한 EventHandler
         /// </summary>
         /// <returns>Client에게 전송할 Data</returns>
         public delegate byte[] PeriodicHandler();
+        /// <summary>
+        /// Request에따른 Response 이벤트
+        /// </summary>
+        public event ResponseHandler CreateResponseEvent;
         /// <summary>
         /// 주기적으로 Client에 Data를 전송하는 Event
         /// </summary>

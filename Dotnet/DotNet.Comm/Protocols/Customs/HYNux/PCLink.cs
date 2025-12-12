@@ -16,7 +16,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
         public object Value { get; set; }
     }
 
-    public class PCLink : ProtocolFrame
+    public class PCLink : ProtocolBase
     {
         public static readonly byte[] WhoCmd = new byte[] { 0x02, 0x30, 0x31, 0x57, 0x48, 0x4F, 0x0D, 0x0A, };
         public bool IsSUM { get; set; } = false;

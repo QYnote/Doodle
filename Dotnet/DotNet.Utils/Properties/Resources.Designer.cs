@@ -63,9 +63,9 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
-        public static System.Drawing.Bitmap Basic_32x32 {
+        public static System.Drawing.Bitmap Button_Close_16x16 {
             get {
-                object obj = ResourceManager.GetObject("Basic_32x32", resourceCulture);
+                object obj = ResourceManager.GetObject("Button_Close_16x16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
-        public static System.Drawing.Bitmap BlueCircleSetting_16x16 {
+        public static System.Drawing.Bitmap Button_Max_16x16 {
             get {
-                object obj = ResourceManager.GetObject("BlueCircleSetting_16x16", resourceCulture);
+                object obj = ResourceManager.GetObject("Button_Max_16x16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,29 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
-        public static System.Drawing.Bitmap Close_16x16 {
+        public static System.Drawing.Bitmap Button_Min_16x16 {
             get {
-                object obj = ResourceManager.GetObject("Close_16x16", resourceCulture);
+                object obj = ResourceManager.GetObject("Button_Min_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Button_Normal_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("Button_Normal_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Chart_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("Chart_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -103,9 +123,9 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
-        public static System.Drawing.Bitmap Connect_32x32 {
+        public static System.Drawing.Bitmap Connector_32x32 {
             get {
-                object obj = ResourceManager.GetObject("Connect_32x32", resourceCulture);
+                object obj = ResourceManager.GetObject("Connector_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -113,19 +133,9 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
-        public static System.Drawing.Bitmap Connect_Green_32x32 {
+        public static System.Drawing.Bitmap Database_32x32 {
             get {
-                object obj = ResourceManager.GetObject("Connect_Green_32x32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap Connect_Red_32x32 {
-            get {
-                object obj = ResourceManager.GetObject("Connect_Red_32x32", resourceCulture);
+                object obj = ResourceManager.GetObject("Database_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -143,139 +153,9 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
-        public static System.Drawing.Bitmap Erase_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("Erase_16x16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap FrmTitle_Button_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("FrmTitle_Button_16x16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap GreenSync_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("GreenSync_16x16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap Image_32x32 {
-            get {
-                object obj = ResourceManager.GetObject("Image_32x32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap LAN_Come_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("LAN_Come_16x16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
         public static System.Drawing.Bitmap Menu_Hamburgar_32x32 {
             get {
                 object obj = ResourceManager.GetObject("Menu_Hamburgar_32x32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap Plus_00_32x32 {
-            get {
-                object obj = ResourceManager.GetObject("Plus_00_32x32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap RedPower_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("RedPower_16x16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap Serial_Come_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("Serial_Come_16x16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap Server_32x32 {
-            get {
-                object obj = ResourceManager.GetObject("Server_32x32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap Stop_00_32x32 {
-            get {
-                object obj = ResourceManager.GetObject("Stop_00_32x32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap Test_32x32 {
-            get {
-                object obj = ResourceManager.GetObject("Test_32x32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap TreeChild_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("TreeChild_16x16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
-        /// </summary>
-        public static System.Drawing.Bitmap YellowWarning_16x16 {
-            get {
-                object obj = ResourceManager.GetObject("YellowWarning_16x16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

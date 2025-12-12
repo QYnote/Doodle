@@ -15,7 +15,7 @@ namespace DotNet.Comm.Protocols
         public object Value { get; set; }
     }
 
-    public class Modbus : ProtocolFrame
+    public class Modbus : ProtocolBase
     {
         public Modbus(bool isClient) : base(isClient) { }
 

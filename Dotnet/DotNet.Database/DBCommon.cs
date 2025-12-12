@@ -18,26 +18,63 @@ namespace DotNet.Database
     {
         public delegate void DBLoghandler(string errorMessage);
         public event DBLoghandler LogEvent;
-        /// <summary>
-        /// DataBase 주소
-        /// </summary>
+
+        /// <summary>DataBase 주소</summary>
         protected string _dataSource = string.Empty;
-        /// <summary>
-        /// DataBase PassWord
-        /// </summary>
-        protected string _password = string.Empty;
+        /// <summary>DataBase ID</summary>
+        private string _id = string.Empty;
+        /// <summary>DataBase PassWord</summary>
+        private string _password = string.Empty;
+
         /// <summary>
         /// DataBase Connection
         /// </summary>
-        protected IDbConnection _conn;
+        protected IDbConnection conn;
         /// <summary>
         /// Transaction
         /// </summary>
-        protected IDbTransaction _transaction;
+        private IDbTransaction transaction;
+
+
+        public abstract string DataSource { get; set; }
+        public string ID
+        {
+            get => _id;
+            set
+            {
+                if (this.BaseConn == null || this.BaseConn.State == ConnectionState.Closed)
+                {
+                    this._id = value;
+                    this.BaseConn = null;
+                }
+                else throw new ConstraintException("DataBase가 사용중입니다.");
+            }
+        }
+        public string Password
+        {
+            get => _password;
+            set
+            {
+                if (this.BaseConn == null || this.BaseConn.State == ConnectionState.Closed)
+                {
+                    this._password = value;
+                    this.BaseConn = null;
+                }
+                else throw new ConstraintException("DataBase가 사용중입니다.");
+            }
+        }
         /// <summary>
         /// DataBase 연결 String
         /// </summary>
         protected abstract string ConnectionString { get; }
+        protected IDbConnection BaseConn
+        { 
+            get => conn; 
+            set => conn = value;
+        }
+        protected IDbTransaction BaseTransaction { get => transaction; set => transaction = value; }
+
+
         /// <summary>
         /// DataBase 연결
         /// </summary>
@@ -87,9 +124,9 @@ namespace DotNet.Database
         {
             this.GetConnection();
 
-            if (this._conn.State == ConnectionState.Open)
+            if (this.BaseConn.State == ConnectionState.Open)
             {
-                this._transaction = this._conn.BeginTransaction();
+                this.BaseTransaction = this.BaseConn.BeginTransaction();
             }
         }
         /// <summary>
@@ -98,18 +135,18 @@ namespace DotNet.Database
         /// <param name="result">Query 최종 실행결과</param>
         public void EndTransaction(bool result)
         {
-            if (this._transaction != null)
+            if (this.BaseTransaction != null)
             {
                 if (result)
                 {
-                    this._transaction.Commit();
+                    this.BaseTransaction.Commit();
                 }
                 else
                 {
-                    this._transaction.Rollback();
+                    this.BaseTransaction.Rollback();
                 }
 
-                this._transaction.Dispose();
+                this.BaseTransaction.Dispose();
             }
         }
         /// <summary>

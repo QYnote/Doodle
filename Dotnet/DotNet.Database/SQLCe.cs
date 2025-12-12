@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlServerCe;
+using System.Linq;
 
 namespace DotNet.Database
 {
@@ -10,50 +11,63 @@ namespace DotNet.Database
     /// </summary>
     public class SQLCe : DBCommon
     {
-        private SqlCeConnection Conn { get { return (SqlCeConnection)GetConnection(); } }
-        private SqlCeTransaction Transaction { get { return (SqlCeTransaction)base._transaction; } }
+        public static readonly string DEFAULT_SQLCE_DIR = "C:\\WorkerFile\\업무자료\\01_TCS\\01_source\\TCS.Data\\Products";
+        public static readonly string DEFAULT_SQLCE_DIR_FILENAME = "tcsdr.sdf";
+        public static readonly string DEFAULT_SQLCE_PASSWORD = "admin123";
 
-        #region 편의성 Property
 
+        public override string DataSource
+        {
+            get => base._dataSource;
+            set
+            {
+                string extention = value.Split('.').Last();
+
+                if (extention != "sdf")
+                    throw new NotImplementedException("파일 확장자 미지원");
+
+                base._dataSource = value;
+            }
+        }
         override protected string ConnectionString
         {
             get
             {
-                if(base._dataSource == string.Empty
-                    || base._password == string.Empty)
+                if(this.DataSource == string.Empty
+                    || base.Password == string.Empty)
                     return string.Empty;
 
                 return string.Format(
                     "Data Source={0};" +
                     "Password={1};" +
                     "Persist Security Info=True",
-                    base._dataSource, base._password);
+                    this.DataSource, base.Password);
             }
         }
+        private SqlCeConnection Conn { get { return (SqlCeConnection)GetConnection(); } }
+        private SqlCeTransaction Transaction { get { return (SqlCeTransaction)base.BaseTransaction; } }
 
-        #endregion 편의성 Property
-
-        public SQLCe(string filePath, string password)
+        public SQLCe()
         {
-            base._dataSource = filePath;
-            base._password = password;
-            base._conn = GetConnection();
+            this.DataSource = $"{DEFAULT_SQLCE_DIR}\\{DEFAULT_SQLCE_DIR_FILENAME}";
+            base.Password = DEFAULT_SQLCE_PASSWORD;
+            base.BaseConn = GetConnection();
         }
 
         protected override IDbConnection GetConnection()
         {
-            if(base._conn == null)
+            if(base.BaseConn == null)
             {
-                if(System.IO.File.Exists(base._dataSource))
-                    base._conn = new SqlCeConnection(this.ConnectionString);
+                if(System.IO.File.Exists(this.DataSource))
+                    base.BaseConn = new SqlCeConnection(this.ConnectionString);
             }
             else
             {
-                if (base._conn.State == System.Data.ConnectionState.Closed)
-                    base._conn.Open();
+                if (base.BaseConn.State == System.Data.ConnectionState.Closed)
+                    base.BaseConn.Open();
             }
 
-            return (SqlCeConnection)base._conn;
+            return (SqlCeConnection)base.BaseConn;
         }
 
         public override DataTable ExecuteQuery(string query, int idx = 0)
@@ -145,7 +159,7 @@ namespace DotNet.Database
 
                 cmd = new SqlCeCommand();
                 cmd.Connection = this.Conn;
-                if (base._transaction != null)
+                if (base.BaseTransaction != null)
                     cmd.Transaction = this.Transaction;
 
                 for (int i = 0; i < spltQuery.Length; i++)
@@ -172,7 +186,7 @@ namespace DotNet.Database
             {
                 if(cmd != null)
                 {
-                    if (base._transaction == null)
+                    if (base.BaseTransaction == null)
                         cmd.Dispose();
                 }
             }
@@ -192,7 +206,7 @@ namespace DotNet.Database
             try
             {
                 cmd = new SqlCeCommand(query, this.Conn);
-                if (base._transaction != null) cmd.Transaction = this.Transaction;
+                if (base.BaseTransaction != null) cmd.Transaction = this.Transaction;
 
                 foreach (var param in parameters)
                     cmd.Parameters.Add(param);
@@ -210,7 +224,7 @@ namespace DotNet.Database
             {
                 if (cmd != null)
                 {
-                    if (base._transaction == null)
+                    if (base.BaseTransaction == null)
                         cmd.Dispose();
                 }
             }

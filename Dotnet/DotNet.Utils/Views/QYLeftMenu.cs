@@ -180,11 +180,11 @@ namespace DotNet.Utils.Views
             base.Add(item);
         }
 
-        public override void Remove(QYLeftMenuItem item)
+        public override bool Remove(QYLeftMenuItem item)
         {
             this.Panel.Controls.Remove(item);
 
-            base.Remove(item);
+            return base.Remove(item);
         }
 
         public override void Remove(int idx)

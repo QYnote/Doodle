@@ -104,31 +104,21 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\BlueCircleSetting_16x16.png" />
-    <None Include="Resources\Basic_32x32.png" />
-    <Content Include="Resources\Close_16x16.png" />
-    <None Include="Resources\Connect_32x32.png" />
+    <None Include="Resources\Button_Min_16x16.png" />
+    <None Include="Resources\Button_Max_16x16.png" />
+    <None Include="Resources\Button_Normal_16x16.png" />
     <None Include="Resources\empty_16x16.png" />
-    <None Include="Resources\Erase_16x16.png" />
     <None Include="Resources\Comm_32x32.png" />
-    <Content Include="Resources\Connect_Green_32x32.png" />
-    <Content Include="Resources\Connect_Red_32x32.png" />
-    <None Include="Resources\FrmTitle_Button_16x16.png" />
-    <Content Include="Resources\GreenSync_16x16.png" />
-    <None Include="Resources\Image_32x32.png" />
-    <Content Include="Resources\LAN_Come_16x16.png" />
+    <None Include="Resources\Button_Close_16x16.png" />
+    <None Include="Resources\Connector_32x32.png" />
     <None Include="Resources\Menu_Hamburgar_32x32.png" />
-    <Content Include="Resources\Plus_00_32x32.png" />
-    <Content Include="Resources\RedPower_16x16.png" />
-    <Content Include="Resources\Serial_Come_16x16.png" />
-    <None Include="Resources\TreeChild_16x16.png" />
-    <None Include="Resources\Test_32x32.png" />
-    <None Include="Resources\Server_32x32.png" />
-    <None Include="Resources\Stop_00_32x32.png" />
-    <Content Include="Resources\YellowWarning_16x16.png" />
+    <None Include="Resources\Database_32x32.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\DevExpress\20.2\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Chart_32x32.png" />
   </ItemGroup>
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">

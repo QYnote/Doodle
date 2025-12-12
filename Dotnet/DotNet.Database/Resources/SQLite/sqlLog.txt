@@ -106,3 +106,26 @@ WHERE KEY = 'commtester.commproperty.checkbox.repeat.count.text'
 ;
 ============================================================
 
+============================================================
+2025-12-12 오전 9:57:25
+--Server Text 추가
+INSERT INTO LANG VALUES('server.property.title','설정','Server Property');
+INSERT INTO LANG VALUES('server.property.type.text','서버 종류','Server Type');
+INSERT INTO LANG VALUES('server.property.type.property','종류별 설정','Type Property');
+INSERT INTO LANG VALUES('server.log','서버 로그','Server Log');
+INSERT INTO LANG VALUES('server.terahz.ip','IP','IP');
+INSERT INTO LANG VALUES('server.terahz.portno','포트 번호','Port No');
+INSERT INTO LANG VALUES('server.terahz.sensor.count','센서 수','Sensor Count');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.object','물체감지 적용','Oject Value');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.max','Span값 적용','Span Value');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.random','난수 적용','Random Value');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.boundscale','난수 범위','Random Range');
+INSERT INTO LANG VALUES('server.terahz.connection.connect','연결','Connect');
+INSERT INTO LANG VALUES('server.terahz.connection.disconnect','연결해제','Disconnect');
+INSERT INTO LANG VALUES('server.modbus.ip','IP','IP');
+INSERT INTO LANG VALUES('server.modbus.portno','포트 번호','Port No');
+INSERT INTO LANG VALUES('server.modbus.connection.connect','연결','Connect');
+INSERT INTO LANG VALUES('server.modbus.connection.disconnect','연결해제','Disconnect');
+
+============================================================
+

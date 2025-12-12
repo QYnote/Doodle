@@ -2,48 +2,67 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.IO;
+using System.Linq;
 
 namespace DotNet.Database
 {
     public class SQLite : DBCommon
     {
-        private SQLiteConnection Conn { get { return (SQLiteConnection)GetConnection(); } }
-        private SQLiteTransaction Transaction { get { return (SQLiteTransaction)base._transaction; } }
+        public static readonly string DEFAULT_SQLITE_DIR = Directory.GetCurrentDirectory();
+        public const string DEFAULT_SQLITE_DIR_FILENAME = "QYDB.sqlite";
+        public const string DEFAULT_SQLITE_PASSWORD = "";
 
+
+        public override string DataSource
+        {
+            get => base._dataSource;
+            set
+            {
+                string extention = value.Split('.').Last();
+
+                if ((extention == "sqlite" || extention == "db" || extention == string.Empty) == false)
+                    throw new NotImplementedException("파일 확장자 미지원");
+
+                base._dataSource = value;
+            }
+        }
         protected override string ConnectionString
         {
             get
             {
-                if (base._dataSource == string.Empty)
+                if (this.DataSource == string.Empty)
                     return string.Empty;
 
-                if (base._password == string.Empty || base._password == "")
-                    return $"Data Source={base._dataSource}";
+                if (base.Password == string.Empty || base.Password == "")
+                    return $"Data Source={this.DataSource}";
 
-                return $"Data Source={base._dataSource};Password={base._password}";
+                return $"Data Source={this.DataSource};Password={base.Password}";
             }
         }
+        private SQLiteConnection Conn { get { return (SQLiteConnection)GetConnection(); } }
+        private SQLiteTransaction Transaction { get { return (SQLiteTransaction)base.BaseTransaction; } }
 
-        public SQLite(string filePath, string password = "")
+        public SQLite()
         {
-            base._dataSource = filePath;
-            base._password = password;
-            base._conn = this.GetConnection();
+            this.DataSource = $"{DEFAULT_SQLITE_DIR}\\{DEFAULT_SQLITE_DIR_FILENAME}";
+            base.Password = DEFAULT_SQLITE_PASSWORD;
+            base.BaseConn = this.GetConnection();
         }
 
         protected override IDbConnection GetConnection()
         {
-            if(base._conn == null)
+            if(base.BaseConn == null)
             {
-                base._conn = new SQLiteConnection(this.ConnectionString);
+                base.BaseConn = new SQLiteConnection(this.ConnectionString);
             }
             else
             {
-                if(base._conn.State == System.Data.ConnectionState.Closed)
-                    base._conn.Open();
+                if(base.BaseConn.State == System.Data.ConnectionState.Closed)
+                    base.BaseConn.Open();
             }
 
-            return (SQLiteConnection)base._conn;
+            return (SQLiteConnection)base.BaseConn;
         }
 
         public override DataSet ExecuteQuery(string query)
@@ -78,7 +97,7 @@ namespace DotNet.Database
             try
             {
                 cmd = new SQLiteCommand(query, this.Conn);
-                if(base._transaction != null) cmd.Transaction = this.Transaction;
+                if(base.BaseTransaction != null) cmd.Transaction = this.Transaction;
 
                 cmd.ExecuteNonQuery();
 
@@ -93,7 +112,7 @@ namespace DotNet.Database
             {
                 if (cmd != null)
                 {
-                    if (base._transaction == null)
+                    if (base.BaseTransaction == null)
                         cmd.Dispose();
                 }
             }
@@ -111,7 +130,7 @@ namespace DotNet.Database
             try
             {
                 cmd = new SQLiteCommand(query, this.Conn);
-                if (base._transaction != null) cmd.Transaction = this.Transaction;
+                if (base.BaseTransaction != null) cmd.Transaction = this.Transaction;
 
                 foreach (var param in parameters)
                     cmd.Parameters.Add(param);
@@ -129,7 +148,7 @@ namespace DotNet.Database
             {
                 if (cmd != null)
                 {
-                    if (base._transaction == null)
+                    if (base.BaseTransaction == null)
                         cmd.Dispose();
                 }
             }

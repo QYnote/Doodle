@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DotNetFrame
@@ -21,8 +18,14 @@ namespace DotNetFrame
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new FrmSolution());
-            Application.Run(new FrmSolution());
+            try
+            {
+                Application.Run(new View.FrmSolution());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}\r\nTrace:{ex.StackTrace}");
+            }
         }
 
         [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]

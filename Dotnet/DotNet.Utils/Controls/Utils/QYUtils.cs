@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace DotNet.Utils.Controls.Utils
     public static class QYUtils
     {
         public static QYMath QYMath = new QYMath();
-        public static QYComm QTComm = new QYComm();
+        public static QYComm Comm = new QYComm();
 
         /// <summary>
         /// 원본에 손상이 가지 않도록 복제품 생성
@@ -467,12 +468,19 @@ namespace DotNet.Utils.Controls.Utils
 
         #endregion 공통Type Control생성 End
 
-        public class QYCollection<T>
+        public class QYCollection<T> : ICollection<T>
         {
-            protected int _maxItemCount = 0;
+            private int _maxItemCount = 0;
+            private bool _isReadOnly = false;
+
             protected List<T> _items = new List<T>();
 
-            public int MaxCount { get => this._maxItemCount; set => this._maxItemCount = value; }
+            /// <summary>Item 수</summary>
+            public int Count => this._items.Count;
+            /// <summary>읽기만 가능 여부</summary>
+            public bool IsReadOnly { get => _isReadOnly; set => _isReadOnly = value; }
+            /// <summary>최대 Item 수</summary>
+            public int MaxItemCount { get => _maxItemCount; set => _maxItemCount = value; }
 
             /// <summary>
             /// Collection Item
@@ -486,21 +494,24 @@ namespace DotNet.Utils.Controls.Utils
             /// <param name="item">추가할 Item</param>
             public virtual void Add(T item)
             {
-                if (this._maxItemCount > 0
-                    && this._items.Count >= this._maxItemCount) return;
+                if(this._maxItemCount != 0 && this._maxItemCount <= this.Count)
+                    throw new NotImplementedException("Collection has max items.");
+                
+                if(this._isReadOnly)
+                    throw new NotImplementedException("Collection is readonly");
 
                 this._items.Add(item);
             }
             /// <summary>
-            /// Collection Item 제거
+            /// Collection 비우기
             /// </summary>
-            /// <param name="item">제거할 Item</param>
-            public virtual void Remove(T item) => this._items.Remove(item);
-            /// <summary>
-            /// Collection Item 제거
-            /// </summary>
-            /// <param name="idx">제거 할 Item Index번호</param>
-            public virtual void Remove(int idx) => this._items.RemoveAt(idx);
+            public virtual void Clear()
+            {
+                if (this._isReadOnly)
+                    throw new NotImplementedException("Collection is readonly");
+
+                this._items.Clear();
+            }
             /// <summary>
             /// Collection Item 검사
             /// </summary>
@@ -508,13 +519,44 @@ namespace DotNet.Utils.Controls.Utils
             /// <returns>true: 존재/false: 없음</returns>
             public virtual bool Contains(T item) => this._items.Contains(item);
             /// <summary>
-            /// Collection Item 수
+            /// Collection Array 복사
             /// </summary>
-            public int Count => this._items.Count;
+            /// <param name="array">복사 받을 Array, 새로 생성됨</param>
+            /// <param name="arrayIndex">시작 Index</param>
+            public virtual void CopyTo(T[] array, int arrayIndex)
+            {
+                if (this.Count <= arrayIndex)
+                    throw new IndexOutOfRangeException();
+
+                array = new T[this.Count];
+                for (int i = 0; i < this.Count; i++)
+                    array[i] = this._items[i].CopyFrom();
+            }
             /// <summary>
-            /// foreach 발동용 Enumerator
+            /// Collection Item 제거
             /// </summary>
+            /// <param name="item">제거할 Item</param>
+            public virtual bool Remove(T item)
+            {
+                if (this._isReadOnly)
+                    throw new NotImplementedException("Collection is readonly");
+
+                return this._items.Remove(item);
+            }
+            /// <summary>
+            /// Collection Item 제거
+            /// </summary>
+            /// <param name="idx">제거 할 Item Index번호</param>
+            public virtual void Remove(int idx)
+            {
+                if (this._isReadOnly)
+                    throw new NotImplementedException("Collection is readonly");
+
+                this._items.RemoveAt(idx);
+            }
+
             public IEnumerator<T> GetEnumerator() => this._items.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
     }
