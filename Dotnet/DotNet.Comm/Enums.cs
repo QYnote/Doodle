@@ -4,16 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dotnet.Comm
+namespace DotNet.Comm
 {
     public enum CommType
     {
         Serial,
         Ethernet
-    }
-    public enum CommStatus
-    {
-        DisConnect,
-        Connect,
     }
 }

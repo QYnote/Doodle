@@ -16,7 +16,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
         public object Value { get; set; }
     }
 
-    public class PCLink : ProtocolFrame
+    public class PCLink : ProtocolBase
     {
         public static readonly byte[] WhoCmd = new byte[] { 0x02, 0x30, 0x31, 0x57, 0x48, 0x4F, 0x0D, 0x0A, };
         public bool IsSUM { get; set; } = false;
@@ -107,11 +107,11 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
             while (idxHandle < buffer.Length - 1)
             {
                 //1. Header Receive 검사
-                startIdx = QYUtils.Find(buffer, headerBytes, idxHandle++);
+                startIdx = Utils.Controls.Utils.QYUtils.Find(buffer, headerBytes, idxHandle++);
                 if (startIdx < 0) continue;
 
                 //2. Tail Receive 검사
-                endStartIdx = QYUtils.Find(buffer, this.TailBytes, startIdx + 1);
+                endStartIdx = Utils.Controls.Utils.QYUtils.Find(buffer, this.TailBytes, startIdx + 1);
                 if (endStartIdx < 0) continue;
 
                 endLastIdx = endStartIdx + this.TailBytes.Length - 1;

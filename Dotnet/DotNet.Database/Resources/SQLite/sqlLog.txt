@@ -1,0 +1,131 @@
+============================================================
+2025-11-13 오전 11:30:50
+--Language Table 생성
+CREATE TABLE LANG(
+KEY TEXT PRIMARY KEY, --Language Key, '위치.control.역할.(...)'등 여러 변동사항에 사용할 수 있도록 Text로 지정하고, 소문자로 작성
+KO TEXT NOT NULL, --한국어
+EN TEXT --영어
+);
+
+INSERT INTO LANG VALUES('sol.title', 'QY 낙서장', 'QY Doodle Program');
+INSERT INTO LANG VALUES('sol.leftmenu.button.commtester.text', '통신 테스터기', 'Comm Tester');
+INSERT INTO LANG VALUES('sol.leftmenu.button.dbconnector.text', 'DB 접속기', 'DB Connector');
+INSERT INTO LANG VALUES('sol.leftmenu.button.server.text', '서버', 'Server');
+============================================================
+
+============================================================
+2025-11-13 오후 12:13:14
+INSERT INTO LANG VALUES('frmdb.dbproperty.title', 'DB 설정', 'DB Properties');
+INSERT INTO LANG VALUES('frmdb.dbproperty.type', 'DB 종류', 'DB Type');
+INSERT INTO LANG VALUES('frmdb.dbproperty.filepath', 'DB 경로', 'DB Path');
+INSERT INTO LANG VALUES('frmdb.dbproperty.id', 'ID', 'ID');
+INSERT INTO LANG VALUES('frmdb.dbproperty.pw', 'PW', 'PW');
+INSERT INTO LANG VALUES('frmdb.dbproperty.logpath', 'Log파일 경로', 'Log FilePath');
+============================================================
+
+============================================================
+2025-11-13 오후 4:00:14
+INSERT INTO LANG VALUES('commtester.portproperty.title','Port 설정','Port Settings');
+INSERT INTO LANG VALUES('commtester.portproperty.button.connect','연결','Connect');
+INSERT INTO LANG VALUES('commtester.portproperty.button.disconnect','연결해제','Disconnect');
+INSERT INTO LANG VALUES('commtester.protocolproperty.title','Protocol 설정','Protocol Settings');
+INSERT INTO LANG VALUES('commtester.protocolproperty.checkbox.errorcode.create.text','Error코드 생성','ErrorCode Create');
+INSERT INTO LANG VALUES('commtester.commproperty.title','통신 설정','Communication Settings');
+INSERT INTO LANG VALUES('commtester.commproperty.checkbox.repeat.enable.text','반복 전송','Repeat');
+INSERT INTO LANG VALUES('commtester.commproperty.label.repeat.countunit.text','회','Times');
+INSERT INTO LANG VALUES('commtester.commproperty.checkbox.repeat.infinity.text','무한반복','Infinity');
+INSERT INTO LANG VALUES('commtester.commproperty.label.tooltip','10진수: @000, 16진수: #00  ex)입력값: 30 - 10진수:@030 / 16진수:#26','Dec: @000, Hex: #00');
+INSERT INTO LANG VALUES('commtester.commproperty.button.send','전송','Send');
+INSERT INTO LANG VALUES('commtester.commproperty.button.stop','멈춤','Stop');
+INSERT INTO LANG VALUES('commtester.log.title','로그','Log');
+INSERT INTO LANG VALUES('commtester.log.commresult.trycount','시도수','Try');
+INSERT INTO LANG VALUES('commtester.log.commresult.success','성공','OK');
+INSERT INTO LANG VALUES('commtester.log.commresult.none','무응답','None');
+INSERT INTO LANG VALUES('commtester.log.commresult.stop','응답멈춤','Stop');
+INSERT INTO LANG VALUES('commtester.log.commresult.infinity','무한응답','Infi.');
+INSERT INTO LANG VALUES('commtester.log.protocolresult.errorcode','무결성검사','ErrorCode');
+INSERT INTO LANG VALUES('commtester.log.protocolresult.protocolerror','Protocol NG','Protocol NG');
+
+============================================================
+
+============================================================
+2025-11-17 오후 3:29:42
+INSERT INTO LANG
+VALUES('commtester.commproperty.checkbox.repeat.count.text',
+'전송 횟수', NULL)
+============================================================
+
+============================================================
+2025-11-19 오후 12:20:45
+INSERT INTO LANG VALUES('commtester.portproperty.ethernet.ip.title', 'IP 주소', 'IP Address');
+INSERT INTO LANG VALUES('commtester.portproperty.ethernet.portno.title', 'Port 번호', 'Port No');
+
+UPDATE LANG SET
+KEY = 'commtester.portproperty.connect.text'
+WHERE KEY = 'commtester.portproperty.button.connect'
+;
+UPDATE LANG SET
+KEY = 'commtester.portproperty.disconnect.text'
+WHERE KEY = 'commtester.portproperty.button.disconnect'
+;
+UPDATE LANG SET
+KEY = 'commtester.protocolproperty.errorcode.create.title'
+WHERE KEY = 'commtester.protocolproperty.checkbox.errorcode.create.text'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.enable.title'
+WHERE KEY = 'commtester.commproperty.checkbox.repeat.enable.text'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.countunit.text'
+WHERE KEY = 'commtester.commproperty.label.repeat.countunit.text'
+;
+============================================================
+
+============================================================
+2025-11-19 오후 12:23:00
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.infinity.title'
+WHERE KEY = 'commtester.commproperty.checkbox.repeat.infinity.text'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.tooltip.text'
+WHERE KEY = 'commtester.commproperty.label.tooltip'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.send.text'
+WHERE KEY = 'commtester.commproperty.button.send'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.stop.text'
+WHERE KEY = 'commtester.commproperty.button.stop'
+;
+UPDATE LANG SET
+KEY = 'commtester.commproperty.repeat.count.title'
+WHERE KEY = 'commtester.commproperty.checkbox.repeat.count.text'
+;
+============================================================
+
+============================================================
+2025-12-12 오전 9:57:25
+--Server Text 추가
+INSERT INTO LANG VALUES('server.property.title','설정','Server Property');
+INSERT INTO LANG VALUES('server.property.type.text','서버 종류','Server Type');
+INSERT INTO LANG VALUES('server.property.type.property','종류별 설정','Type Property');
+INSERT INTO LANG VALUES('server.log','서버 로그','Server Log');
+INSERT INTO LANG VALUES('server.terahz.ip','IP','IP');
+INSERT INTO LANG VALUES('server.terahz.portno','포트 번호','Port No');
+INSERT INTO LANG VALUES('server.terahz.sensor.count','센서 수','Sensor Count');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.object','물체감지 적용','Oject Value');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.max','Span값 적용','Span Value');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.random','난수 적용','Random Value');
+INSERT INTO LANG VALUES('server.terahz.sensor.offset.boundscale','난수 범위','Random Range');
+INSERT INTO LANG VALUES('server.terahz.connection.connect','연결','Connect');
+INSERT INTO LANG VALUES('server.terahz.connection.disconnect','연결해제','Disconnect');
+INSERT INTO LANG VALUES('server.modbus.ip','IP','IP');
+INSERT INTO LANG VALUES('server.modbus.portno','포트 번호','Port No');
+INSERT INTO LANG VALUES('server.modbus.connection.connect','연결','Connect');
+INSERT INTO LANG VALUES('server.modbus.connection.disconnect','연결해제','Disconnect');
+
+============================================================
+

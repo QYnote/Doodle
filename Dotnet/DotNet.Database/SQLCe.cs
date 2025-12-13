@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlServerCe;
-using System.Diagnostics;
+using System.Linq;
 
 namespace DotNet.Database
 {
@@ -11,128 +11,169 @@ namespace DotNet.Database
     /// </summary>
     public class SQLCe : DBCommon
     {
-        private SqlCeConnection _conn = null;
-        private SqlCeTransaction _transaction = null;
+        public static readonly string DEFAULT_SQLCE_DIR = "C:\\WorkerFile\\업무자료\\01_TCS\\01_source\\TCS.Data\\Products";
+        public static readonly string DEFAULT_SQLCE_DIR_FILENAME = "tcsdr.sdf";
+        public static readonly string DEFAULT_SQLCE_PASSWORD = "admin123";
 
-        #region 편의성 Property
 
+        public override string DataSource
+        {
+            get => base._dataSource;
+            set
+            {
+                string extention = value.Split('.').Last();
+
+                if (extention != "sdf")
+                    throw new NotImplementedException("파일 확장자 미지원");
+
+                base._dataSource = value;
+            }
+        }
         override protected string ConnectionString
         {
             get
             {
-                if(base._dataSource == string.Empty
-                    || base._password == string.Empty)
+                if(this.DataSource == string.Empty
+                    || base.Password == string.Empty)
                     return string.Empty;
 
                 return string.Format(
                     "Data Source={0};" +
                     "Password={1};" +
                     "Persist Security Info=True",
-                    base._dataSource, base._password);
+                    this.DataSource, base.Password);
             }
         }
+        private SqlCeConnection Conn { get { return (SqlCeConnection)GetConnection(); } }
+        private SqlCeTransaction Transaction { get { return (SqlCeTransaction)base.BaseTransaction; } }
 
-        #endregion 편의성 Property
-        /// <summary>
-        /// SQLCe Database class
-        /// </summary>
-        /// <param name="filePath">DB File Path</param>
-        /// <param name="password">DB Password</param>
-        public SQLCe(string filePath, string password)
+        public SQLCe()
         {
-            base._dataSource = filePath;
-            base._password = password;
-            this._conn = GetConnection();
+            this.DataSource = $"{DEFAULT_SQLCE_DIR}\\{DEFAULT_SQLCE_DIR_FILENAME}";
+            base.Password = DEFAULT_SQLCE_PASSWORD;
+            base.BaseConn = GetConnection();
         }
-        /// <summary>
-        /// Connection 생성 및 연결
-        /// </summary>
-        /// <returns>생성 or 연결된 Connection</returns>
-        private SqlCeConnection GetConnection()
+
+        protected override IDbConnection GetConnection()
         {
-            if(this._conn == null)
+            if(base.BaseConn == null)
             {
-                if(System.IO.File.Exists(this._dataSource))
-                    this._conn = new SqlCeConnection(this.ConnectionString);
+                if(System.IO.File.Exists(this.DataSource))
+                    base.BaseConn = new SqlCeConnection(this.ConnectionString);
             }
             else
             {
-                if (this._conn.State == System.Data.ConnectionState.Closed)
-                    this._conn.Open();
+                if (base.BaseConn.State == System.Data.ConnectionState.Closed)
+                    base.BaseConn.Open();
             }
 
-            return this._conn;
+            return (SqlCeConnection)base.BaseConn;
         }
-        /// <summary>
-        /// 반환이 있는 Query 실행<br/>
-        /// DataSet or DataTable만 사용가능
-        /// </summary>
-        /// <typeparam name="T">반환 받을 Type - DataSet or DataTable</typeparam>
-        /// <param name="query">실행 Query</param>
-        /// <returns>반환받은 Data</returns>
-        /// <exception cref="InvalidOperationException">DataSet, Table이 아님</exception>
-        /// <remarks>
-        /// SQL Compact CE는 미지원하는 기능
-        /// </remarks>
-        public override T ExcuteQuery<T>(string query)
-        {
-            if (typeof(T) != typeof(DataTable)
-                && typeof(T) != typeof(DataSet))
-                throw new InvalidOperationException("DataType is not DataSet or DataTable");
 
+        public override DataTable ExecuteQuery(string query, int idx = 0)
+        {
+            string[] spltQuery = query.Split(';');
+            DataSet ds = new DataSet();
+
+            for (int i = 0; i < spltQuery.Length; i++)
+            {
+                DataSet readDs = this.ExecuteQuery(spltQuery[i].Trim());
+
+                if (readDs != null)
+                    ds.Tables.Add(readDs.Tables[0]);
+                else
+                    break;
+            }
+
+            if (ds.Tables.Count > idx)
+                return ds.Tables[idx];
+            else if (ds.Tables.Count > 0)
+                return ds.Tables[0];
+            else
+                return null;
+        }
+
+        public override DataSet ExecuteQuery(string query)
+        {
+            string[] spltQuery = query.Split(';');
             SqlCeDataAdapter adapter = null;
             DataSet ds = null;
-            int idx = 0;
 
-            try
+            if (spltQuery.Length == 1)
             {
-                SqlCeConnection conn = this.GetConnection();
+                try
+                {
+                    query = query.Replace("\r\n", " ").Trim();
+                    if (query == string.Empty) return null;
 
+                    //주석 Row 스킵
+                    if (query[0] == '-' && query[1] == '-') return null;
+
+                    ds = new DataSet();
+                    adapter = new SqlCeDataAdapter(query, this.Conn);
+                    adapter.Fill(ds);
+
+                }
+                catch (Exception ex)
+                {
+                    base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                }
+                finally
+                {
+                    if (adapter != null)
+                        adapter.Dispose();
+                }
+            }
+            else
+            {
                 ds = new DataSet();
-                adapter = new SqlCeDataAdapter(query, conn);
-                adapter.Fill(ds);
 
-                string[] queryAry = query.Split(';');
+                for (int i = 0; i < spltQuery.Length; i++)
+                {
+                    DataSet runDs = ExecuteQuery(spltQuery[i]);
 
-            }
-            catch (Exception ex)
-            {
-                base.RunLogEvent(string.Format("Query Error: {0}\r\nQuery Index - {1}\r\n\r\nLog:{2}", ex.Message, idx, query));
-            }
-            finally
-            {
-                if (adapter != null)
-                    adapter.Dispose();
-            }
+                    if (runDs != null)
+                    {
+                        foreach (DataTable table in runDs.Tables)
+                        {
+                            if (ds.Tables.Contains(table.TableName))
+                                table.TableName = $"Table{ds.Tables.Count + 1}";
 
-            if (typeof(T) == typeof(DataTable))
-            {
-                return ds.Tables.Count > 0 ? ds.Tables[0] as T : null;
-            }
-            else if (typeof(T) == typeof(DataSet))
-            {
-                return ds as T;
+                            ds.Tables.Add(table.Copy());
+                        }
+                    }
+                }
             }
 
-            return null;
+            return ds;
         }
-        /// <summary>
-        /// 반환이 없는 Query 실행
-        /// </summary>
-        /// <param name="query">query</param>
-        /// <returns>실행성공여부</returns>
-        public override bool ExcuteNonQuery(string query)
+
+        public override bool ExecuteNonQuery(string query)
         {
             SqlCeCommand cmd = null;
             bool result = false;
 
             try
             {
-                cmd = new SqlCeCommand(query, this.GetConnection());
-                if (this._transaction != null) cmd.Transaction = this._transaction;
+                string[] spltQuery = query.Split(';');
 
-                cmd.CommandText = query;
-                cmd.ExecuteNonQuery();
+                cmd = new SqlCeCommand();
+                cmd.Connection = this.Conn;
+                if (base.BaseTransaction != null)
+                    cmd.Transaction = this.Transaction;
+
+                for (int i = 0; i < spltQuery.Length; i++)
+                {
+                    spltQuery[i] = spltQuery[i].Replace("\r\n", " ").Trim();
+                    if (spltQuery[i] == string.Empty) continue;
+
+                    //주석 Row 스킵
+                    if (spltQuery[i][0] == '-' && spltQuery[i][1] == '-') continue;
+
+
+                    cmd.CommandText = spltQuery[i];
+                    cmd.ExecuteNonQuery();
+                }
 
                 result = true;
             }
@@ -145,32 +186,27 @@ namespace DotNet.Database
             {
                 if(cmd != null)
                 {
-                    if (this._transaction == null)
+                    if (base.BaseTransaction == null)
                         cmd.Dispose();
                 }
             }
 
             return result;
         }
-        /// <summary>
-        /// @변수를 사용하는 Query 실행
-        /// </summary>
-        /// <param name="query">@변수를 사용하는 Query</param>
-        /// <param name="parameters">변수목록</param>
-        /// <returns>실행성공여부</returns>
-        public override bool ExcuteNonQuery<T>(string query, List<T> parameters)
+
+        public override bool ExecuteNonQuery<SqlCeParameter>(string query, IList<SqlCeParameter> parameters)
         {
-            if (typeof(T) != typeof(SqlCeParameter)) return false;
             //Parametr 지정값 @가 없으면 false처리
             if (query.Contains("@") == false) return false;
+
 
             SqlCeCommand cmd = null;
             bool result = false;
 
             try
             {
-                cmd = new SqlCeCommand(query, this.GetConnection());
-                if (this._transaction != null) cmd.Transaction = this._transaction;
+                cmd = new SqlCeCommand(query, this.Conn);
+                if (base.BaseTransaction != null) cmd.Transaction = this.Transaction;
 
                 foreach (var param in parameters)
                     cmd.Parameters.Add(param);
@@ -188,44 +224,12 @@ namespace DotNet.Database
             {
                 if (cmd != null)
                 {
-                    if (this._transaction == null)
+                    if (base.BaseTransaction == null)
                         cmd.Dispose();
                 }
             }
 
             return result;
-        }
-        /// <summary>
-        /// Transaction 시작처리
-        /// </summary>
-        public override void BeginTransaction()
-        {
-            GetConnection();
-
-            if(this._conn.State == ConnectionState.Open)
-            {
-                this._transaction = this._conn.BeginTransaction();
-            }
-        }
-        /// <summary>
-        /// Transaction 종료처리
-        /// </summary>
-        /// <param name="result">Query 실행 최종결과</param>
-        public override void EndTransaction(bool result)
-        {
-            if (this._transaction != null)
-            {
-                if (result)
-                {
-                    this._transaction.Commit();
-                }
-                else
-                {
-                    this._transaction.Rollback();
-                }
-
-                this._transaction.Dispose();
-            }
         }
 
         public string GetTableColumnInfoQuery(string tableName)

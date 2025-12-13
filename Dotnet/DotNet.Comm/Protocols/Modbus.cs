@@ -1,4 +1,4 @@
-﻿using DotNet.Utils.Controls;
+﻿using DotNet.Utils.Controls.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +15,7 @@ namespace DotNet.Comm.Protocols
         public object Value { get; set; }
     }
 
-    public class Modbus : ProtocolFrame
+    public class Modbus : ProtocolBase
     {
         public Modbus(bool isClient) : base(isClient) { }
 

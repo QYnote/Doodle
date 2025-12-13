@@ -60,6 +60,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -71,53 +72,70 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomComm\HYNux\HYCommTesterPort.cs" />
-    <Compile Include="CustomComm\RuntimeData.cs" />
-    <Compile Include="FrmSolution.cs">
+    <Compile Include="ViewModel\Chart\DataCreater_CPU.cs" />
+    <Compile Include="ViewModel\Chart\DataFilter.cs" />
+    <Compile Include="ViewModel\CommTester\CommTester.cs" />
+    <Compile Include="ViewModel\AppData.cs" />
+    <Compile Include="ViewModel\DataBase\VM_DataBase.cs" />
+    <Compile Include="ViewModel\Server\Server_HY_TeraHz.cs" />
+    <Compile Include="ViewModel\Server\Server_Modbus.cs" />
+    <Compile Include="View\Charts\FrmChart.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmSolution.Designer.cs">
+    <Compile Include="View\Charts\FrmChart.Designer.cs">
+      <DependentUpon>FrmChart.cs</DependentUpon>
+    </Compile>
+    <Compile Include="View\FrmSolution.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="View\FrmSolution.Designer.cs">
       <DependentUpon>FrmSolution.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmSolution_NonUse.cs">
+    <Compile Include="View\DataBase\FrmDataBase.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmSolution_NonUse.Designer.cs">
-      <DependentUpon>FrmSolution_NonUse.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Frm\FrmDataBase.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Frm\FrmDataBase.Designer.cs">
+    <Compile Include="View\DataBase\FrmDataBase.Designer.cs">
       <DependentUpon>FrmDataBase.cs</DependentUpon>
     </Compile>
-    <Compile Include="Frm\FrmMain.cs">
+    <Compile Include="View\FrmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Frm\FrmMain.Designer.cs">
+    <Compile Include="View\FrmMain.Designer.cs">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="Frm\FrmServer.cs">
+    <Compile Include="View\Server\FrmServer.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Frm\FrmServer.Designer.cs">
+    <Compile Include="View\Server\FrmServer.Designer.cs">
       <DependentUpon>FrmServer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Frm\FrmCommTester.cs">
+    <Compile Include="View\CommTester\FrmCommTester.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Frm\FrmCommTester.Designer.cs">
+    <Compile Include="View\CommTester\FrmCommTester.Designer.cs">
       <DependentUpon>FrmCommTester.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Frm\FrmCommTester.resx">
+    <Compile Include="View\Server\UcModbusProperty.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="View\Server\UcModbusProperty.Designer.cs">
+      <DependentUpon>UcModbusProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="View\Server\UcTeraHzProperty.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="View\Server\UcTeraHzProperty.Designer.cs">
+      <DependentUpon>UcTeraHzProperty.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="View\CommTester\FrmCommTester.resx">
       <DependentUpon>FrmCommTester.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Frm\FrmMain.resx">
+    <EmbeddedResource Include="View\FrmMain.resx">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Frm\FrmServer.resx">
+    <EmbeddedResource Include="View\Server\FrmServer.resx">
       <DependentUpon>FrmServer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -170,5 +188,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

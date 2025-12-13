@@ -8,11 +8,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DotNet.Server.Servers
+namespace DotNet.Comm.Servers
 {
     public class TCPServer : ServerBase
     {
-
         private TcpListener _server = null;
         private List<TcpClient> _clientList = new List<TcpClient>();
 
@@ -104,25 +103,28 @@ namespace DotNet.Server.Servers
                     }
 
                     //수신된 Data 검사
-                    bytesLength = stream.Read(bufferFull, 0, bufferFull.Length);
-
-                    if (bytesLength > 0)
+                    if (stream.DataAvailable)
                     {
-                        //Socket Buffer 최대치 검사
-                        if (bufferFull.Length < bytesLength)
-                            bufferFull = new byte[bufferFull.Length * 2];
+                        bytesLength = stream.Read(bufferFull, 0, bufferFull.Length);
 
-                        byte[] buffer = new byte[bytesLength];
-                        Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
-
-                        //Client Active Event에 읽어들인 Buffer 전송
-                        sendBytes = base.RunCreateResponse(buffer);
-
-                        //보낸 Client에게 되돌려주는 Data
-                        if (sendBytes != null && sendBytes.Length != 0)
+                        if (bytesLength > 0)
                         {
-                            stream.Write(sendBytes, 0, sendBytes.Length);
-                            sendBytes = null;   //전송 후 초기화
+                            //Socket Buffer 최대치 검사
+                            if (bufferFull.Length < bytesLength)
+                                bufferFull = new byte[bufferFull.Length * 2];
+
+                            byte[] buffer = new byte[bytesLength];
+                            Buffer.BlockCopy(bufferFull, 0, buffer, 0, bytesLength);
+
+                            //Client Active Event에 읽어들인 Buffer 전송
+                            sendBytes = base.RunCreateResponse(buffer);
+
+                            //보낸 Client에게 되돌려주는 Data
+                            if (sendBytes != null && sendBytes.Length != 0)
+                            {
+                                stream.Write(sendBytes, 0, sendBytes.Length);
+                                sendBytes = null;   //전송 후 초기화
+                            }
                         }
                     }
 

@@ -118,70 +118,34 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Basic_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Basic_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Button_Close_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Button_Close_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="BlueCircleSetting_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\BlueCircleSetting_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Button_Max_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Button_Max_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Close_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Close_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Button_Min_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Button_Min_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Button_Normal_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Button_Normal_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Chart_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Chart_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Comm_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Comm_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Connect_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Connect_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Connector_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Connector_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Connect_Green_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Connect_Green_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Connect_Red_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Connect_Red_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Database_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Database_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="empty_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\empty_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Erase_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Erase_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="FrmTitle_Button_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\FrmTitle_Button_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="GreenSync_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\GreenSync_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Image_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Image_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="LAN_Come_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\LAN_Come_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="Menu_Hamburgar_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Menu_Hamburgar_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Plus_00_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Plus_00_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="RedPower_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\RedPower_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Serial_Come_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Serial_Come_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Server_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Server_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Stop_00_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Stop_00_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Test_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Test_32x32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="TreeChild_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\TreeChild_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="YellowWarning_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\YellowWarning_16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
