@@ -1,7 +1,26 @@
+import 'dart:async';
+import 'package:desktop_multi_window/desktop_multi_window.dart';  //Windows 멀티 윈도우용
 import 'package:flutter/material.dart';
+import 'views/frmtest1.dart';
 
-void main() {
-  runApp(const MyApp());
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final windowController = await WindowController.fromCurrentEngine();
+  
+  if(args.isNotEmpty && args.first == 'sub_window_args'){
+    runApp(SubTestApp(
+      windowController: windowController,
+      arguments: args[1],
+    ));
+  }
+  else{
+    runApp(const MyApp());
+  }
+}
+
+ parseArguments(String arguments){
+  
 }
 
 class MyApp extends StatelessWidget {
@@ -28,7 +47,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );

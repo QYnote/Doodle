@@ -1,7 +1,11 @@
 name: qyapp
 description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
+# 작업 내역
+# Terminal
+# flutter config --enbale--windows-dsktop: Flutter에서 Windows창 사용 활성화
+# flutter pub get: 패키지 프로젝트에 반영
+# dependencies
+# desktop_multi_windows: Windows에서 멀티 Windows 사용 용도
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
@@ -30,6 +34,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  desktop_multi_window: ^0.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
