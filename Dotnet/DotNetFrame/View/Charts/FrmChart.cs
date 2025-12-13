@@ -161,7 +161,7 @@ namespace DotNetFrame.View.Charts
 
             Series seriesCPU = this.chart.Series.Add("CPU");
             seriesCPU.LegendText = "CPU[%]";
-            seriesCPU.ChartType = SeriesChartType.FastLine;
+            seriesCPU.ChartType = SeriesChartType.Line;
             seriesCPU.XValueType = ChartValueType.DateTime;
             seriesCPU.IsVisibleInLegend = true;
 
@@ -231,6 +231,7 @@ namespace DotNetFrame.View.Charts
                 ChartArea area = this.chart.ChartAreas[series.ChartArea];
                 this.chart.BeginInit();
                 series.Points.Clear();
+                series.MarkerSize = 0;
                 area.AxisY.StripLines.Clear();
 
                 double min_CPU = double.MaxValue,
@@ -268,7 +269,7 @@ namespace DotNetFrame.View.Charts
                 {
                     for (int i = 0; i < peakAry.Length; i++)
                         peakAry[i] = peakList[i].YValues[0];
-                    anomalyValue = this._data_filter.Calc_Amplitude(peakAry);
+                    anomalyValue = this._data_filter.Calc_Anomaly(peakAry);
                 }
 
                 foreach (var peak in peakList)
@@ -306,7 +307,6 @@ namespace DotNetFrame.View.Charts
                         //이상치 봉우리 표기
                         foreach (var item in outlierList)
                         {
-                            series.MarkerSize = 0;
                             item.MarkerSize = 8;
                             item.MarkerStyle = MarkerStyle.Circle;
                             item.MarkerColor = Color.Black;

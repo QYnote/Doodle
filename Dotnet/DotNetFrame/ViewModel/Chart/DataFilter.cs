@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace DotNetFrame.ViewModel.Chart
 {
@@ -27,7 +28,7 @@ namespace DotNetFrame.ViewModel.Chart
 
             for (int i = 0; i < ary.Length; i++)
             {
-                List<double> list_in_kernal = List_In_kernal(ary, i);
+                List<double> list_in_kernal = List_In_kernal(ref ary, i);
 
                 double v = list_in_kernal.Sum() / list_in_kernal.Count;
 
@@ -53,7 +54,7 @@ namespace DotNetFrame.ViewModel.Chart
 
             for (int i = 0; i < ary.Length; i++)
             {
-                List<double> list_in_kernal = List_In_kernal(ary, i);
+                List<double> list_in_kernal = List_In_kernal(ref ary, i);
 
                 if (weights == null)
                     weights = this.Default_WAF_Weights();
@@ -69,7 +70,7 @@ namespace DotNetFrame.ViewModel.Chart
             return resultData.ToArray();
         }
 
-        private List<T> List_In_kernal<T>(T[] ary, int currentIndex)
+        private List<T> List_In_kernal<T>(ref T[] ary, int currentIndex)
         {
             int minIndex = currentIndex - this._kernal_size,
                     maxIndex = currentIndex + this._kernal_size,
@@ -127,23 +128,28 @@ namespace DotNetFrame.ViewModel.Chart
             return weight;
         }
 
-        public List<System.Windows.Forms.DataVisualization.Charting.DataPoint> GetPeakList(System.Windows.Forms.DataVisualization.Charting.DataPointCollection collection)
+        public List<DataPoint> GetPeakList(DataPointCollection collection)
         {
-            List<System.Windows.Forms.DataVisualization.Charting.DataPoint> peakList = new List<System.Windows.Forms.DataVisualization.Charting.DataPoint>();   //봉우리목록
+            List<DataPoint> peakList = new List<DataPoint>();   //봉우리목록
+
+            //1. Collection Array화
+            DataPoint[] ary = new DataPoint[collection.Count];
+            for (int i = 0; i < collection.Count; i++)
+                ary[i] = collection[i];
 
             for (int p = this._kernal_size; p < collection.Count; p++)
             {
-                //1. 검사에 사용할 데이터 추출
-                List<System.Windows.Forms.DataVisualization.Charting.DataPoint> list_in_kernal = this.List_In_kernal(collection.ToArray(), p);
+                //2. 검사에 사용할 데이터 추출
+                List<DataPoint> list_in_kernal = this.List_In_kernal(ref ary, p);
 
-                //2. 봉우리 등록
+                //3. 봉우리 등록
                 bool isPeak = true;
 
-                //검사할 모든 값보다 크면 봉우리로 처리
                 foreach (var item in list_in_kernal)
                 {
                     if (collection[p] == item) continue;
 
+                    //검사할 모든 값보다 크면 봉우리로 처리
                     if (collection[p].YValues[0] < item.YValues[0])
                     {
                         isPeak = false;
@@ -158,14 +164,14 @@ namespace DotNetFrame.ViewModel.Chart
             return peakList;
         }
 
-        public double Calc_Amplitude(double[] ary)
+        public double Calc_Anomaly(double[] ary)
         {
             double peakAvg = ary.Sum() / ary.Length,
                    peakMin = ary.Min(),
                    peakMax = ary.Max(),
                    peakRange = peakMax - peakMin;
             //튀는값 판단값, 봉우리 평균값 + (봉우리 범위 * 보정치)보다 높으면 튀는 데이터로 판단
-            return peakAvg + (peakRange * this._peak_threshold);
+            return peakAvg + ((peakAvg - peakMin) * 2);// + (peakRange * this._peak_threshold);
         }
     }
 }
