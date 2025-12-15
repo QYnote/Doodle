@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Data.SqlServerCe;
 using System.IO;
 using System.Linq;
 
 namespace DotNet.Database
 {
-    public class SQLite : DBCommon
+    public class SQLite : DBBase
     {
         public static readonly string DEFAULT_SQLITE_DIR = Directory.GetCurrentDirectory();
         public const string DEFAULT_SQLITE_DIR_FILENAME = "QYDB.sqlite";
@@ -55,6 +56,13 @@ namespace DotNet.Database
             if(base.BaseConn == null)
             {
                 base.BaseConn = new SQLiteConnection(this.ConnectionString);
+            }
+            else if (base.BaseConn.ConnectionString != this.ConnectionString)
+            {
+                if (base.BaseConn.State != System.Data.ConnectionState.Closed)
+                    base.BaseConn.Close();
+
+                base.BaseConn = new SqlCeConnection(this.ConnectionString);
             }
             else
             {

@@ -13,7 +13,7 @@ namespace DotNetFrame.ViewModel.DataBase
     internal class VM_DataBase
     {
         private DataBaseType _db_type = DataBaseType.SQLite;
-        private DBCommon _db = null;
+        private DBBase _db = null;
         private string _db_datasource = string.Empty;
         private string _db_id = string.Empty;
         private string _db_password = string.Empty;

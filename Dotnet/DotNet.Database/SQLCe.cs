@@ -9,7 +9,7 @@ namespace DotNet.Database
     /// <summary>
     /// SQLCe Database 처리 Class
     /// </summary>
-    public class SQLCe : DBCommon
+    public class SQLCe : DBBase
     {
         public static readonly string DEFAULT_SQLCE_DIR = "C:\\WorkerFile\\업무자료\\01_TCS\\01_source\\TCS.Data\\Products";
         public static readonly string DEFAULT_SQLCE_DIR_FILENAME = "tcsdr.sdf";
@@ -59,6 +59,14 @@ namespace DotNet.Database
             if(base.BaseConn == null)
             {
                 if(System.IO.File.Exists(this.DataSource))
+                    base.BaseConn = new SqlCeConnection(this.ConnectionString);
+            }
+            else if(base.BaseConn.ConnectionString != this.ConnectionString)
+            {
+                if (base.BaseConn.State != System.Data.ConnectionState.Closed)
+                    base.BaseConn.Close();
+
+                if (System.IO.File.Exists(this.DataSource))
                     base.BaseConn = new SqlCeConnection(this.ConnectionString);
             }
             else

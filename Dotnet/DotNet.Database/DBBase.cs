@@ -14,7 +14,7 @@ namespace DotNet.Database
         SQLite,
     }
 
-    public abstract class DBCommon
+    public abstract class DBBase
     {
         public delegate void DBLoghandler(string errorMessage);
         public event DBLoghandler LogEvent;
