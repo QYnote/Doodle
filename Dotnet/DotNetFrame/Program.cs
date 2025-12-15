@@ -20,7 +20,7 @@ namespace DotNetFrame
             Application.SetCompatibleTextRenderingDefault(false);
             try
             {
-                Application.Run(new View.FrmSolution());
+                Application.Run(new Base.View.FrmSolution());
             }
             catch (Exception ex)
             {

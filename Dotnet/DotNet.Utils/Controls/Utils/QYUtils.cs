@@ -487,7 +487,7 @@ namespace DotNet.Utils.Controls.Utils
             /// </summary>
             /// <param name="idx">Item Index</param>
             /// <returns>해당 Index의 Item</returns>
-            public T this[int idx] => this._items[idx];
+            public virtual T this[int idx] => this._items[idx];
             /// <summary>
             /// Collection Item 추가
             /// </summary>

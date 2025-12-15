@@ -129,3 +129,16 @@ INSERT INTO LANG VALUES('server.modbus.connection.disconnect','연결해제','Di
 
 ============================================================
 
+============================================================
+2025-12-15 오후 12:20:37
+--차트 Text 초기 목록 추가
+INSERT INTO LANG VALUES('chart.property.text','Data 설정','Data Property');
+INSERT INTO LANG VALUES('chart.cre.interval','생성 간격[ms]','Create Interval');
+INSERT INTO LANG VALUES('chart.cre.length','표기 시간[s]','Display Time');
+INSERT INTO LANG VALUES('chart.filter.MAF','단순 이동 평균','MAF(Move Average Filter)');
+INSERT INTO LANG VALUES('chart.filter.WAF','가중 이동 평균','WAF(Weight Average Filter)');
+INSERT INTO LANG VALUES('chart.filter.kernal','필터 Kernal 크기','Filter Kernal');
+INSERT INTO LANG VALUES('chart.peak.kernal','봉우리 Kernal 크기','Peak Kernal');
+INSERT INTO LANG VALUES('sol.leftmenu.button.chart.text','차트','Chart');
+============================================================
+

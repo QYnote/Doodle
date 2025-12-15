@@ -72,74 +72,74 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Model\CommTester\M_CommTester.cs" />
-    <Compile Include="Model\Chart\M_DataCreater_CPU.cs" />
-    <Compile Include="ViewModel\Chart\DataFilter.cs" />
-    <Compile Include="ViewModel\Chart\VM_DataCreateer_CPU.cs" />
-    <Compile Include="ViewModel\CommTester\VM_CommTester.cs" />
-    <Compile Include="ViewModel\AppData.cs" />
-    <Compile Include="ViewModel\DataBase\VM_DataBase.cs" />
-    <Compile Include="Model\Server\M_Server_HY_TeraHz.cs" />
-    <Compile Include="Model\Server\M_Server_Modbus.cs" />
-    <Compile Include="ViewModel\Server\VM_Server_Modbus.cs" />
-    <Compile Include="ViewModel\Server\VM_Server_HY_TeraHz.cs" />
-    <Compile Include="View\Charts\FrmChart.cs">
+    <Compile Include="CommTester\Model\M_CommTester.cs" />
+    <Compile Include="Charts\Model\M_DataCreater_CPU.cs" />
+    <Compile Include="Charts\ViewModel\DataFilter.cs" />
+    <Compile Include="Charts\ViewModel\VM_DataCreater_CPU.cs" />
+    <Compile Include="CommTester\ViewModel\VM_CommTester.cs" />
+    <Compile Include="Base\Model\AppData.cs" />
+    <Compile Include="DataBase\ViewModel\VM_DataBase.cs" />
+    <Compile Include="Server\Model\M_Server_HY_TeraHz.cs" />
+    <Compile Include="Server\Model\M_Server_Modbus.cs" />
+    <Compile Include="Server\ViewModel\VM_Server_Modbus.cs" />
+    <Compile Include="Server\ViewModel\VM_Server_HY_TeraHz.cs" />
+    <Compile Include="Charts\View\FrmChart.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="View\Charts\FrmChart.Designer.cs">
+    <Compile Include="Charts\View\FrmChart.Designer.cs">
       <DependentUpon>FrmChart.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\FrmSolution.cs">
+    <Compile Include="Base\View\FrmSolution.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="View\FrmSolution.Designer.cs">
+    <Compile Include="Base\View\FrmSolution.Designer.cs">
       <DependentUpon>FrmSolution.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\DataBase\FrmDataBase.cs">
+    <Compile Include="DataBase\View\FrmDataBase.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="View\DataBase\FrmDataBase.Designer.cs">
+    <Compile Include="DataBase\View\FrmDataBase.Designer.cs">
       <DependentUpon>FrmDataBase.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\FrmMain.cs">
+    <Compile Include="Base\View\FrmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="View\FrmMain.Designer.cs">
+    <Compile Include="Base\View\FrmMain.Designer.cs">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\Server\FrmServer.cs">
+    <Compile Include="Server\View\FrmServer.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="View\Server\FrmServer.Designer.cs">
+    <Compile Include="Server\View\FrmServer.Designer.cs">
       <DependentUpon>FrmServer.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\CommTester\FrmCommTester.cs">
+    <Compile Include="CommTester\View\FrmCommTester.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="View\CommTester\FrmCommTester.Designer.cs">
+    <Compile Include="CommTester\View\FrmCommTester.Designer.cs">
       <DependentUpon>FrmCommTester.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="View\Server\UcModbusProperty.cs">
+    <Compile Include="Server\View\UcModbusProperty.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="View\Server\UcModbusProperty.Designer.cs">
+    <Compile Include="Server\View\UcModbusProperty.Designer.cs">
       <DependentUpon>UcModbusProperty.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\Server\UcTeraHzProperty.cs">
+    <Compile Include="Server\View\UcTeraHzProperty.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="View\Server\UcTeraHzProperty.Designer.cs">
+    <Compile Include="Server\View\UcTeraHzProperty.Designer.cs">
       <DependentUpon>UcTeraHzProperty.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="View\CommTester\FrmCommTester.resx">
+    <EmbeddedResource Include="CommTester\View\FrmCommTester.resx">
       <DependentUpon>FrmCommTester.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="View\FrmMain.resx">
+    <EmbeddedResource Include="Base\View\FrmMain.resx">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="View\Server\FrmServer.resx">
+    <EmbeddedResource Include="Server\View\FrmServer.resx">
       <DependentUpon>FrmServer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -192,6 +192,8 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Base\ViewModel\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -29,7 +29,7 @@ namespace DotNet.Database
         /// <summary>
         /// DataBase Connection
         /// </summary>
-        protected IDbConnection conn;
+        private IDbConnection conn;
         /// <summary>
         /// Transaction
         /// </summary>

@@ -11,9 +11,9 @@ namespace DotNet.Database
     /// </summary>
     public class SQLCe : DBBase
     {
-        public static readonly string DEFAULT_SQLCE_DIR = "C:\\WorkerFile\\업무자료\\01_TCS\\01_source\\TCS.Data\\Products";
-        public static readonly string DEFAULT_SQLCE_DIR_FILENAME = "tcsdr.sdf";
-        public static readonly string DEFAULT_SQLCE_PASSWORD = "admin123";
+        public const string DEFAULT_SQLCE_DIR = "C:\\WorkerFile\\업무자료\\01_TCS\\01_source\\TCS.Data\\Products";
+        public const string DEFAULT_SQLCE_DIR_FILENAME = "tcsdr.sdf";
+        public const string DEFAULT_SQLCE_PASSWORD = "admin123";
 
 
         public override string DataSource
@@ -122,9 +122,9 @@ namespace DotNet.Database
                     adapter.Fill(ds);
 
                 }
-                catch (Exception ex)
+                catch (SqlCeException ex)
                 {
-                    base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                    throw ex;
                 }
                 finally
                 {
@@ -185,10 +185,10 @@ namespace DotNet.Database
 
                 result = true;
             }
-            catch (Exception ex)
+            catch (SqlCeException ex)
             {
                 result = false;
-                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                throw ex;
             }
             finally
             {
@@ -223,10 +223,10 @@ namespace DotNet.Database
 
                 result = true;
             }
-            catch (Exception ex)
+            catch (SqlCeException ex)
             {
                 result = false;
-                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                throw ex;
             }
             finally
             {

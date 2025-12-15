@@ -23,7 +23,7 @@ namespace DotNet.Database
                 string extention = value.Split('.').Last();
 
                 if ((extention == "sqlite" || extention == "db" || extention == string.Empty) == false)
-                    throw new NotImplementedException("파일 확장자 미지원");
+                    throw new SQLiteException("파일 확장자 미지원");
 
                 base._dataSource = value;
             }
@@ -62,11 +62,11 @@ namespace DotNet.Database
                 if (base.BaseConn.State != System.Data.ConnectionState.Closed)
                     base.BaseConn.Close();
 
-                base.BaseConn = new SqlCeConnection(this.ConnectionString);
+                base.BaseConn = new SQLiteConnection(this.ConnectionString);
             }
             else
             {
-                if(base.BaseConn.State == System.Data.ConnectionState.Closed)
+                if (base.BaseConn.State == System.Data.ConnectionState.Closed)
                     base.BaseConn.Open();
             }
 
@@ -84,9 +84,9 @@ namespace DotNet.Database
                 adapter = new SQLiteDataAdapter(query, this.Conn);
                 adapter.Fill(ds);
             }
-            catch (Exception ex)
+            catch (SQLiteException ex)
             {
-                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                throw ex;
             }
             finally
             {
@@ -111,10 +111,10 @@ namespace DotNet.Database
 
                 result = true;
             }
-            catch (Exception ex)
+            catch (SQLiteException ex)
             {
                 result = false;
-                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                throw ex;
             }
             finally
             {
@@ -147,10 +147,10 @@ namespace DotNet.Database
 
                 result = true;
             }
-            catch (Exception ex)
+            catch (SQLiteException ex)
             {
                 result = false;
-                base.RunLogEvent(string.Format("Query Error: {0}\r\n\r\nLog:{1}", ex.Message, query));
+                throw ex;
             }
             finally
             {
