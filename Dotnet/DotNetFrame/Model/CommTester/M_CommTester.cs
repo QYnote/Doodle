@@ -4,6 +4,7 @@ using DotNet.Comm.ClientPorts.OSPort;
 using DotNet.Comm.Protocols;
 using DotNet.Comm.Protocols.Customs.HYNux;
 using DotNet.Utils.Controls.Utils;
+using DotNetFrame.ViewModel.CommTester;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFrame.ViewModel.CommTester
+namespace DotNetFrame.Model.CommTester
 {
     /// <summary>
     /// Application Protocol
@@ -35,7 +36,7 @@ namespace DotNetFrame.ViewModel.CommTester
         HY_PCLink_SUM_TH300500,
     }
 
-    internal class CommTester
+    internal class M_CommTester
     {
         /// <summary>
         /// Request 전송 후 이벤트
@@ -43,28 +44,28 @@ namespace DotNetFrame.ViewModel.CommTester
         /// <remarks>
         /// Param[0] = RequestByte
         /// </remarks>
-        public event UpdateUI_WithParam AfterSendRequest;
+        public event Update_WithParam AfterSendRequest;
         /// <summary>
         /// 데이터 읽은 후 Port에 누적된 Buffer
         /// </summary>
         /// <remarks>
         /// Param[0]: Port의 현재 누적 Buffer
         /// </remarks>
-        public event UpdateUI_WithParam PortCurrentBuffer;
+        public event Update_WithParam PortCurrentBuffer;
         /// <summary>
         /// Request 에러코드 미일치
         /// </summary>
         /// <remarks>
         /// Param[0]: Response Data
         /// </remarks>
-        public event UpdateUI_WithParam Error_ErrorCode;
+        public event Update_WithParam Error_ErrorCode;
         /// <summary>
         /// Request Protocol 에러
         /// </summary>
         /// <remarks>
         /// Param[0]: Response Data
         /// </remarks>
-        public event UpdateUI_WithParam Error_Protocol;
+        public event Update_WithParam Error_Protocol;
         /// <summary>
         /// Request 정상종료
         /// </summary>
@@ -72,7 +73,7 @@ namespace DotNetFrame.ViewModel.CommTester
         /// Param[0]: Request Data<br/>
         /// Param[1]: Response Data
         /// </remarks>
-        public event UpdateUI_WithParam RequestComplete;
+        public event Update_WithParam RequestComplete;
         /// <summary>
         /// Request Timeout
         /// </summary>
@@ -84,7 +85,14 @@ namespace DotNetFrame.ViewModel.CommTester
         /// <br/>
         /// Param[1]: Port의 누적된 Buffer
         /// </remarks>
-        public event UpdateUI_WithParam RequestTimeout;
+        public event Update_WithParam RequestTimeout;
+        /// <summary>
+        /// OS Port Log
+        /// </summary>
+        /// <remarks>
+        /// Param[0]: Log Text
+        /// </remarks>
+        public event Update_WithParam OSPortLog;
 
         /// <summary>Application ↔ OS Port</summary>
         private AppPort _appPort = new AppPort();
@@ -116,7 +124,6 @@ namespace DotNetFrame.ViewModel.CommTester
         /// <summary>최근 Buffer 읽은 시간</summary>
         private DateTime _read_buffer_last_time = DateTime.MinValue;
 
-        internal AppPort AppPort { get => this._appPort; }
         /// <summary>OS Port 종류</summary>
         internal CommType PortType { get => this._appPort.CommType; set => this._appPort.CommType = value; }
         /// <summary>OS Port</summary>
@@ -127,7 +134,7 @@ namespace DotNetFrame.ViewModel.CommTester
             get => this._protocolType;
             set
             {
-                if(this._protocolType != value)
+                if (this._protocolType != value)
                 {
                     switch (value)
                     {
@@ -178,10 +185,9 @@ namespace DotNetFrame.ViewModel.CommTester
         /// <summary>전송등록 여부</summary>
         internal bool IsWriting { get => this._write_queue.Count > 0; }
 
-        internal CommTester()
+        internal M_CommTester()
         {
-            this._bgWorker.WorkerSupportsCancellation = true;
-            this._bgWorker.DoWork += _bgWorker_DoWork;
+            this._appPort.ComPortLog += (obj) => { this.OSPortLog?.Invoke(obj); };
         }
 
         /// <summary>
@@ -368,7 +374,7 @@ namespace DotNetFrame.ViewModel.CommTester
         /// <returns>등록 결과</returns>
         internal bool Register_Data(string text)
         {
-            if(this._write_queue.Count > 0)
+            if (this._write_queue.Count > 0)
             {
                 this._write_queue.Clear();
 

@@ -634,6 +634,6 @@ namespace DotNet.Utils.Controls.Utils
         }
     }
 
-    public delegate void UpdateUI_WithParam(params object[] obj);
-    public delegate void UpdateUI_WithoutParam();
+    public delegate void Update_WithParam(params object[] obj);
+    public delegate void Update_WithoutParam();
 }

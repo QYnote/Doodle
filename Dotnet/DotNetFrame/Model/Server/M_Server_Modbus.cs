@@ -7,11 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFrame.ViewModel.Server
+namespace DotNetFrame.Model.Server
 {
-    internal class Server_Modbus
+    internal class M_Server_Modbus
     {
-        public event UpdateUI_WithParam ServerLog;
+        public event Update_WithParam ServerLog;
 
         private TCPServer _server = new TCPServer();
         private ProtocolBase _protocol = null;
@@ -23,7 +23,7 @@ namespace DotNetFrame.ViewModel.Server
         public string IP { get => this._server.IP; set => this._server.IP = value; }
         public int PortNo { get => this._server.PortNo; set => this._server.PortNo = value; }
 
-        internal Server_Modbus()
+        internal M_Server_Modbus()
         {
             this.IP = "127.0.0.1";
             this.PortNo = 5000;

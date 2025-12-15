@@ -131,7 +131,7 @@ namespace DotNetFrame.View.Server
             if (obj[0] is string == false) return;
 
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(ServerLog), obj);
+                this.BeginInvoke(new Update_WithParam(ServerLog), obj);
             else
             {
                 string txt = obj[0] as string;

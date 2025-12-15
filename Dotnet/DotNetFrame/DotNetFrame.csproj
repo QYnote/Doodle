@@ -72,13 +72,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ViewModel\Chart\DataCreater_CPU.cs" />
+    <Compile Include="Model\CommTester\M_CommTester.cs" />
+    <Compile Include="Model\Chart\M_DataCreater_CPU.cs" />
     <Compile Include="ViewModel\Chart\DataFilter.cs" />
-    <Compile Include="ViewModel\CommTester\CommTester.cs" />
+    <Compile Include="ViewModel\Chart\VM_DataCreateer_CPU.cs" />
+    <Compile Include="ViewModel\CommTester\VM_CommTester.cs" />
     <Compile Include="ViewModel\AppData.cs" />
     <Compile Include="ViewModel\DataBase\VM_DataBase.cs" />
-    <Compile Include="ViewModel\Server\Server_HY_TeraHz.cs" />
-    <Compile Include="ViewModel\Server\Server_Modbus.cs" />
+    <Compile Include="Model\Server\M_Server_HY_TeraHz.cs" />
+    <Compile Include="Model\Server\M_Server_Modbus.cs" />
+    <Compile Include="ViewModel\Server\VM_Server_Modbus.cs" />
+    <Compile Include="ViewModel\Server\VM_Server_HY_TeraHz.cs" />
     <Compile Include="View\Charts\FrmChart.cs">
       <SubType>Form</SubType>
     </Compile>

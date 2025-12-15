@@ -58,7 +58,7 @@ namespace DotNetFrame.View
         private void UpdateUI()
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithoutParam(UpdateUI));
+                this.BeginInvoke(new Update_WithoutParam(UpdateUI));
             else
             {
 

@@ -37,7 +37,7 @@ namespace DotNetFrame.View.Server
 
         #endregion UI Controls
 
-        private Server_HY_TeraHz _teraHz = new Server_HY_TeraHz();
+        private VM_Server_HY_TeraHz _teraHz = new VM_Server_HY_TeraHz();
 
         internal UcTeraHzProperty(TextBox txtLog)
         {
@@ -88,7 +88,7 @@ namespace DotNetFrame.View.Server
             this.num_Sensor_Count.TextAlign = HorizontalAlignment.Right;
             this.num_Sensor_Count.Minimum = 0;
             this.num_Sensor_Count.Maximum = UInt64.MaxValue;
-            this.num_Sensor_Count.Value = Server_HY_TeraHz.DEFAULT_SENSOR_COUNT;
+            this.num_Sensor_Count.Value = VM_Server_HY_TeraHz.DEFAULT_SENSOR_COUNT;
             this.num_Sensor_Count.ValueChanged += NumSensor_ValueChanged;
 
             this.chk_Sensor_Offset_Object.Left = this.lbl_Sensor_Count.Left;
@@ -105,7 +105,7 @@ namespace DotNetFrame.View.Server
             this.num_Sensor_Offset_Object.TextAlign = HorizontalAlignment.Right;
             this.num_Sensor_Offset_Object.Minimum = 0;
             this.num_Sensor_Offset_Object.Maximum = UInt16.MaxValue;
-            this.num_Sensor_Offset_Object.Value = Server_HY_TeraHz.DEFAULT_SENSOR_OFFSET_OBJECT;
+            this.num_Sensor_Offset_Object.Value = VM_Server_HY_TeraHz.DEFAULT_SENSOR_OFFSET_OBJECT;
             this.num_Sensor_Offset_Object.Enabled = false;
             this.num_Sensor_Offset_Object.ValueChanged += Num_sensor_offset_object_ValueChanged;
 
@@ -123,7 +123,7 @@ namespace DotNetFrame.View.Server
             this.num_Sensor_Offset_Max.TextAlign = HorizontalAlignment.Right;
             this.num_Sensor_Offset_Max.Minimum = 0;
             this.num_Sensor_Offset_Max.Maximum = UInt16.MaxValue;
-            this.num_Sensor_Offset_Max.Value = Server_HY_TeraHz.DEFAULT_SENSOR_OFFSET_MAX;
+            this.num_Sensor_Offset_Max.Value = VM_Server_HY_TeraHz.DEFAULT_SENSOR_OFFSET_MAX;
             this.num_Sensor_Offset_Max.Enabled = false;
             this.num_Sensor_Offset_Max.ValueChanged += Num_sensor_offset_max_ValueChanged;
 
@@ -145,7 +145,7 @@ namespace DotNetFrame.View.Server
             this.num_Sensor_Offset_BoundScale.TextAlign = HorizontalAlignment.Right;
             this.num_Sensor_Offset_BoundScale.Minimum = 0;
             this.num_Sensor_Offset_BoundScale.Maximum = UInt16.MaxValue;
-            this.num_Sensor_Offset_BoundScale.Value = Server_HY_TeraHz.DEFAULT_SENSOR_OFFSET_BOUNDSCALE;
+            this.num_Sensor_Offset_BoundScale.Value = VM_Server_HY_TeraHz.DEFAULT_SENSOR_OFFSET_BOUNDSCALE;
             this.num_Sensor_Offset_BoundScale.ValueChanged += Num_sensor_offset_boundScale_ValueChanged;
 
             this.btnConnection.Left = this.lbl_Sensor_Offset_BoundScale.Left;
@@ -297,7 +297,7 @@ namespace DotNetFrame.View.Server
             if (obj[0] is string == false || this.IsDisposed) return;
 
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(ServerLog), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(ServerLog), new object[] { obj });
             else
             {
                 string txt = obj[0] as string;

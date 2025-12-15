@@ -28,7 +28,7 @@ namespace DotNetFrame.View.Server
 
         #endregion UI Controls
 
-        private Server_Modbus _modbus = new Server_Modbus();
+        private VM_Server_Modbus _modbus = new VM_Server_Modbus();
 
         public UcModbusProperty(TextBox txtLog)
         {
@@ -138,7 +138,7 @@ namespace DotNetFrame.View.Server
             if (obj[0] is string == false || this.IsDisposed) return;
 
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(ServerLog), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(ServerLog), new object[] { obj });
             else
             {
                 string txt = obj[0] as string;

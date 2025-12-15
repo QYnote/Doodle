@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFrame.ViewModel.Chart
+namespace DotNetFrame.Model.Chart
 {
-    internal class DataCreater_CPU
+    internal class M_DataCreater_CPU
     {
         internal const int DEFAULT_DATA_GET_INTERVAL = 100;
         internal const int DEFAULT_DATA_GET_TIME = 60;
@@ -29,7 +29,7 @@ namespace DotNetFrame.ViewModel.Chart
         }
         public int Time { get => _data_get_time; set => _data_get_time = value; }
 
-        internal DataCreater_CPU()
+        internal M_DataCreater_CPU()
         {
             this.InitComponent();
         }

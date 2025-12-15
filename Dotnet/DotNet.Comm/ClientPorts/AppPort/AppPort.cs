@@ -22,7 +22,7 @@ namespace DotNet.Comm.ClientPorts.AppPort
         /// 이 이벤트가 있는 Class는 통신 Port가 아닌 Application Port임<br/>
         /// Param[0] = Log 내용
         /// </remarks>
-        public event Utils.Controls.Utils.UpdateUI_WithParam ComPortLog;
+        public event Utils.Controls.Utils.Update_WithParam ComPortLog;
 
         private CommType _commType = CommType.Serial;
         private OSPort.OSPortBase _osPort = new OSPort.QYSerialPort();

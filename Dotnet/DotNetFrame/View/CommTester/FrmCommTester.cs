@@ -1,8 +1,7 @@
 ﻿using DotNet.Comm;
-using DotNet.Comm.ClientPorts.OSPort;
 using DotNet.Utils.Controls.Utils;
+using DotNetFrame.Model.CommTester;
 using DotNetFrame.ViewModel;
-using DotNetFrame.ViewModel.CommTester;
 using System;
 using System.ComponentModel;
 using System.Data;
@@ -12,7 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static DotNetFrame.ViewModel.CommTester.CommTester;
 
 namespace DotNetFrame.View.CommTester
 {
@@ -69,33 +67,10 @@ namespace DotNetFrame.View.CommTester
         private DataTable _dtDataResult = new DataTable();
         private DataTable _dtProtocolResult = new DataTable();
         private DataTable _dtBuffer = new DataTable();
-        private ViewModel.CommTester.CommTester _tester = new ViewModel.CommTester.CommTester();
+        private ViewModel.CommTester.VM_CommTester _tester = new ViewModel.CommTester.VM_CommTester();
         private BackgroundWorker BgWorker = new BackgroundWorker();
         private const int BUFFER_COLUMN_COUNT = 15;
         private const int RESULT_COLUMN_COUNT = 512;
-
-        private QYSerialPort Serial
-        {
-            get
-            {
-                if (this._tester != null
-                    && this._tester.OSPort is QYSerialPort)
-                    return this._tester.OSPort as QYSerialPort;
-                else
-                    return null;
-            }
-        }
-        private QYEthernet Ethernet
-        {
-            get
-            {
-                if (this._tester != null
-                    && this._tester.OSPort is QYEthernet)
-                    return this._tester.OSPort as QYEthernet;
-                else
-                    return null;
-            }
-        }
 
         public FrmCommTester()
         {
@@ -227,11 +202,11 @@ namespace DotNetFrame.View.CommTester
                 this._tester.PortType = CommType.Serial;
 
                 if (this.cboPortList.Items.Count > 0)
-                    this.Serial.PortName = (string)this.cboPortList.Items[0];
-                this.Serial.BaudRate = (int)this._baudrateList[0];
-                this.Serial.Parity = (Parity)QYUtils.EnumToItems<Parity>()[0];
-                this.Serial.StopBits = (StopBits)QYUtils.EnumToItems<StopBits>()[0];
-                this.Serial.DataBits = (int)this._databitsList[1];
+                    this._tester.SerialPort.PortName = (string)this.cboPortList.Items[0];
+                this._tester.SerialPort.BaudRate = (int)this._baudrateList[0];
+                this._tester.SerialPort.Parity = (Parity)QYUtils.EnumToItems<Parity>()[0];
+                this._tester.SerialPort.StopBits = (StopBits)QYUtils.EnumToItems<StopBits>()[0];
+                this._tester.SerialPort.DataBits = (int)this._databitsList[1];
 
                 this.pnlPort_Serial.Visible = true;
                 this.pnlPort_Ethernet.Visible = false;
@@ -240,8 +215,8 @@ namespace DotNetFrame.View.CommTester
             {
                 this._tester.PortType = CommType.Ethernet;
 
-                this.Ethernet.IP = this.txtEthernetIP.Text;
-                this.Ethernet.PortNo = Convert.ToInt32(this.txtPortNo.Value);
+                this._tester.EthernetPort.IP = this.txtEthernetIP.Text;
+                this._tester.EthernetPort.PortNo = Convert.ToInt32(this.txtPortNo.Value);
 
                 this.pnlPort_Serial.Visible = false;
                 this.pnlPort_Ethernet.Visible = true;
@@ -341,46 +316,46 @@ namespace DotNetFrame.View.CommTester
 
             if (this._tester.IsOpen == false)
             {
-                if (this.Serial == null) return;
+                if (this._tester.SerialPort == null) return;
 
-                this.Serial.PortName = name;
+                this._tester.SerialPort.PortName = name;
             }
         }
 
         private void Rdo_CheckedChanged_BaudRate(object sender, EventArgs e)
         {
-            if (this.Serial == null) return;
+            if (this._tester.SerialPort == null) return;
             RadioButton rdo = sender as RadioButton;
             int baudRate = (int)rdo.Tag;
 
-            this.Serial.BaudRate = baudRate;
+            this._tester.SerialPort.BaudRate = baudRate;
         }
 
         private void Rdo_CheckedChanged_Parity(object sender, EventArgs e)
         {
-            if (this.Serial == null) return;
+            if (this._tester.SerialPort == null) return;
             RadioButton rdo = sender as RadioButton;
             Parity parity = (Parity)rdo.Tag;
 
-            this.Serial.Parity = parity;
+            this._tester.SerialPort.Parity = parity;
         }
 
         private void Rdo_CheckedChanged_StopBits(object sender, EventArgs e)
         {
-            if (this.Serial == null) return;
+            if (this._tester.SerialPort == null) return;
             RadioButton rdo = sender as RadioButton;
             StopBits stopBits = (StopBits)rdo.Tag;
 
-            this.Serial.StopBits = stopBits;
+            this._tester.SerialPort.StopBits = stopBits;
         }
 
         private void Rdo_CheckedChanged_DataBits(object sender, EventArgs e)
         {
-            if (this.Serial == null) return;
+            if (this._tester.SerialPort == null) return;
             RadioButton rdo = sender as RadioButton;
             byte databit = (byte)rdo.Tag;
 
-            this.Serial.DataBits = databit;
+            this._tester.SerialPort.DataBits = databit;
         }
 
         private RadioButton CreateRdo(object data)
@@ -441,16 +416,16 @@ namespace DotNetFrame.View.CommTester
 
         private void TxtEthernetIP_TextChanged(object sender, EventArgs e)
         {
-            if (this.Ethernet == null) return;
+            if (this._tester.EthernetPort == null) return;
 
-            this.Ethernet.IP = (sender as Control).Text;
+            this._tester.EthernetPort.IP = (sender as Control).Text;
         }
 
         private void TxtPortNo_ValueChanged(object sender, EventArgs e)
         {
-            if (this.Ethernet == null) return;
+            if (this._tester.EthernetPort == null) return;
 
-            this.Ethernet.PortNo = Convert.ToInt32((sender as NumericUpDown).Value);
+            this._tester.EthernetPort.PortNo = Convert.ToInt32((sender as NumericUpDown).Value);
         }
 
         #endregion Port 설정
@@ -492,7 +467,7 @@ namespace DotNetFrame.View.CommTester
             ComboBox cbo = sender as ComboBox;
             ProtocolType protocol = (ProtocolType)cbo.SelectedValue;
 
-            this._tester.ProtocolType = protocol;
+            this._tester.Protocol = protocol;
 
             if (protocol != ProtocolType.None)
                 this.gvProtocolResult.Visible = true;
@@ -907,7 +882,7 @@ namespace DotNetFrame.View.CommTester
                     this.cboPortList.SelectedIndex = 0;
                 foreach (RadioButton rdo in this.gbxBaudRate.Controls)
                 {
-                    if((int)rdo.Tag == this.Serial.BaudRate)
+                    if((int)rdo.Tag == this._tester.SerialPort.BaudRate)
                     {
                         rdo.Checked = true;
                         break;
@@ -915,7 +890,7 @@ namespace DotNetFrame.View.CommTester
                 }
                 foreach (RadioButton rdo in this.gbxParity.Controls)
                 {
-                    if ((Parity)rdo.Tag == this.Serial.Parity)
+                    if ((Parity)rdo.Tag == this._tester.SerialPort.Parity)
                     {
                         rdo.Checked = true;
                         break;
@@ -923,7 +898,7 @@ namespace DotNetFrame.View.CommTester
                 }
                 foreach (RadioButton rdo in this.gbxStopBits.Controls)
                 {
-                    if ((StopBits)rdo.Tag == this.Serial.StopBits)
+                    if ((StopBits)rdo.Tag == this._tester.SerialPort.StopBits)
                     {
                         rdo.Checked = true;
                         break;
@@ -931,7 +906,7 @@ namespace DotNetFrame.View.CommTester
                 }
                 foreach (RadioButton rdo in this.gbxDataBits.Controls)
                 {
-                    if ((byte)rdo.Tag == this.Serial.DataBits)
+                    if ((byte)rdo.Tag == this._tester.SerialPort.DataBits)
                     {
                         rdo.Checked = true;
                         break;
@@ -944,7 +919,7 @@ namespace DotNetFrame.View.CommTester
                 this.txtPortNo.Value = 0502;
             }
 
-            this._tester.AppPort.ComPortLog += this.UpdateUI_ComPortLog;
+            this._tester.OSPortLog += this.UpdateUI_ComPortLog;
             this._tester.AfterSendRequest += this.UpdateUI_AfterSendRequest;
             this._tester.PortCurrentBuffer += this.UpdateUI_PortCurrentBuffer;
             this._tester.Error_ErrorCode += this.UpdateUI_Error_ErrorCode;
@@ -985,7 +960,7 @@ namespace DotNetFrame.View.CommTester
         private void UpdateUI_ComPortLog(params object[] obj)
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_ComPortLog), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(UpdateUI_ComPortLog), new object[] { obj });
             else
             {
                 this.txtLog.AppendText($"Port Log: {obj[0] as string}\r\n");
@@ -995,10 +970,10 @@ namespace DotNetFrame.View.CommTester
         private void UpdateUI_AfterSendRequest(params object[] obj)
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_AfterSendRequest), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(UpdateUI_AfterSendRequest), new object[] { obj });
             else
             {
-                DotNetFrame.ViewModel.CommTester.CommFrame frame = obj[0] as DotNetFrame.ViewModel.CommTester.CommFrame;
+                CommFrame frame = obj[0] as CommFrame;
                 //송신 Grid Log Update
                 DataRow dr = this._dtDataLog.NewRow();
                 dr["Type"] = "Req";
@@ -1026,7 +1001,7 @@ namespace DotNetFrame.View.CommTester
         private void UpdateUI_PortCurrentBuffer(params object[] obj)
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_PortCurrentBuffer), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(UpdateUI_PortCurrentBuffer), new object[] { obj });
             else
             {
                 byte[] buffer = obj[0] as byte[];
@@ -1055,7 +1030,7 @@ namespace DotNetFrame.View.CommTester
         private void UpdateUI_Error_ErrorCode(params object[] obj)
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_Error_ErrorCode), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(UpdateUI_Error_ErrorCode), new object[] { obj });
             else
             {
                 byte[] frame = obj[0] as byte[];
@@ -1073,7 +1048,7 @@ namespace DotNetFrame.View.CommTester
         private void UpdateUI_Error_Protocol(params object[] obj)
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_Error_Protocol), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(UpdateUI_Error_Protocol), new object[] { obj });
             else
             {
                 byte[] frame = obj[0] as byte[];
@@ -1091,7 +1066,7 @@ namespace DotNetFrame.View.CommTester
         private void UpdateUI_RequestComplete(params object[] obj)
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_RequestComplete), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(UpdateUI_RequestComplete), new object[] { obj });
             else
             {
                 byte[] frame = obj[1] as byte[];
@@ -1108,7 +1083,7 @@ namespace DotNetFrame.View.CommTester
         private void UpdateUI_RequestTimeout(params object[] obj)
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithParam(UpdateUI_RequestTimeout), new object[] { obj });
+                this.BeginInvoke(new Update_WithParam(UpdateUI_RequestTimeout), new object[] { obj });
             else
             {
                 string type = obj[0] as string;
@@ -1160,7 +1135,7 @@ namespace DotNetFrame.View.CommTester
             try
             {
                 if (this.InvokeRequired)
-                    this.BeginInvoke(new UpdateUI_WithParam(UpdateUI), new object[] { obj });
+                    this.BeginInvoke(new Update_WithParam(UpdateUI), new object[] { obj });
                 else
                 {
                     if (obj[0] as string == "Sending")

@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Header;
 
 namespace DotNetFrame.View.Charts
 {
@@ -24,7 +23,7 @@ namespace DotNetFrame.View.Charts
         private CheckBox chk_filter_WAF = new CheckBox();
         private Chart chart = new Chart();
 
-        private DataCreater_CPU _data_creater = new DataCreater_CPU();
+        private VM_DataCreateer_CPU _data_creater = new VM_DataCreateer_CPU();
         private DataFilter _data_filter = new DataFilter();
         private BackgroundWorker _bgWorker = new BackgroundWorker();
 
@@ -66,7 +65,7 @@ namespace DotNetFrame.View.Charts
             num_cre_interval.TextAlign = HorizontalAlignment.Right;
             num_cre_interval.Minimum = 0;
             num_cre_interval.Maximum = int.MaxValue;
-            num_cre_interval.Value = DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
+            num_cre_interval.Value = VM_DataCreateer_CPU.DEFAULT_DATA_GET_INTERVAL;
             num_cre_interval.ValueChanged += Num_cre_interval_ValueChanged;
 
             this.lbl_cre_maxseconds.Left = this.lbl_cre_interval.Left;
@@ -80,7 +79,7 @@ namespace DotNetFrame.View.Charts
             num_cre_maxseconds.TextAlign = HorizontalAlignment.Right;
             num_cre_maxseconds.Minimum = 0;
             num_cre_maxseconds.Maximum = int.MaxValue;
-            num_cre_maxseconds.Value = DataCreater_CPU.DEFAULT_DATA_GET_TIME;
+            num_cre_maxseconds.Value = VM_DataCreateer_CPU.DEFAULT_DATA_GET_TIME;
             num_cre_maxseconds.ValueChanged += Num_cre_maxseconds_ValueChanged; ;
 
             this.chk_filter_MAF.Left = this.lbl_cre_maxseconds.Left;
@@ -107,7 +106,7 @@ namespace DotNetFrame.View.Charts
             num_filter_kernal_size.DecimalPlaces = 0;
             num_filter_kernal_size.TextAlign = HorizontalAlignment.Right;
             num_filter_kernal_size.Minimum = 0;
-            num_filter_kernal_size.Maximum = DataCreater_CPU.DEFAULT_DATA_GET_TIME * 1000 / DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
+            num_filter_kernal_size.Maximum = VM_DataCreateer_CPU.DEFAULT_DATA_GET_TIME * 1000 / VM_DataCreateer_CPU.DEFAULT_DATA_GET_INTERVAL;
             num_filter_kernal_size.Value = 3;
             num_filter_kernal_size.ValueChanged += Num_filter_kernal_size_ValueChanged;
 
@@ -206,7 +205,7 @@ namespace DotNetFrame.View.Charts
         private void UpdateUI()
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new UpdateUI_WithoutParam(UpdateUI));
+                this.BeginInvoke(new Update_WithoutParam(UpdateUI));
             else
             {
                 (DateTime, double)[] values = this._data_creater.CPU_Create_Data();

@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFrame.ViewModel.Server
+namespace DotNetFrame.Model.Server
 {
-    internal class Server_HY_TeraHz
+    internal class M_Server_HY_TeraHz
     {
         internal const int DEFAULT_SENSOR_COUNT = 64;
         internal const int DEFAULT_SENSOR_OFFSET_OBJECT = 500;
@@ -16,7 +16,7 @@ namespace DotNetFrame.ViewModel.Server
         internal const int DEFAULT_SENSOR_OFFSET_BOUNDSCALE = 200;
         internal const int SENSOR_PER_CHIP = 16;
 
-        public event UpdateUI_WithParam ServerLog;
+        public event Update_WithParam ServerLog;
 
         private int _device_sensor_count = DEFAULT_SENSOR_COUNT;
         private bool _device_sensor_apply_object = false;
@@ -64,7 +64,7 @@ namespace DotNetFrame.ViewModel.Server
         public bool ApplyRandom { get => _device_sensor_apply_random; set => _device_sensor_apply_random = value; }
         public short OffsetBoundScale { get => _device_sensor_offset_boundScale; set => _device_sensor_offset_boundScale = value; }
 
-        internal Server_HY_TeraHz()
+        internal M_Server_HY_TeraHz()
         {
             this.IP = "127.0.0.1";
             this.PortNo = 5000;
