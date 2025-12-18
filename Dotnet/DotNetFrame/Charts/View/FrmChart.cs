@@ -19,14 +19,17 @@ namespace DotNetFrame.Chart.View
 {
     public partial class FrmChart : Form
     {
-        private GroupBox gbx_cre_property = new GroupBox();
         private GroupBox gbx_creater = new GroupBox();
         private Label lbl_cre_interval = new Label();
         private Label lbl_cre_maxseconds = new Label();
+
         private GroupBox gbx_filter = new GroupBox();
         private GroupBox gbx_filter_type = new GroupBox();
         private Label lbl_filter_kernal_size = new Label();
         private NumericUpDown num_filter_kernal_size = new NumericUpDown();
+        private Label lbl_filter_quantity = new Label();
+        private NumericUpDown num_filter_quantity = new NumericUpDown();
+
         private GroupBox gbx_peak = new GroupBox();
         private Label lbl_peak_kernal_size = new Label();
         private System.Windows.Forms.DataVisualization.Charting.Chart chart = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -132,9 +135,26 @@ namespace DotNetFrame.Chart.View
             this.num_filter_kernal_size.Maximum = VM_DataCreater_CPU.DEFAULT_DATA_GET_TIME * 1000 / VM_DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
             this.num_filter_kernal_size.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Filter_Kernal_Size), true, DataSourceUpdateMode.OnPropertyChanged);
 
+
+            this.lbl_filter_quantity.Left = this.lbl_filter_kernal_size.Left;
+            this.lbl_filter_quantity.Top = this.lbl_filter_kernal_size.Bottom + 3;
+            this.lbl_filter_quantity.Width = this.lbl_cre_maxseconds.Width;
+            this.lbl_filter_quantity.TextAlign = ContentAlignment.MiddleLeft;
+            this.num_filter_quantity.Left = this.lbl_filter_quantity.Right + 3;
+            this.num_filter_quantity.Top = this.lbl_filter_quantity.Top;
+            this.num_filter_quantity.Width = this.num_filter_kernal_size.Width;
+            this.num_filter_quantity.DecimalPlaces = 0;
+            this.num_filter_quantity.TextAlign = HorizontalAlignment.Right;
+            this.num_filter_quantity.Minimum = 0;
+            this.num_filter_quantity.Maximum = int.MaxValue;
+            this.num_filter_quantity.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Filter_Process_Count), true, DataSourceUpdateMode.OnPropertyChanged);
+
+
             gbx.Controls.Add(this.gbx_filter_type);
             gbx.Controls.Add(this.lbl_filter_kernal_size);
-            gbx.Controls.Add(num_filter_kernal_size);
+            gbx.Controls.Add(this.num_filter_kernal_size);
+            gbx.Controls.Add(this.lbl_filter_quantity);
+            gbx.Controls.Add(this.num_filter_quantity);
         }
 
         private void InitUI_Peak(GroupBox gbx)
@@ -197,10 +217,12 @@ namespace DotNetFrame.Chart.View
             this.gbx_creater.Text = AppData.Lang("chart.cre.title");
             this.lbl_cre_interval.Text = AppData.Lang("chart.cre.interval");
             this.lbl_cre_maxseconds.Text = AppData.Lang("chart.cre.length");
+
             this.gbx_filter.Text = AppData.Lang("chart.filter.title");
             this.gbx_filter_type.Text = AppData.Lang("chart.filter.type");
-            this.gbx_filter_type.Text = AppData.Lang("chart.filter.count");
             this.lbl_filter_kernal_size.Text = AppData.Lang("chart.filter.kernal");
+            this.lbl_filter_kernal_size.Text = AppData.Lang("chart.filter.count");
+
             this.gbx_peak.Text = AppData.Lang("chart.peak.title");
             this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.kernal");
             this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.reference.value");
@@ -225,9 +247,13 @@ namespace DotNetFrame.Chart.View
                 if(this._chartHandler.FilterType == FilterType.None)
                 {
                     this.num_filter_kernal_size.Enabled = false;
+                    this.num_filter_quantity.Enabled = false;
                 }
                 else
+                {
                     this.num_filter_kernal_size.Enabled = true;
+                    this.num_filter_quantity.Enabled = true;
+                }
             }
         }
 
