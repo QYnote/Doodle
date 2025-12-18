@@ -1,11 +1,8 @@
 ﻿using DotNet.Utils.Controls.Utils;
 using DotNet.Utils.Views;
 using DotNetFrame.Base.Model;
-using DotNetFrame.Chart.ViewModel;
 using DotNetFrame.Charts.ViewModel;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -32,6 +29,11 @@ namespace DotNetFrame.Chart.View
 
         private GroupBox gbx_peak = new GroupBox();
         private Label lbl_peak_kernal_size = new Label();
+        private Label lbl_peak_reference = new Label();
+        private CheckBox chk_peak_show_all = new CheckBox();
+        private CheckBox chk_peak_show_reference = new CheckBox();
+
+
         private System.Windows.Forms.DataVisualization.Charting.Chart chart = new System.Windows.Forms.DataVisualization.Charting.Chart();
 
         private ChartHandler _chartHandler = new ChartHandler();
@@ -50,17 +52,15 @@ namespace DotNetFrame.Chart.View
             SplitContainer split = new SplitContainer();
             split.Dock = DockStyle.Fill;
             split.Panel1.Padding = new Padding(3);
+            split.SplitterDistance = 34;
 
             this.gbx_creater.Dock = DockStyle.Top;
-            this.gbx_creater.Height = 73;
             this.InitUI_Creater(this.gbx_creater);
 
             this.gbx_filter.Dock = DockStyle.Top;
-            this.gbx_filter.Height = 140;
             this.InitUI_Filter(this.gbx_filter);
 
             this.gbx_peak.Dock = DockStyle.Top;
-            this.gbx_peak.Height = 150;
             this.InitUI_Peak(this.gbx_peak);
 
             this.InitUI_Chart(split.Panel2);
@@ -73,7 +73,7 @@ namespace DotNetFrame.Chart.View
 
         private void InitUI_Creater(GroupBox gbx)
         {
-            this.lbl_cre_interval.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GroupBox_Caption_Hight(gbx) + 3);
+            this.lbl_cre_interval.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
             this.lbl_cre_interval.Width = 110;
             this.lbl_cre_interval.TextAlign = ContentAlignment.MiddleLeft;
             NumericUpDown num_cre_interval = new NumericUpDown();
@@ -100,6 +100,8 @@ namespace DotNetFrame.Chart.View
             num_cre_maxseconds.Maximum = int.MaxValue;
             num_cre_maxseconds.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Creater_Time), true, DataSourceUpdateMode.OnPropertyChanged);
 
+            gbx.Height = this.lbl_cre_maxseconds.Bottom + 3;
+
             gbx.Controls.Add(this.lbl_cre_interval);
             gbx.Controls.Add(num_cre_interval);
             gbx.Controls.Add(this.lbl_cre_maxseconds);
@@ -108,7 +110,7 @@ namespace DotNetFrame.Chart.View
 
         private void InitUI_Filter(GroupBox gbx)
         {
-            this.gbx_filter_type.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GroupBox_Caption_Hight(gbx) + 3);
+            this.gbx_filter_type.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
             RadioButton[] rdo_filter_type = QYViewUtils.CreateEnumRadioButton<FilterType>();
             for (int i = 0; i < rdo_filter_type.Length; i++)
             {
@@ -132,7 +134,7 @@ namespace DotNetFrame.Chart.View
             this.num_filter_kernal_size.DecimalPlaces = 0;
             this.num_filter_kernal_size.TextAlign = HorizontalAlignment.Right;
             this.num_filter_kernal_size.Minimum = 0;
-            this.num_filter_kernal_size.Maximum = VM_DataCreater_CPU.DEFAULT_DATA_GET_TIME * 1000 / VM_DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
+            this.num_filter_kernal_size.Maximum = int.MaxValue;
             this.num_filter_kernal_size.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Filter_Kernal_Size), true, DataSourceUpdateMode.OnPropertyChanged);
 
 
@@ -149,6 +151,8 @@ namespace DotNetFrame.Chart.View
             this.num_filter_quantity.Maximum = int.MaxValue;
             this.num_filter_quantity.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Filter_Process_Count), true, DataSourceUpdateMode.OnPropertyChanged);
 
+            this.gbx_filter_type.Width = this.num_filter_kernal_size.Right - this.gbx_filter_type.Left;
+            gbx.Height = this.lbl_filter_quantity.Bottom + 3;
 
             gbx.Controls.Add(this.gbx_filter_type);
             gbx.Controls.Add(this.lbl_filter_kernal_size);
@@ -159,21 +163,55 @@ namespace DotNetFrame.Chart.View
 
         private void InitUI_Peak(GroupBox gbx)
         {
-            this.lbl_peak_kernal_size.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GroupBox_Caption_Hight(gbx) + 3);
+            this.lbl_peak_kernal_size.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
             this.lbl_peak_kernal_size.Width = this.lbl_filter_kernal_size.Width;
             this.lbl_peak_kernal_size.TextAlign = ContentAlignment.MiddleLeft;
             NumericUpDown num_peak_kernal_size = new NumericUpDown();
             num_peak_kernal_size.Left = this.lbl_peak_kernal_size.Right + 3;
             num_peak_kernal_size.Top = this.lbl_peak_kernal_size.Top;
-            num_peak_kernal_size.Width = this.num_filter_kernal_size.Width;
+            num_peak_kernal_size.Width = 80;
             num_peak_kernal_size.DecimalPlaces = 0;
             num_peak_kernal_size.TextAlign = HorizontalAlignment.Right;
             num_peak_kernal_size.Minimum = 0;
-            num_peak_kernal_size.Maximum = VM_DataCreater_CPU.DEFAULT_DATA_GET_TIME * 1000 / VM_DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
+            num_peak_kernal_size.Maximum = int.MaxValue;
             num_peak_kernal_size.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Peak_Kernal_Size), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.lbl_peak_reference.Left = this.lbl_peak_kernal_size.Left;
+            this.lbl_peak_reference.Top = this.lbl_peak_kernal_size.Bottom + 3;
+            this.lbl_peak_reference.Width = this.lbl_peak_kernal_size.Width;
+            this.lbl_peak_reference.TextAlign = ContentAlignment.MiddleLeft;
+            NumericUpDown num_peak_reference = new NumericUpDown();
+            num_peak_reference.Left = this.lbl_peak_reference.Right + 3;
+            num_peak_reference.Top = this.lbl_peak_reference.Top;
+            num_peak_reference.Width = num_peak_kernal_size.Width;
+            num_peak_reference.DecimalPlaces = 0;
+            num_peak_reference.TextAlign = HorizontalAlignment.Right;
+            num_peak_reference.Minimum = 0;
+            num_peak_reference.Maximum = int.MaxValue;
+            num_peak_reference.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Peak_Detect_Value), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.chk_peak_show_all.Left = this.lbl_peak_reference.Left;
+            this.chk_peak_show_all.Top = this.lbl_peak_reference.Bottom + 3;
+            this.chk_peak_show_all.Width = this.lbl_peak_reference.Width + 20;
+            this.chk_peak_show_all.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_peak_show_all.CheckAlign = ContentAlignment.MiddleRight;
+            this.chk_peak_show_all.DataBindings.Add("Checked", this._chartHandler, nameof(this._chartHandler.Peak_Show_All), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.chk_peak_show_reference.Left = this.chk_peak_show_all.Left;
+            this.chk_peak_show_reference.Top = this.chk_peak_show_all.Bottom + 3;
+            this.chk_peak_show_reference.Width = this.chk_peak_show_all.Width;
+            this.chk_peak_show_reference.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_peak_show_reference.CheckAlign = ContentAlignment.MiddleRight;
+            this.chk_peak_show_reference.DataBindings.Add("Checked", this._chartHandler, nameof(this._chartHandler.Peak_Show_Detect_Value), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            gbx.Height = this.chk_peak_show_reference.Bottom + 3;
 
             gbx.Controls.Add(this.lbl_peak_kernal_size);
             gbx.Controls.Add(num_peak_kernal_size);
+            gbx.Controls.Add(this.lbl_peak_reference);
+            gbx.Controls.Add(num_peak_reference);
+            gbx.Controls.Add(this.chk_peak_show_all);
+            gbx.Controls.Add(this.chk_peak_show_reference);
         }
 
         private void InitUI_Chart(Panel pnl)
@@ -221,13 +259,13 @@ namespace DotNetFrame.Chart.View
             this.gbx_filter.Text = AppData.Lang("chart.filter.title");
             this.gbx_filter_type.Text = AppData.Lang("chart.filter.type");
             this.lbl_filter_kernal_size.Text = AppData.Lang("chart.filter.kernal");
-            this.lbl_filter_kernal_size.Text = AppData.Lang("chart.filter.count");
+            this.lbl_filter_quantity.Text = AppData.Lang("chart.filter.count");
 
             this.gbx_peak.Text = AppData.Lang("chart.peak.title");
             this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.kernal");
-            this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.reference.value");
-            this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.show.all");
-            this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.show.reference");
+            this.lbl_peak_reference.Text = AppData.Lang("chart.peak.reference.value");
+            this.chk_peak_show_all.Text = AppData.Lang("chart.peak.show.all");
+            this.chk_peak_show_reference.Text = AppData.Lang("chart.peak.show.reference");
         }
 
 

@@ -1,5 +1,6 @@
 ﻿using DotNet.Database;
 using DotNet.Utils.Controls.Utils;
+using DotNet.Utils.Views;
 using DotNetFrame.Base.Model;
 using DotNetFrame.DataBase.ViewModel;
 using System;
@@ -88,7 +89,7 @@ namespace DotNetFrame.DataBase.View
         }
         private void InitUI_Property(GroupBox gbx)
         {
-            this.lbl_db_property_type.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GroupBox_Caption_Hight(gbx));
+            this.lbl_db_property_type.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx));
             this.lbl_db_property_type.TextAlign = ContentAlignment.MiddleLeft;
             ComboBox cbo_db_property_type = new ComboBox();
             cbo_db_property_type.Left = this.lbl_db_property_type.Right + 3;
@@ -136,6 +137,7 @@ namespace DotNetFrame.DataBase.View
             this.txt_db_property_id.Top = this.lbl_db_property_id.Top;
             this.txt_db_property_id.Height = this.lbl_db_property_id.Height;
             this.txt_db_property_id.DataBindings.Add("Text", this._dbHandler, nameof(this._dbHandler.ID), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.txt_db_property_id.Enabled = false;
 
             this.lbl_db_property_pw.Left = this.txt_db_property_id.Right + 3;
             this.lbl_db_property_pw.Top = this.txt_db_property_id.Top;

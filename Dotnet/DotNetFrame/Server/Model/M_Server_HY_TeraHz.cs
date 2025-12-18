@@ -16,7 +16,7 @@ namespace DotNetFrame.Server.Model
         internal const int DEFAULT_SENSOR_OFFSET_BOUNDSCALE = 200;
         internal const int SENSOR_PER_CHIP = 16;
 
-        public event Update_WithParam ServerLog;
+        public event EventHandler<string> ServerLog;
 
         private int _device_sensor_count = DEFAULT_SENSOR_COUNT;
         private bool _device_sensor_apply_object = false;
@@ -34,8 +34,8 @@ namespace DotNetFrame.Server.Model
 
         private bool _cmd_send_allow = false;
         private bool _cmd_send_cali_allow = false;
-        
 
+        public bool IsOpen => this._server.IsOpen;
         public string IP { get => this._server.IP; set => this._server.IP = value; }
         public int PortNo { get => this._server.PortNo; set => this._server.PortNo = value; }
         public int SensorCount
@@ -68,7 +68,7 @@ namespace DotNetFrame.Server.Model
         {
             this.IP = "127.0.0.1";
             this.PortNo = 5000;
-            this._server.Log += (msg) => { this.ServerLog?.Invoke(msg); };
+            this._server.Log += (msg) => { this.ServerLog?.Invoke(this, msg); };
             this._server.PeriodicSendEvent += _server_PeriodicSendEvent;
             this._server.CreateResponseEvent += _server_CreateResponseEvent;
 
@@ -141,7 +141,7 @@ namespace DotNetFrame.Server.Model
             if (request == null || this._write_isValidating) return null;
 
             //0. Test용 수신 Buffer 표기
-            this.ServerLog?.Invoke($"Buffer: {ByteToString(request)}");
+            this.ServerLog?.Invoke(this, $"Buffer: {ByteToString(request)}");
 
             //1. Buffer 보관
             if (this._read_buffer == null)
@@ -165,7 +165,7 @@ namespace DotNetFrame.Server.Model
                 if (handle < 0)
                 {
                     this._read_buffer = null;
-                    this.ServerLog?.Invoke($"비정상 Request: {ByteToString(this._read_buffer)}");
+                    this.ServerLog?.Invoke(this, $"비정상 Request: {ByteToString(this._read_buffer)}");
 
                     this._read_buffer = null;
                     return null;
@@ -219,7 +219,7 @@ namespace DotNetFrame.Server.Model
                 if (resStr != string.Empty)
                 {
                     byte[] resBytes = Encoding.ASCII.GetBytes(resStr);
-                    this.ServerLog?.Invoke(string.Format("Response Bytes: {0}", ByteToString(resBytes)));
+                    this.ServerLog?.Invoke(this, $"Response Bytes: {ByteToString(resBytes)}");
 
                     this._read_buffer = null;
                     return resBytes;

@@ -124,15 +124,16 @@ namespace DotNetFrame.DataBase.ViewModel
         {
             this._type_list = QYUtils.GetEnumItems<DataBaseType>().ToList();
             this.Type = DataBaseType.SQLite;
-            this.DataSource = $"{new DirectoryInfo(SQLite.DEFAULT_SQLITE_DIR).Parent.Parent.Parent.FullName}\\DotNet.Database\\Resources\\SQLite\\{SQLite.DEFAULT_SQLITE_DIR_FILENAME}";
-            this.Password = SQLite.DEFAULT_SQLITE_PASSWORD;
+            this._db_connector.DataSource = this.DataSource = $"{new DirectoryInfo(SQLite.DEFAULT_SQLITE_DIR).Parent.Parent.Parent.FullName}\\DotNet.Database\\Resources\\SQLite\\{SQLite.DEFAULT_SQLITE_DIR_FILENAME}";
+            this._db_connector.Password = this.Password = SQLite.DEFAULT_SQLITE_PASSWORD;
+
+            this._db_connector.GetConnection();
         }
 
         private void UpdateType(DataBaseType type)
         {
             try
             {
-
                 switch (type)
                 {
                     case DataBaseType.SQLCe:
@@ -150,7 +151,6 @@ namespace DotNetFrame.DataBase.ViewModel
                         this._db_log_dir = $"{new DirectoryInfo(SQLite.DEFAULT_SQLITE_DIR).Parent.Parent.Parent.FullName}\\DotNet.Database\\Resources\\SQLite";
                         break;
                 }
-                this._db_connector.GetConnection();
 
                 this._db_current = null;
                 this.SelectedName = null;

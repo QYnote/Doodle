@@ -22,7 +22,7 @@ namespace DotNetFrame.Server.ViewModel
 
         internal VM_Server_HY_TeraHz()
         {
-            this._server.ServerLog += (obj) => { this.ServerLog?.Invoke(obj); };
+
         }
 
         internal string IP { get => this._server.IP; set => this._server.IP = value; }

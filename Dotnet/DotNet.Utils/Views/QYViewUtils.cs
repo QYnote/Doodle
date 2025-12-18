@@ -10,6 +10,13 @@ namespace DotNet.Utils.Views
     public static class QYViewUtils
     {
         /// <summary>
+        /// GroupBox의 Caption 높이 가져오기
+        /// </summary>
+        /// <param name="gbx">확인할 GroupBox</param>
+        /// <returns>Caption 높이</returns>
+        public static float GroupBox_Caption_Hight(GroupBox gbx) => gbx.CreateGraphics().MeasureString(gbx.Text, gbx.Font).Height;
+
+        /// <summary>
         /// RadioButton.Check에 DataBinding
         /// </summary>
         /// <param name="rdo">Binding 할 RadioButton</param>

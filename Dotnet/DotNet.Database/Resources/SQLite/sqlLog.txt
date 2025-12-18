@@ -166,17 +166,21 @@ INSERT INTO LANG VALUES('db.connection.query.result', 'Query 완료', 'Query Suc
 ============================================================
 
 ============================================================
-2025-12-18 오후 5:31:23
+2025-12-18 오후 5:35:46
+--미사용 Chart Lang 삭제
+DELETE FROM LANG
+WHERE
+KEY = 'chart.filter.MAF'
+OR KEY ='chart.filter.WAF';
+============================================================
+
+============================================================
+2025-12-18 오후 7:21:37
 --Chart KEY 변경
 UPDATE LANG SET
 KEY = 'chart.cre.title'
 WHERE KEY = 'chart.property.text';
 
-
-============================================================
-
-============================================================
-2025-12-18 오후 5:32:01
 --신규 Chart Lang 추가
 INSERT INTO LANG VALUES('chart.filter.title', '필터 설정', 'Filter Setting');
 INSERT INTO LANG VALUES('chart.filter.type', '종류', 'Type');
@@ -184,14 +188,23 @@ INSERT INTO LANG VALUES('chart.filter.count', '진행수', 'Count');
 INSERT INTO LANG VALUES('chart.peak.reference.value', '검출값', 'Detect Value');
 INSERT INTO LANG VALUES('chart.peak.show.all', '모든 봉우리 표기', 'Show All Peak');
 INSERT INTO LANG VALUES('chart.peak.show.reference', '검출선 표기', 'Show Detect Line');
-============================================================
 
-============================================================
-2025-12-18 오후 5:35:46
 --미사용 Chart Lang 삭제
 DELETE FROM LANG
 WHERE
 KEY = 'chart.filter.MAF'
 OR KEY ='chart.filter.WAF';
+
+============================================================
+
+============================================================
+2025-12-18 오후 7:36:40
+--Chart
+INSERT INTO LANG VALUES('chart.peak.title', '검출 설정', 'Detect Setting')
+============================================================
+============================================================
+2025-12-18 오후 9:32:26
+--난수범위 다른 Control이랑 똑같이 설정변경으로 인한 삭제
+DELETE FROM LANG WHERE KEY = 'server.terahz.sensor.offset.boundscale'
 ============================================================
 
