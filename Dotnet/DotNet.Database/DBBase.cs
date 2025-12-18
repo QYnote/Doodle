@@ -25,7 +25,6 @@ namespace DotNet.Database
         private string _id = string.Empty;
         /// <summary>DataBase PassWord</summary>
         private string _password = string.Empty;
-
         /// <summary>
         /// DataBase Connection
         /// </summary>
@@ -47,7 +46,6 @@ namespace DotNet.Database
                     this._id = value;
                     this.BaseConn = null;
                 }
-                else throw new ConstraintException("DataBase가 사용중입니다.");
             }
         }
         public string Password
@@ -60,7 +58,6 @@ namespace DotNet.Database
                     this._password = value;
                     this.BaseConn = null;
                 }
-                else throw new ConstraintException("DataBase가 사용중입니다.");
             }
         }
         /// <summary>
@@ -79,7 +76,7 @@ namespace DotNet.Database
         /// DataBase 연결
         /// </summary>
         /// <returns>연결된 Connection</returns>
-        protected abstract IDbConnection GetConnection();
+        public abstract IDbConnection GetConnection();
         /// <summary>
         /// Select Query 실행
         /// </summary>

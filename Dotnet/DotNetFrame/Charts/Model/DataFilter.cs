@@ -4,32 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFrame.Chart.ViewModel
+namespace DotNetFrame.Chart.Model
 {
     internal class DataFilter
     {
-        internal const int DEFAULT_FILTER_KERNAL_SIZE = 10;
+        internal const int DEFAULT_FILTER_KERNAL_SIZE = 3;
         internal const int DEFAULT_PEAK_KERNAL_SIZE = 10;
-
-        private int _filter_kernal_size = DEFAULT_FILTER_KERNAL_SIZE;
-        private int _peak_kernal_size = DEFAULT_PEAK_KERNAL_SIZE;
-
-        public int Filter_KernalSize { get => _filter_kernal_size; set => _filter_kernal_size = value; }
-        public int Peak_KernalSize { get => _peak_kernal_size; set => _peak_kernal_size = value; }
 
         /// <summary>
         /// 단순 이동 평균
         /// </summary>
         /// <param name="ary">원본 Data Array</param>
         /// <returns>필터링이 적용된 Data</returns>
-        public double[] MAF(double[] ary)
+        public double[] MAF(double[] ary, int kernalSize)
         {
             if (ary == null || ary.Length == 0) return null;
+            if (kernalSize == -1)
+                kernalSize = DEFAULT_FILTER_KERNAL_SIZE;
             List<double> resultData = new List<double>();
 
             for (int i = 0; i < ary.Length; i++)
             {
-                List<double> list_in_kernal = List_In_kernal(ref ary, i, this._filter_kernal_size);
+                List<double> list_in_kernal = List_In_kernal(ref ary, i, kernalSize);
 
                 double v = list_in_kernal.Sum() / list_in_kernal.Count;
 
@@ -45,20 +41,24 @@ namespace DotNetFrame.Chart.ViewModel
         /// <param name="weights">가중치 Array</param>
         /// <returns>필터링이 적용된 Data</returns>
         /// <exception cref="ArgumentException">가중치 Array 길이 미일치 에러</exception>
-        public double[] WAF(double[] ary, double[] weights = null)
+        public double[] WAF(double[] ary, int kernalSize, double[] weights = null)
         {
             if (ary == null || ary.Length == 0) return null;
-            if (weights != null && weights.Length < this._filter_kernal_size * 2 + 1)
-                throw new ArgumentException($"Weigths Legnth not allow\r\nCurrent: {weights.Length} / Allow: {this._filter_kernal_size * 2 + 1}");
+
+            if (kernalSize == -1)
+                kernalSize = DEFAULT_FILTER_KERNAL_SIZE;
+
+            if (weights != null && weights.Length < kernalSize * 2 + 1)
+                throw new ArgumentException($"Weigths Legnth not allow\r\nCurrent: {weights.Length} / Allow: {kernalSize * 2 + 1}");
 
             List<double> resultData = new List<double>();
 
             for (int i = 0; i < ary.Length; i++)
             {
-                List<double> list_in_kernal = List_In_kernal(ref ary, i, this._filter_kernal_size);
+                List<double> list_in_kernal = List_In_kernal(ref ary, i, kernalSize);
 
                 if (weights == null)
-                    weights = this.Default_WAF_Weights();
+                    weights = this.Default_WAF_Weights(kernalSize);
 
                 //Data에 가중치 부여
                 double v = 0;
@@ -108,18 +108,18 @@ namespace DotNetFrame.Chart.ViewModel
             return result;
         }
 
-        private double[] Default_WAF_Weights()
+        private double[] Default_WAF_Weights(int kernalSize)
         {
-            double[] weight = new double[this._filter_kernal_size * 2 + 1];
+            double[] weight = new double[kernalSize * 2 + 1];
             double weightSum = 0;
 
             //△모양의 가중값 입력
             for (int k = 0; k < weight.Length; k++)
             {
-                if (k <= this._filter_kernal_size)
+                if (k <= kernalSize)
                     weight[k] = k + 1;
-                else if (k > this._filter_kernal_size)
-                    weight[k] = this._filter_kernal_size - (k - this._filter_kernal_size) + 1;
+                else if (k > kernalSize)
+                    weight[k] = kernalSize- (k - kernalSize) + 1;
             }
             weightSum = weight.Sum();
             //전체대비 비율로 전환
@@ -129,14 +129,14 @@ namespace DotNetFrame.Chart.ViewModel
             return weight;
         }
 
-        public List<int> GetPeakIndexList(double[] ary)
+        public List<int> GetPeakIndexList(double[] ary, int kernalSize)
         {
             List<int> peakList = new List<int>();   //봉우리목록
 
-            for (int p = this._peak_kernal_size; p < ary.Length; p++)
+            for (int p = kernalSize; p < ary.Length; p++)
             {
                 //2. 검사에 사용할 데이터 추출
-                List<double> list_in_kernal = this.List_In_kernal(ref ary, p, this._peak_kernal_size);
+                List<double> list_in_kernal = this.List_In_kernal(ref ary, p, kernalSize);
 
                 //3. 봉우리 등록
                 bool isPeak = true;

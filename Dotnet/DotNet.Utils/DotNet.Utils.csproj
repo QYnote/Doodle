@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\Utils\QYViewModelHandler.cs" />
     <Compile Include="Views\Events\QYEvents.cs" />
     <Compile Include="Views\QYCircularProgressBar.cs">
       <SubType>UserControl</SubType>
@@ -95,6 +96,7 @@
     <Compile Include="Views\QYTokenTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Views\QYViewUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -119,6 +121,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Chart_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Button_Database_16x16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Button_Folder_16x16.png" />
   </ItemGroup>
   <!--Data폴더에 있는 File 복사-->
   <Target Name="CopyFiles" AfterTargets="Compile">

@@ -438,13 +438,13 @@ namespace DotNetFrame.CommTester.View
             cboProtocolList.DropDownStyle = ComboBoxStyle.DropDownList;
             cboProtocolList.DataSource = QYUtils.GetEnumItems<ProtocolType>();
             cboProtocolList.ValueMember = "Value";
-            cboProtocolList.DisplayMember = "Name";
+            cboProtocolList.DisplayMember = "DisplayText";
             var items = cboProtocolList.DataSource as QYUtils.EnumItem<ProtocolType>[];
             float maxTextWidth = -1;
             Graphics graphics = cboProtocolList.CreateGraphics();
             for (int i = 0; i < items.Length; i++)
             {
-                float width = graphics.MeasureString(items[i].Name, cboProtocolList.Font).Width;
+                float width = graphics.MeasureString(items[i].DisplayText, cboProtocolList.Font).Width;
 
                 if (maxTextWidth < width) maxTextWidth = width;
             }

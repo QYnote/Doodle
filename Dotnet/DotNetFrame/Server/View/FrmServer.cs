@@ -62,7 +62,7 @@ namespace DotNetFrame.Server.View
             this.cbo_server_type.Top = this.lbl_server_type.Top;
             this.cbo_server_type.DataSource = QYUtils.GetEnumItems<ServerType>();
             this.cbo_server_type.ValueMember = "Value";
-            this.cbo_server_type.DisplayMember = "Name";
+            this.cbo_server_type.DisplayMember = "DisplayText";
             this.cbo_server_type.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cbo_server_type.SelectedValueChanged += CboProtocol_SelectedValueChanged;
 

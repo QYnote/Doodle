@@ -142,3 +142,56 @@ INSERT INTO LANG VALUES('chart.peak.kernal','봉우리 Kernal 크기','Peak Kern
 INSERT INTO LANG VALUES('sol.leftmenu.button.chart.text','차트','Chart');
 ============================================================
 
+
+============================================================
+2025-12-18 오후 1:42:31
+--DB Key 명칭 수정
+UPDATE LANG SET
+KEY = CONCAT('db.property.', SUBSTRING(KEY, 18, LENGTH(KEY) - 18 + 1))
+WHERE KEY LIKE 'frmdb%';
+
+--DB KEY 명칭 수정
+UPDATE LANG SET
+KEY = 'db.property.datasource'
+WHERE KEY = 'db.property.filepath';
+UPDATE LANG SET
+KEY = 'db.property.logdirectory'
+WHERE KEY = 'db.property.logpath';
+
+--DB 연결테스트 추가
+INSERT INTO LANG VALUES('db.connection.test', '테스트', 'Test');
+INSERT INTO LANG VALUES('db.connection.test.result', '연결 성공', 'Connect');
+INSERT INTO LANG VALUES('db.connection.query.result', 'Query 완료', 'Query Success');
+
+============================================================
+
+============================================================
+2025-12-18 오후 5:31:23
+--Chart KEY 변경
+UPDATE LANG SET
+KEY = 'chart.cre.title'
+WHERE KEY = 'chart.property.text';
+
+
+============================================================
+
+============================================================
+2025-12-18 오후 5:32:01
+--신규 Chart Lang 추가
+INSERT INTO LANG VALUES('chart.filter.title', '필터 설정', 'Filter Setting');
+INSERT INTO LANG VALUES('chart.filter.type', '종류', 'Type');
+INSERT INTO LANG VALUES('chart.filter.count', '진행수', 'Count');
+INSERT INTO LANG VALUES('chart.peak.reference.value', '검출값', 'Detect Value');
+INSERT INTO LANG VALUES('chart.peak.show.all', '모든 봉우리 표기', 'Show All Peak');
+INSERT INTO LANG VALUES('chart.peak.show.reference', '검출선 표기', 'Show Detect Line');
+============================================================
+
+============================================================
+2025-12-18 오후 5:35:46
+--미사용 Chart Lang 삭제
+DELETE FROM LANG
+WHERE
+KEY = 'chart.filter.MAF'
+OR KEY ='chart.filter.WAF';
+============================================================
+

@@ -64,6 +64,6 @@ namespace DotNet.Utils.Views.Events
         /// </summary>
         /// <param name="gbx">확인할 GroupBox</param>
         /// <returns>Caption 높이</returns>
-        public static float GetCaptionHeight(GroupBox gbx) =>  gbx.CreateGraphics().MeasureString(gbx.Text, gbx.Font).Height;
+        public static float GroupBox_Caption_Hight(GroupBox gbx) =>  gbx.CreateGraphics().MeasureString(gbx.Text, gbx.Font).Height;
     }
 }

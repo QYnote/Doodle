@@ -1,6 +1,8 @@
 ﻿using DotNet.Utils.Controls.Utils;
+using DotNet.Utils.Views;
 using DotNetFrame.Base.Model;
 using DotNetFrame.Chart.ViewModel;
+using DotNetFrame.Charts.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,28 +20,26 @@ namespace DotNetFrame.Chart.View
     public partial class FrmChart : Form
     {
         private GroupBox gbx_cre_property = new GroupBox();
+        private GroupBox gbx_creater = new GroupBox();
         private Label lbl_cre_interval = new Label();
         private Label lbl_cre_maxseconds = new Label();
+        private GroupBox gbx_filter = new GroupBox();
+        private GroupBox gbx_filter_type = new GroupBox();
         private Label lbl_filter_kernal_size = new Label();
-        private CheckBox chk_filter_MAF = new CheckBox();
-        private CheckBox chk_filter_WAF = new CheckBox();
         private NumericUpDown num_filter_kernal_size = new NumericUpDown();
+        private GroupBox gbx_peak = new GroupBox();
         private Label lbl_peak_kernal_size = new Label();
         private System.Windows.Forms.DataVisualization.Charting.Chart chart = new System.Windows.Forms.DataVisualization.Charting.Chart();
 
-        private VM_DataCreater_CPU _data_creater = new VM_DataCreater_CPU();
-        private DataFilter _data_filter = new DataFilter();
+        private ChartHandler _chartHandler = new ChartHandler();
         private BackgroundWorker _bgWorker = new BackgroundWorker();
 
         public FrmChart()
         {
             InitializeComponent();
-            this.InitUI();
             this.InitText();
-
-            this._bgWorker.WorkerSupportsCancellation = true;
-            this._bgWorker.DoWork += _bgWorker_DoWork;
-            this._bgWorker.RunWorkerAsync();
+            this.InitUI();
+            this.InitComponent();
         }
 
         private void InitUI()
@@ -48,18 +48,29 @@ namespace DotNetFrame.Chart.View
             split.Dock = DockStyle.Fill;
             split.Panel1.Padding = new Padding(3);
 
-            this.InitUI_Property();
+            this.gbx_creater.Dock = DockStyle.Top;
+            this.gbx_creater.Height = 73;
+            this.InitUI_Creater(this.gbx_creater);
+
+            this.gbx_filter.Dock = DockStyle.Top;
+            this.gbx_filter.Height = 140;
+            this.InitUI_Filter(this.gbx_filter);
+
+            this.gbx_peak.Dock = DockStyle.Top;
+            this.gbx_peak.Height = 150;
+            this.InitUI_Peak(this.gbx_peak);
+
             this.InitUI_Chart(split.Panel2);
-            split.Panel1.Controls.Add(this.gbx_cre_property);
+
+            split.Panel1.Controls.Add(this.gbx_peak);
+            split.Panel1.Controls.Add(this.gbx_filter);
+            split.Panel1.Controls.Add(this.gbx_creater);
             this.Controls.Add(split);
         }
 
-        private void InitUI_Property()
+        private void InitUI_Creater(GroupBox gbx)
         {
-            this.gbx_cre_property.Dock = DockStyle.Fill;
-            this.gbx_cre_property.Text = "Data 설정";
-
-            this.lbl_cre_interval.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GetCaptionHeight(this.gbx_cre_property) + 3);
+            this.lbl_cre_interval.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GroupBox_Caption_Hight(gbx) + 3);
             this.lbl_cre_interval.Width = 110;
             this.lbl_cre_interval.TextAlign = ContentAlignment.MiddleLeft;
             NumericUpDown num_cre_interval = new NumericUpDown();
@@ -70,8 +81,7 @@ namespace DotNetFrame.Chart.View
             num_cre_interval.TextAlign = HorizontalAlignment.Right;
             num_cre_interval.Minimum = 0;
             num_cre_interval.Maximum = int.MaxValue;
-            num_cre_interval.Value = VM_DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
-            num_cre_interval.ValueChanged += Num_cre_interval_ValueChanged;
+            num_cre_interval.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Creater_Interval), true, DataSourceUpdateMode.OnPropertyChanged);
 
             this.lbl_cre_maxseconds.Left = this.lbl_cre_interval.Left;
             this.lbl_cre_maxseconds.Top = this.lbl_cre_interval.Bottom + 3;
@@ -85,103 +95,65 @@ namespace DotNetFrame.Chart.View
             num_cre_maxseconds.TextAlign = HorizontalAlignment.Right;
             num_cre_maxseconds.Minimum = 0;
             num_cre_maxseconds.Maximum = int.MaxValue;
-            num_cre_maxseconds.Value = VM_DataCreater_CPU.DEFAULT_DATA_GET_TIME;
-            num_cre_maxseconds.ValueChanged += Num_cre_maxseconds_ValueChanged; ;
+            num_cre_maxseconds.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Creater_Time), true, DataSourceUpdateMode.OnPropertyChanged);
 
-            this.chk_filter_MAF.Left = this.lbl_cre_maxseconds.Left;
-            this.chk_filter_MAF.Top = this.lbl_cre_maxseconds.Bottom + 3;
-            this.chk_filter_MAF.Width = this.lbl_cre_maxseconds.Width + 20;
-            this.chk_filter_MAF.CheckAlign = ContentAlignment.MiddleRight;
-            this.chk_filter_MAF.Checked = false;
-            this.chk_filter_MAF.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_filter_MAF.CheckedChanged += Chk_filter_CheckedChanged;
+            gbx.Controls.Add(this.lbl_cre_interval);
+            gbx.Controls.Add(num_cre_interval);
+            gbx.Controls.Add(this.lbl_cre_maxseconds);
+            gbx.Controls.Add(num_cre_maxseconds);
+        }
 
-            this.chk_filter_WAF.Left = this.chk_filter_MAF.Left;
-            this.chk_filter_WAF.Top = this.chk_filter_MAF.Bottom + 3;
-            this.chk_filter_WAF.Width = this.chk_filter_MAF.Width;
-            this.chk_filter_WAF.CheckAlign = ContentAlignment.MiddleRight;
-            this.chk_filter_WAF.Checked = true;
-            this.chk_filter_WAF.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_filter_WAF.CheckedChanged += Chk_filter_CheckedChanged;
+        private void InitUI_Filter(GroupBox gbx)
+        {
+            this.gbx_filter_type.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GroupBox_Caption_Hight(gbx) + 3);
+            RadioButton[] rdo_filter_type = QYViewUtils.CreateEnumRadioButton<FilterType>();
+            for (int i = 0; i < rdo_filter_type.Length; i++)
+            {
+                RadioButton rdo = rdo_filter_type[i];
+                rdo.Dock = DockStyle.Top;
+                QYViewUtils.BindingRadioButton(rdo, this._chartHandler, nameof(this._chartHandler.FilterType), rdo.Tag);
 
-            this.lbl_filter_kernal_size.Left = this.chk_filter_WAF.Left;
-            this.lbl_filter_kernal_size.Top = this.chk_filter_WAF.Bottom + 3;
+                this.gbx_filter_type.Controls.Add(rdo);
+                rdo.BringToFront();
+            }
+            this.gbx_filter_type.Height = 92;
+
+            
+            this.lbl_filter_kernal_size.Left = this.gbx_filter_type.Left;
+            this.lbl_filter_kernal_size.Top = this.gbx_filter_type.Bottom + 3;
             this.lbl_filter_kernal_size.Width = this.lbl_cre_maxseconds.Width;
             this.lbl_filter_kernal_size.TextAlign = ContentAlignment.MiddleLeft;
             this.num_filter_kernal_size.Left = this.lbl_filter_kernal_size.Right + 3;
             this.num_filter_kernal_size.Top = this.lbl_filter_kernal_size.Top;
-            this.num_filter_kernal_size.Width = num_cre_interval.Width;
+            this.num_filter_kernal_size.Width = 80;
             this.num_filter_kernal_size.DecimalPlaces = 0;
             this.num_filter_kernal_size.TextAlign = HorizontalAlignment.Right;
             this.num_filter_kernal_size.Minimum = 0;
             this.num_filter_kernal_size.Maximum = VM_DataCreater_CPU.DEFAULT_DATA_GET_TIME * 1000 / VM_DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
-            this.num_filter_kernal_size.Value = 3;
-            this.num_filter_kernal_size.ValueChanged += Num_filter_kernal_size_ValueChanged;
+            this.num_filter_kernal_size.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Filter_Kernal_Size), true, DataSourceUpdateMode.OnPropertyChanged);
 
-            this.lbl_peak_kernal_size.Left = this.lbl_filter_kernal_size.Left;
-            this.lbl_peak_kernal_size.Top = this.lbl_filter_kernal_size.Bottom + 3;
+            gbx.Controls.Add(this.gbx_filter_type);
+            gbx.Controls.Add(this.lbl_filter_kernal_size);
+            gbx.Controls.Add(num_filter_kernal_size);
+        }
+
+        private void InitUI_Peak(GroupBox gbx)
+        {
+            this.lbl_peak_kernal_size.Location = new Point(3, (int)DotNet.Utils.Views.Events.QYEvents.GroupBox_Caption_Hight(gbx) + 3);
             this.lbl_peak_kernal_size.Width = this.lbl_filter_kernal_size.Width;
             this.lbl_peak_kernal_size.TextAlign = ContentAlignment.MiddleLeft;
             NumericUpDown num_peak_kernal_size = new NumericUpDown();
             num_peak_kernal_size.Left = this.lbl_peak_kernal_size.Right + 3;
             num_peak_kernal_size.Top = this.lbl_peak_kernal_size.Top;
-            num_peak_kernal_size.Width = num_cre_interval.Width;
+            num_peak_kernal_size.Width = this.num_filter_kernal_size.Width;
             num_peak_kernal_size.DecimalPlaces = 0;
             num_peak_kernal_size.TextAlign = HorizontalAlignment.Right;
             num_peak_kernal_size.Minimum = 0;
             num_peak_kernal_size.Maximum = VM_DataCreater_CPU.DEFAULT_DATA_GET_TIME * 1000 / VM_DataCreater_CPU.DEFAULT_DATA_GET_INTERVAL;
-            num_peak_kernal_size.Value = DataFilter.DEFAULT_PEAK_KERNAL_SIZE;
-            num_peak_kernal_size.ValueChanged += Num_peak_kernal_size_ValueChanged;
+            num_peak_kernal_size.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Peak_Kernal_Size), true, DataSourceUpdateMode.OnPropertyChanged);
 
-            this.gbx_cre_property.Controls.Add(this.lbl_cre_interval);
-            this.gbx_cre_property.Controls.Add(num_cre_interval);
-            this.gbx_cre_property.Controls.Add(this.lbl_cre_maxseconds);
-            this.gbx_cre_property.Controls.Add(num_cre_maxseconds);
-            this.gbx_cre_property.Controls.Add(this.chk_filter_MAF);
-            this.gbx_cre_property.Controls.Add(this.chk_filter_WAF);
-            this.gbx_cre_property.Controls.Add(this.lbl_filter_kernal_size);
-            this.gbx_cre_property.Controls.Add(num_filter_kernal_size);
-            this.gbx_cre_property.Controls.Add(this.lbl_peak_kernal_size);
-            this.gbx_cre_property.Controls.Add(num_peak_kernal_size);
-        }
-
-        private void Num_cre_interval_ValueChanged(object sender, EventArgs e)
-        {
-            NumericUpDown num = sender as NumericUpDown;
-
-            this._data_creater.Interval = Convert.ToInt32(num.Value);
-        }
-
-        private void Num_cre_maxseconds_ValueChanged(object sender, EventArgs e)
-        {
-            NumericUpDown num = sender as NumericUpDown;
-
-            this._data_creater.Time = Convert.ToInt32(num.Value);
-        }
-
-        private void Chk_filter_CheckedChanged(object sender, EventArgs e)
-        {
-            bool MAF = this.chk_filter_MAF.Checked;
-            bool WAF = this.chk_filter_WAF.Checked;
-
-            if(MAF == false && WAF == false)
-                this.num_filter_kernal_size.Enabled = false;
-            else
-                this.num_filter_kernal_size.Enabled = true;
-        }
-
-        private void Num_filter_kernal_size_ValueChanged(object sender, EventArgs e)
-        {
-            NumericUpDown num = sender as NumericUpDown;
-
-            this._data_filter.Filter_KernalSize = Convert.ToInt32(num.Value);
-        }
-
-        private void Num_peak_kernal_size_ValueChanged(object sender, EventArgs e)
-        {
-            NumericUpDown num = sender as NumericUpDown;
-
-            this._data_filter.Peak_KernalSize = Convert.ToInt32(num.Value);
+            gbx.Controls.Add(this.lbl_peak_kernal_size);
+            gbx.Controls.Add(num_peak_kernal_size);
         }
 
         private void InitUI_Chart(Panel pnl)
@@ -222,13 +194,41 @@ namespace DotNetFrame.Chart.View
 
         private void InitText()
         {
-            this.gbx_cre_property.Text = AppData.Lang("chart.property.text");
+            this.gbx_creater.Text = AppData.Lang("chart.cre.title");
             this.lbl_cre_interval.Text = AppData.Lang("chart.cre.interval");
             this.lbl_cre_maxseconds.Text = AppData.Lang("chart.cre.length");
-            this.chk_filter_MAF.Text = AppData.Lang("chart.filter.MAF");
-            this.chk_filter_WAF.Text = AppData.Lang("chart.filter.WAF");
+            this.gbx_filter.Text = AppData.Lang("chart.filter.title");
+            this.gbx_filter_type.Text = AppData.Lang("chart.filter.type");
+            this.gbx_filter_type.Text = AppData.Lang("chart.filter.count");
             this.lbl_filter_kernal_size.Text = AppData.Lang("chart.filter.kernal");
+            this.gbx_peak.Text = AppData.Lang("chart.peak.title");
             this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.kernal");
+            this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.reference.value");
+            this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.show.all");
+            this.lbl_peak_kernal_size.Text = AppData.Lang("chart.peak.show.reference");
+        }
+
+
+        private void InitComponent()
+        {
+            this._chartHandler.PropertyChanged += _chartHandler_PropertyChanged;
+
+            this._bgWorker.WorkerSupportsCancellation = true;
+            this._bgWorker.DoWork += _bgWorker_DoWork;
+            this._bgWorker.RunWorkerAsync();
+        }
+
+        private void _chartHandler_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(this._chartHandler.FilterType))
+            {
+                if(this._chartHandler.FilterType == FilterType.None)
+                {
+                    this.num_filter_kernal_size.Enabled = false;
+                }
+                else
+                    this.num_filter_kernal_size.Enabled = true;
+            }
         }
 
         private void _bgWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -249,88 +249,60 @@ namespace DotNetFrame.Chart.View
                 System.Threading.Thread.Sleep(50);
             }
         }
-
         private void UpdateUI()
         {
             if (this.InvokeRequired)
                 this.BeginInvoke(new Update_WithoutParam(UpdateUI));
             else
             {
-                (DateTime, double)[] values = this._data_creater.CPU_Create_Data();
-                if (values.Length <= 0) return;
+                (DateTime, double)[] data = this._chartHandler.Creater_Data_Get();
+                if (data == null
+                    || (data != null && data.Length == 0)) return;
 
-                double[] yAry = new double[values.Length];
-                for (int i = 0; i < yAry.Length; i++)
-                    yAry[i] = values[i].Item2;
+                double[] arys = new double[data.Length];
+                for (int i = 0; i < data.Length; i++)
+                    arys[i] = data[i].Item2;
 
-                //단순이동 평균 적용
-                if (this.chk_filter_MAF.Checked)
-                    yAry = this._data_filter.MAF(yAry);
-                //가중이동 평균 적용
-                if (this.chk_filter_WAF.Checked)
-                    yAry = this._data_filter.WAF(yAry);
+                arys = this._chartHandler.Filter_Apply(arys);
 
-                for (int i = 0; i < yAry.Length; i++)
-                    values[i].Item2 = yAry[i];
-
+                for (int i = 0; i < data.Length; i++)
+                    data[i].Item2 = arys[i];
 
                 Series series = this.chart.Series["CPU"];
                 ChartArea area = this.chart.ChartAreas[series.ChartArea];
-                this.chart.BeginInit();
                 series.Points.Clear();
                 series.MarkerSize = 0;
                 area.AxisY.StripLines.Clear();
 
-                double min_CPU = double.MaxValue,
-                       max_CPU = double.MinValue;
-                DateTime now = DateTime.Now,
-                         minDate = now.AddSeconds(-this._data_creater.Time);
+                //데이터 입력
+                foreach (var item in data)
+                    series.Points.AddXY(item.Item1, item.Item2);
 
-                foreach (var pair in values)
+                //X축 범위 설정
+                DateTime now = DateTime.Now;
+                this.chart.ChartAreas[0].AxisX.Maximum = now.ToOADate();
+                this.chart.ChartAreas[0].AxisX.Minimum = now.AddSeconds(-this._chartHandler.Creater_Time).ToOADate();
+                //Y축 범위 설정
+                double yMax = data.Max(x => x.Item2),
+                       yMin = data.Min(x => x.Item2);
+                if (yMin < yMax)
                 {
-                    series.Points.AddXY(pair.Item1, pair.Item2);
-
-                    if (min_CPU > pair.Item2) min_CPU = pair.Item2;
-                    if (max_CPU < pair.Item2) max_CPU = pair.Item2;
-                }
-
-                if (min_CPU < max_CPU)
-                {
-                    double range = max_CPU - min_CPU,
-                           offset = range / 10;
+                    double range = yMax - yMin,
+                               offset = range / 10;
 
                     if (series.YAxisType == AxisType.Primary)
                     {
-                        area.AxisY.Minimum = min_CPU < offset ? 0 : min_CPU - offset;
-                        area.AxisY.Maximum = max_CPU + offset;
+                        area.AxisY.Minimum = yMin < offset ? 0 : yMin - offset;
+                        area.AxisY.Maximum = yMax + offset;
                     }
                 }
-                this.chart.ChartAreas[0].AxisX.Maximum = now.ToOADate();
-                this.chart.ChartAreas[0].AxisX.Minimum = minDate.ToOADate();
 
-                //1. Y축 Data 추출
-                double[] aryPoints = new double[series.Points.Count];
-                for (int i = 0; i < aryPoints.Length; i++)
-                    aryPoints[i] = series.Points[i].YValues[0];
-
-                //2-1. 봉우리 목록 추출 및 이상치 값 계산
-                List<int> peakIndexList = this._data_filter.GetPeakIndexList(aryPoints);
-                double[] peakAry = new double[peakIndexList.Count];
-                double anomalyValue = -1;
-                if (peakAry.Length > 0)
-                {
-                    for (int i = 0; i < peakAry.Length; i++)
-                        peakAry[i] = series.Points[peakIndexList[i]].YValues[0];
-
-                    anomalyValue = this._data_filter.Calc_Anomaly(aryPoints, peakAry);
-                }
-
-                //2-2. 이상치 검출선 표기
-                if (true)
+                //이상치 검출선
+                if (this._chartHandler.Peak_Show_Detect_Value)
                 {
                     StripLine lineAvgValue = new StripLine();
                     lineAvgValue.Interval = 0;
-                    lineAvgValue.IntervalOffset = anomalyValue;
+                    lineAvgValue.IntervalOffset = this._chartHandler.Peak_Detect_Value;
                     lineAvgValue.StripWidth = 0;
                     lineAvgValue.BorderWidth = 2;
                     lineAvgValue.BorderColor = Color.BlueViolet;
@@ -341,34 +313,22 @@ namespace DotNetFrame.Chart.View
                     area.AxisY.StripLines.Add(lineAvgValue);
                 }
 
-                //3. 봉우리 표기 및 이상치 봉우리 추출
-                List<DataPoint> outlierList = new List<DataPoint>();
-                foreach (var idx in peakIndexList)
+                foreach (var idx in this._chartHandler.Peak_Index_List_Get(arys))
                 {
-                    //모든 봉우리 표기
-                    if (true)
+                    if (this._chartHandler.Peak_Show_All)
                     {
                         series.Points[idx].MarkerSize = 8;
                         series.Points[idx].MarkerStyle = MarkerStyle.Circle;
                         series.Points[idx].MarkerColor = Color.DarkGray;
                     }
 
-                    if (series.Points[idx].YValues[0] > anomalyValue)
-                        outlierList.Add(series.Points[idx]);
-                }
-
-                //4. 이상치 봉우리 표기
-                if (peakIndexList.Count > 0)
-                {
-                    foreach (var item in outlierList)
+                    if (series.Points[idx].YValues[0] > this._chartHandler.Peak_Detect_Value)
                     {
-                        item.MarkerSize = 8;
-                        item.MarkerStyle = MarkerStyle.Circle;
-                        item.MarkerColor = Color.Black;
+                        series.Points[idx].MarkerSize = 8;
+                        series.Points[idx].MarkerStyle = MarkerStyle.Circle;
+                        series.Points[idx].MarkerColor = Color.Black;
                     }
                 }
-
-                this.chart.EndInit();
             }
         }
     }

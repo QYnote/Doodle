@@ -6,19 +6,6 @@ using System.Threading.Tasks;
 
 namespace DotNet.Utils.Controls.Utils
 {
-    /// <summary>
-    /// 데이터 필터
-    /// </summary>
-    public enum DataFilterType
-    {
-        /// <summary>미사용</summary>
-        None,
-        /// <summary>이동평균</summary>
-        MAF,
-        /// <summary>가중평균</summary>
-        WAF,
-    }
-
     public class QYMath
     {
         /// <summary>
@@ -422,96 +409,6 @@ namespace DotNet.Utils.Controls.Utils
                     pivot[j, i] = ary[i, j];
 
             return pivot;
-        }
-        /// <summary>
-        /// Data 필터 처리
-        /// </summary>
-        /// <param name="type">필터 처리 종류</param>
-        /// <param name="ary">(x, y) 데이터 Array</param>
-        /// <returns>(x, 필터처리된 y)</returns>
-        public double[] DataFilter(DataFilterType type,
-                                   double[] ary,
-                                   int kernalSize = 3)
-        {
-            if (ary == null || ary.Length == 0) return null;
-            List<double> filtData = new List<double>();
-            int kernal = kernalSize;
-
-            for (int i = 0; i < ary.Length; i++)
-            {
-                int minIndex = i - kernal,
-                    maxIndex = i + kernal;
-                int kernalHandle = 0;
-                List<double> kernal_datas = new List<double>();
-                int offset = minIndex + kernalHandle;
-
-                //1. Kernal 내에 있는 데이터 추출
-                while (offset < i)
-                {
-                    //1-1. 현재 Index보다 작은 Index Data Kernal 수만큼 추출
-                    offset = minIndex + kernalHandle;
-
-                    if (offset >= 0)
-                        kernal_datas.Add(ary[offset]);
-
-                    kernalHandle++;
-                }
-
-                //1-2. 중앙값 데이터 등록
-                kernal_datas.Add(ary[i]);
-                kernalHandle++;
-
-                while (offset < maxIndex)
-                {
-                    //1-3. 현재 Index보다 큰 Index Data Kernal 수만큼 추출
-                    offset = minIndex + kernalHandle;
-                    if (offset < ary.Length - 1)
-                        kernal_datas.Add(ary[offset]);
-
-                    kernalHandle++;
-                }
-
-                //2. Data 정렬
-                kernal_datas = kernal_datas.OrderBy(x => x).ToList();//DateTime 순 정렬
-
-                //3. Data 필터값 계산
-                double v = 0;
-                if (type == DataFilterType.MAF)
-                    //단순 이동 평균
-                    v = kernal_datas.Sum() / kernal_datas.Count;
-                else if (type == DataFilterType.WAF)
-                {
-                    //가중 이동 평균
-                    if (kernal % 2 == 0) continue;
-
-                    float[] weight = new float[kernal * 2 + 1];
-                    float weightSum = 0;
-
-                    //△모양의 가중값 입력
-                    for (int k = 0; k < weight.Length; k++)
-                    {
-                        if (k < kernal)
-                            weight[k] = k + 1;
-                        else if (k == kernal)
-                            weight[k] = kernal + 1;
-                        else if (k > kernal)
-                            weight[k] = kernal - (k - kernal) + 1;
-                    }
-                    weightSum = weight.Sum();
-                    //전체대비 비율로 전환
-                    for (int k = 0; k < weight.Length; k++)
-                        weight[k] = weight[k] / weightSum;
-
-                    //Data에 가중치 부여
-                    for (int k = 0; k < kernal_datas.Count; k++)
-                        v += (kernal_datas[k] * weight[k]);
-                }
-
-                //4. 계산된 Data 등록
-                filtData.Add(v);
-            }
-
-            return filtData.ToArray();
         }
     }
 }

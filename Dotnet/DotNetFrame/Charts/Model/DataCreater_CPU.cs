@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.Chart.Model
 {
-    internal class M_DataCreater_CPU
+    internal class DataCreater_CPU
     {
         internal const int DEFAULT_DATA_GET_INTERVAL = 100;
         internal const int DEFAULT_DATA_GET_TIME = 60;
@@ -20,16 +20,34 @@ namespace DotNetFrame.Chart.Model
 
         public int Interval
         { 
-            get => _data_get_interval;
+            get => (int)this._cpu_cre_timer.Interval;
             set
             {
-                _data_get_interval = value;
-                this._cpu_cre_timer.Interval = value;
+                if (_data_get_interval != value)
+                {
+                    if (value < 50)
+                        this._cpu_cre_timer.Interval = 50;
+                    else
+                        this._cpu_cre_timer.Interval = value;
+                }
             }
         }
-        public int Time { get => _data_get_time; set => _data_get_time = value; }
+        public int Time
+        {
+            get => _data_get_time;
+            set
+            {
+                if (_data_get_time != value)
+                {
+                    if (value < 1)
+                        this._data_get_time = 1;
+                    else 
+                        _data_get_time = value;
+                }
+            }
+        }
 
-        internal M_DataCreater_CPU()
+        internal DataCreater_CPU()
         {
             this.InitComponent();
         }

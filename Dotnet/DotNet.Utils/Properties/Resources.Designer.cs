@@ -73,6 +73,26 @@ namespace DotNet.Utils.Properties {
         /// <summary>
         ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
         /// </summary>
+        public static System.Drawing.Bitmap Button_Database_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("Button_Database_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        public static System.Drawing.Bitmap Button_Folder_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("Button_Folder_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Drawing.Bitmap 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
         public static System.Drawing.Bitmap Button_Max_16x16 {
             get {
                 object obj = ResourceManager.GetObject("Button_Max_16x16", resourceCulture);

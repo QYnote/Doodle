@@ -51,7 +51,7 @@ namespace DotNet.Database
             base.BaseConn = this.GetConnection();
         }
 
-        protected override IDbConnection GetConnection()
+        public override IDbConnection GetConnection()
         {
             if(base.BaseConn == null)
             {

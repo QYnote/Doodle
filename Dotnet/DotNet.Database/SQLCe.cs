@@ -54,7 +54,7 @@ namespace DotNet.Database
             base.BaseConn = GetConnection();
         }
 
-        protected override IDbConnection GetConnection()
+        public override IDbConnection GetConnection()
         {
             if(base.BaseConn == null)
             {
@@ -164,25 +164,26 @@ namespace DotNet.Database
             try
             {
                 string[] spltQuery = query.Split(';');
-
                 cmd = new SqlCeCommand();
                 cmd.Connection = this.Conn;
                 if (base.BaseTransaction != null)
                     cmd.Transaction = this.Transaction;
 
-                for (int i = 0; i < spltQuery.Length; i++)
+                if (spltQuery != null)
                 {
-                    spltQuery[i] = spltQuery[i].Replace("\r\n", " ").Trim();
-                    if (spltQuery[i] == string.Empty) continue;
+                    for (int i = 0; i < spltQuery.Length; i++)
+                    {
+                        spltQuery[i] = spltQuery[i].Replace("\r\n", " ").Trim();
+                        if (spltQuery[i] == string.Empty) continue;
 
-                    //주석 Row 스킵
-                    if (spltQuery[i][0] == '-' && spltQuery[i][1] == '-') continue;
+                        //주석 Row 스킵
+                        if (spltQuery[i][0] == '-' && spltQuery[i][1] == '-') continue;
 
 
-                    cmd.CommandText = spltQuery[i];
-                    cmd.ExecuteNonQuery();
+                        cmd.CommandText = spltQuery[i];
+                        cmd.ExecuteNonQuery();
+                    }
                 }
-
                 result = true;
             }
             catch (SqlCeException ex)

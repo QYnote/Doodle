@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace DotNet.Utils.Controls.Utils
@@ -116,14 +117,10 @@ namespace DotNet.Utils.Controls.Utils
         /// <returns>변환된 DataItem 목록</returns>
         static public EnumItem<T>[] GetEnumItems<T>() where T : Enum
         {
-            T[] values = Enum.GetValues(typeof(T)).OfType<T>().ToArray();//Enum 목록 추출
-            if (values.Length == 0) return null;
-
-            EnumItem<T>[] items = new EnumItem<T>[values.Length];
-            for (int i = 0; i < items.Length; i++)
-                items[i] = new EnumItem<T>(values[i]);
-
-            return items;
+            return Enum.GetValues(typeof(T))
+                .Cast<T>()
+                .Select(e => new EnumItem<T>(e))
+                .ToArray();
         }
         /// <summary>
         /// Enum Item 목록
@@ -138,12 +135,24 @@ namespace DotNet.Utils.Controls.Utils
             /// <summary>
             /// Enum Text
             /// </summary>
-            public string Name { get; }
+            public string DisplayText { get; }
 
             public EnumItem(T item)
             {
                 this.Value = item;
-                this.Name = item.ToString();
+                this.DisplayText = GetDescription(item);
+            }
+
+            private string GetDescription(Enum value)
+            {
+                System.Reflection.FieldInfo info = value.GetType().GetField(value.ToString());
+                System.ComponentModel.DescriptionAttribute[] attributes =
+                    (System.ComponentModel.DescriptionAttribute[])info.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+
+                if (attributes != null && attributes.Length > 0)
+                    return attributes[0].Description;
+
+                return value.ToString();
             }
         }
 
