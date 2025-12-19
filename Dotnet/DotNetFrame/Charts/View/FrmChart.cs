@@ -276,6 +276,8 @@ namespace DotNetFrame.Chart.View
             this._bgWorker.WorkerSupportsCancellation = true;
             this._bgWorker.DoWork += _bgWorker_DoWork;
             this._bgWorker.RunWorkerAsync();
+
+            _chartHandler_PropertyChanged(this._chartHandler, new PropertyChangedEventArgs(nameof(_chartHandler.FilterType)));
         }
 
         private void _chartHandler_PropertyChanged(object sender, PropertyChangedEventArgs e)

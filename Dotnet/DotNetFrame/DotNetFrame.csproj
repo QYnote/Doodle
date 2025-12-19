@@ -76,16 +76,25 @@
     <Compile Include="CommTester\Model\M_CommTester.cs" />
     <Compile Include="Charts\Model\DataCreater_CPU.cs" />
     <Compile Include="Charts\Model\DataFilter.cs" />
-    <Compile Include="CommTester\ViewModel\VM_CommTester.cs" />
+    <Compile Include="CommTester\ViewModel\CommTesterHandler.cs" />
+    <Compile Include="CommTester\ViewModel\EthernetHandler.cs" />
+    <Compile Include="CommTester\ViewModel\SerialHandler.cs" />
     <Compile Include="Base\Model\AppData.cs" />
+    <Compile Include="CommTester\View\UcEthernet.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CommTester\View\UcSerial.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CommTester\View\UcSerial.Designer.cs">
+      <DependentUpon>UcSerial.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataBase\ViewModel\DatabaseHandler.cs" />
-    <Compile Include="Server\Model\M_Server_HY_TeraHz.cs" />
-    <Compile Include="Server\Model\M_Server_Modbus.cs" />
+    <Compile Include="Server\Model\Server_HY_TeraHz.cs" />
+    <Compile Include="Server\Model\Server_Modbus.cs" />
     <Compile Include="Server\ViewModel\ModbusHandler.cs" />
     <Compile Include="Server\ViewModel\ServerHandler.cs" />
     <Compile Include="Server\ViewModel\TeraHzHandler.cs" />
-    <Compile Include="Server\ViewModel\VM_Server_Modbus.cs" />
-    <Compile Include="Server\ViewModel\VM_Server_HY_TeraHz.cs" />
     <Compile Include="Charts\View\FrmChart.cs">
       <SubType>Form</SubType>
     </Compile>

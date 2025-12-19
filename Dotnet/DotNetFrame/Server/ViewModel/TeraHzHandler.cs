@@ -12,7 +12,7 @@ namespace DotNetFrame.Server.ViewModel
     {
         internal event EventHandler<string> ServerLog;
 
-        private M_Server_HY_TeraHz _server = new M_Server_HY_TeraHz();
+        private Server_HY_TeraHz _server = new Server_HY_TeraHz();
 
         public string Server_IPAddress
         {
@@ -38,7 +38,7 @@ namespace DotNetFrame.Server.ViewModel
                 }
             }
         }
-        public int HW_SensorCount
+        public int Sensor_Count
         {
             get => (int)Math.Log(2, this._server.SensorCount);
             set
@@ -52,24 +52,6 @@ namespace DotNetFrame.Server.ViewModel
             }
         }
 
-        public int Data_Quantity
-        {
-            get => this._server.SensorCount;
-            set
-            {
-                if(this._server.SensorCount != value)
-                {
-                    try
-                    {
-                        this._server.SensorCount = value;
-                    }
-                    catch (ArgumentOutOfRangeException rangeout)
-                    {
-
-                    }
-                }
-            }
-        }
         public bool Data_Span_Run
         {
             get => this._server.ApplyMax;

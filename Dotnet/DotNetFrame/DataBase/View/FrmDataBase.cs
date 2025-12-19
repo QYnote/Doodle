@@ -137,7 +137,6 @@ namespace DotNetFrame.DataBase.View
             this.txt_db_property_id.Top = this.lbl_db_property_id.Top;
             this.txt_db_property_id.Height = this.lbl_db_property_id.Height;
             this.txt_db_property_id.DataBindings.Add("Text", this._dbHandler, nameof(this._dbHandler.ID), true, DataSourceUpdateMode.OnPropertyChanged);
-            this.txt_db_property_id.Enabled = false;
 
             this.lbl_db_property_pw.Left = this.txt_db_property_id.Right + 3;
             this.lbl_db_property_pw.Top = this.txt_db_property_id.Top;
@@ -157,7 +156,6 @@ namespace DotNetFrame.DataBase.View
             txt_db_property_logdirectory.Height = this.lbl_db_property_logdirectory.Height;
             txt_db_property_logdirectory.Width = 600;
             txt_db_property_logdirectory.DataBindings.Add("Text", this._dbHandler, nameof(this._dbHandler.LogDirectory), true, DataSourceUpdateMode.OnPropertyChanged);
-            txt_db_property_logdirectory.Enabled = false;
             Button btn_db_property_logdirectory = new Button();
             btn_db_property_logdirectory.Left = txt_db_property_logdirectory.Right + 3;
             btn_db_property_logdirectory.Top = txt_db_property_logdirectory.Top - 1;
@@ -305,6 +303,8 @@ namespace DotNetFrame.DataBase.View
         {
             this._dbHandler.PropertyChanged += _dbHandler_PropertyChanged;
             this._dbHandler.ErrorMessage += _dbHandler_ErrorMessage;
+
+            _dbHandler_PropertyChanged(this._dbHandler, new PropertyChangedEventArgs(nameof(this._dbHandler.Type)));
         }
         private void _dbHandler_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {

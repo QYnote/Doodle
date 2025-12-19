@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.Server.Model
 {
-    internal class M_Server_HY_TeraHz
+    internal class Server_HY_TeraHz
     {
         internal const int DEFAULT_SENSOR_COUNT = 64;
         internal const int DEFAULT_SENSOR_OFFSET_OBJECT = 500;
@@ -64,7 +64,7 @@ namespace DotNetFrame.Server.Model
         public bool ApplyRandom { get => _device_sensor_apply_random; set => _device_sensor_apply_random = value; }
         public short OffsetBoundScale { get => _device_sensor_offset_boundScale; set => _device_sensor_offset_boundScale = value; }
 
-        internal M_Server_HY_TeraHz()
+        internal Server_HY_TeraHz()
         {
             this.IP = "127.0.0.1";
             this.PortNo = 5000;

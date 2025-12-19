@@ -208,3 +208,45 @@ INSERT INTO LANG VALUES('chart.peak.title', '검출 설정', 'Detect Setting')
 DELETE FROM LANG WHERE KEY = 'server.terahz.sensor.offset.boundscale'
 ============================================================
 
+============================================================
+2025-12-19 오전 8:56:48
+--서버 Text 변경 및 추가
+INSERT INTO LANG VALUES('server.terahz.server', '서버 설정', 'Server Config');
+INSERT INTO LANG VALUES('server.terahz.sensor', '센서 설정', 'Sensor Config');
+INSERT INTO LANG VALUES('server.terahz.data', '데이터 설정', 'Data Config');
+
+UPDATE LANG SET KEY = 'server.terahz.server.ip' WHERE KEY ='server.terahz.ip';
+UPDATE LANG SET KEY = 'server.terahz.server.port' WHERE KEY ='server.terahz.port';
+UPDATE LANG SET KEY = 'server.terahz.data.span.offset' WHERE KEY ='server.terahz.sensor.offset.max';
+UPDATE LANG SET KEY = 'server.terahz.data.object.offset' WHERE KEY ='server.terahz.sensor.offset.object';
+UPDATE LANG SET KEY = 'server.terahz.data.randomvalue.scale' WHERE KEY ='server.terahz.sensor.offset.random';
+
+============================================================
+
+============================================================
+2025-12-19 오전 8:58:01
+--미적용 재설정
+UPDATE LANG SET KEY = 'server.terahz.server.portno' WHERE KEY ='server.terahz.portno';
+
+============================================================
+
+============================================================
+2025-12-19 오전 8:59:08
+--연결버튼 Text 수정
+UPDATE LANG SET KEY = 'server.terahz.server.connection.connect' WHERE KEY ='server.terahz.connection.connect';
+UPDATE LANG SET KEY = 'server.terahz.server.connection.disconnect' WHERE KEY ='server.terahz.connection.disconnect';
+
+============================================================
+
+============================================================
+2025-12-19 오전 9:30:50
+--서버 Modbus Key 수정
+INSERT INTO LANG VALUES('server.modbus.server', '서버 설정', 'Server Config');
+
+UPDATE LANG SET KEY = 'server.modbus.server.connection.connect' WHERE KEY ='server.modbus.connection.connect';
+UPDATE LANG SET KEY = 'server.modbus.server.connection.disconnect' WHERE KEY ='server.modbus.connection.disconnect';
+UPDATE LANG SET KEY = 'server.modbus.server.ip' WHERE KEY ='server.modbus.ip';
+UPDATE LANG SET KEY = 'server.modbus.server.portno' WHERE KEY ='server.modbus.portno';
+
+============================================================
+

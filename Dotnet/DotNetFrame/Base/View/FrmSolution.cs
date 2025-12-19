@@ -182,47 +182,69 @@ namespace DotNetFrame.Base.View
 
         private void CallForm(string frmName)
         {
-            //1. 기존 Form 숨김
-            if(this._curForm != null)
-                this._curForm.Hide();
-
-            //2. 이미 열린 Form 탐색
-            foreach (var pair in this._openForm)
+            try
             {
-                if(pair.Key == frmName)
+
+                //1. 기존 Form 숨김
+                if (this._curForm != null)
+                    this._curForm.Hide();
+
+                //2. 이미 열린 Form 탐색
+                foreach (var pair in this._openForm)
                 {
-                    this._curForm = pair.Value;
+                    if (pair.Key == frmName)
+                    {
+                        this._curForm = pair.Value;
+                        this.lblTitleText.Text = $"{this.txtTitle} - {this._curForm.Text}";
+                        this._curForm.Show();
+                        return;
+                    }
+                }
+
+                //3. 신규 Form 생성
+                switch (frmName)
+                {
+                    case "Main": this._curForm = new FrmMain() { Name = frmName, Text = AppData.Lang("메인화면") }; break;
+                    case "CommTest": this._curForm = new CommTester.View.FrmCommTester() { Name = frmName, Text = this.btnCommTester.Text }; break;
+                    case "DBConnector": this._curForm = new DataBase.View.FrmDataBase() { Name = frmName, Text = this.btnDataBase.Text }; break;
+                    case "Server": this._curForm = new Server.View.FrmServer() { Name = frmName, Text = this.btnServer.Text }; break;
+                    case "Chart": this._curForm = new Chart.View.FrmChart() { Name = frmName, Text = this.btnChart.Text }; break;
+                }
+
+                if (this._curForm != null)
+                {
+                    //열림폼 등록
+                    this._openForm[this._curForm.Name] = this._curForm;
+
+                    //Title 설정
                     this.lblTitleText.Text = $"{this.txtTitle} - {this._curForm.Text}";
+
+                    //Form 열기
+                    this._curForm.Dock = DockStyle.Fill;
+                    this._curForm.FormBorderStyle = FormBorderStyle.None;
+                    this._curForm.TopLevel = false;
+                    this.pnlBody.Controls.Add(this._curForm);
+
                     this._curForm.Show();
-                    return;
                 }
             }
-
-            //3. 신규 Form 생성
-            switch(frmName)
+            catch (ArgumentException ex)
             {
-                case "Main": this._curForm = new FrmMain() { Name = frmName, Text = AppData.Lang("메인화면") }; break;
-                case "CommTest": this._curForm = new CommTester.View.FrmCommTester() { Name = frmName, Text = this.btnCommTester.Text }; break;
-                case "DBConnector": this._curForm = new DataBase.View.FrmDataBase() { Name = frmName, Text = this.btnDataBase.Text }; break;
-                case "Server": this._curForm = new Server.View.FrmServer() { Name = frmName, Text = this.btnServer.Text }; break;
-                case "Chart": this._curForm = new Chart.View.FrmChart() { Name = frmName, Text = this.btnChart.Text }; break;
+                if (ex.TargetSite.Name == "CheckBinding")
+                {
+                    if (ex.ParamName == "PropertyName")
+                        MessageBox.Show($"DataBinding Error - Control Property명칭 오류\r\n\r\nTrace:{ex.StackTrace}");
+                    else if (ex.ParamName == "dataMember")
+                        MessageBox.Show($"DataBinding Error - Binding Property 접근제한자(Not public) 오류\r\n\r\nTrace:{ex.StackTrace}");
+                }
+                else
+                {
+                    MessageBox.Show($"Error: {ex.Message}\r\n\r\nTrace:{ex.StackTrace}");
+                }
             }
-
-            if(this._curForm != null)
+            catch (Exception ex)
             {
-                //열림폼 등록
-                this._openForm[this._curForm.Name] = this._curForm;
-
-                //Title 설정
-                this.lblTitleText.Text = $"{this.txtTitle} - {this._curForm.Text}";
-
-                //Form 열기
-                this._curForm.Dock = DockStyle.Fill;
-                this._curForm.FormBorderStyle = FormBorderStyle.None;
-                this._curForm.TopLevel = false;
-                this.pnlBody.Controls.Add(this._curForm);
-
-                this._curForm.Show();
+                MessageBox.Show($"Error: {ex.Message}\r\n\r\nTrace:{ex.StackTrace}");
             }
         }
 
