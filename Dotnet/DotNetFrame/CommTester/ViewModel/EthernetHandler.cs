@@ -9,13 +9,11 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.CommTester.ViewModel
 {
-    internal class EthernetHandler : QYViewModelHandler
+    internal class EthernetHandler : QYBindingBase
     {
         private OSPortBase _base;
 
-        private QYEthernet Ethernet => this._base as QYEthernet;
-
-        public bool IsOpen => this.Ethernet?.IsOpen ?? false;
+        public QYEthernet Ethernet => this._base as QYEthernet;
 
         public string IP
         {

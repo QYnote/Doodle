@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.Server.ViewModel
 {
-    internal class TeraHzHandler : QYViewModelHandler
+    internal class TeraHzHandler : QYBindingBase
     {
         internal event EventHandler<string> ServerLog;
 
@@ -60,7 +60,7 @@ namespace DotNetFrame.Server.ViewModel
                 if(this._server.ApplyMax != value)
                 {
                     this._server.ApplyMax = value;
-                    base.OnPopertyChanged(nameof(this.Data_Span_Run));
+                    base.OnPropertyChanged(nameof(this.Data_Span_Run));
                 }
             }
         }
@@ -83,7 +83,7 @@ namespace DotNetFrame.Server.ViewModel
                 if (this._server.ApplyObject != value)
                 {
                     this._server.ApplyObject = value;
-                    base.OnPopertyChanged(nameof(this.Data_Object_Run));
+                    base.OnPropertyChanged(nameof(this.Data_Object_Run));
                 }
             }
         }
@@ -106,7 +106,7 @@ namespace DotNetFrame.Server.ViewModel
                 if (this._server.ApplyRandom != value)
                 {
                     this._server.ApplyRandom = value;
-                    base.OnPopertyChanged(nameof(this.Data_RandomValue_Run));
+                    base.OnPropertyChanged(nameof(this.Data_RandomValue_Run));
                 }
             }
         }

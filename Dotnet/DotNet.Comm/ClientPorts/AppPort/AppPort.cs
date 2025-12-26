@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNet.Utils.Controls.Utils;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace DotNet.Comm.ClientPorts.AppPort
     /// <remarks>
     /// Application ↔ OS 통신 Port
     /// </remarks>
-    public class AppPort
+    public abstract class AppPort : QYBindingBase
     {
         /// <summary>
         /// 통신 Port Log
@@ -24,31 +25,32 @@ namespace DotNet.Comm.ClientPorts.AppPort
         /// </remarks>
         public event Utils.Controls.Utils.Update_WithParam ComPortLog;
 
-        private CommType _commType = CommType.Serial;
+        private PortType _commType = PortType.Serial;
         private OSPort.OSPortBase _osPort = new OSPort.QYSerialPort();
-        private bool _isUserOpen = false;
+        private bool _isAppOpen = false;
 
         /// <summary>
-        /// 통신 Port 종류
+        /// OS Port 종류
         /// </summary>
         /// <remarks>
         /// 기존 종류와 다를경우 통신Port 신규 생성
         /// </remarks>
-        public CommType CommType
+        public PortType PortType
         {
             get => this._commType;
             set
             {
                 if(this._commType != value)
                 {
-                    if (value == CommType.Serial)
+                    if (value == PortType.Serial)
                         this._osPort = new OSPort.QYSerialPort();
-                    else if (value == CommType.Ethernet)
+                    else if (value == PortType.Ethernet)
                         this._osPort = new OSPort.QYEthernet(false);
-
                     this._osPort.Log += (msg) => { this.ComPortLog?.Invoke(msg); };
 
                     this._commType = value;
+
+                    base.OnPropertyChanged(nameof(this.PortType));
                 }
             }
         }
@@ -57,48 +59,42 @@ namespace DotNet.Comm.ClientPorts.AppPort
         /// </summary>
         public OSPort.OSPortBase OSPort { get => this._osPort; }
         /// <summary>
-        /// 사용자의 Port Open여부
+        /// Application Port Open여부
         /// </summary>
-        public bool IsUserOpen { get => this._isUserOpen; }
+        public bool IsAppOpen
+        {
+            get => this._isAppOpen;
+            protected set
+            {
+                if(this.IsAppOpen != value)
+                {
+                    this._isAppOpen = value;
+
+                    base.OnPropertyChanged(nameof(this.IsAppOpen));
+                }
+            }
+        }
         /// <summary>
         /// Port 연결
         /// </summary>
         /// <returns>연결 결과</returns>
-        public bool Connect()
-        {
-            if (this.OSPort.IsOpen) return false;
-
-            this._isUserOpen = true;
-
-            this.OSPort.Open();
-
-            return true;
-        }
+        public abstract bool Connect();
         /// <summary>
         /// Port 연결 해제
         /// </summary>
         /// <returns>해제 결과</returns>
-        public bool Disconnect()
-        {
-            this._isUserOpen = false;
-
-            this.OSPort.Close();
-            this.OSPort.InitPort();
-
-            return true;
-        }
+        public abstract bool Disconnect();
         /// <summary>
         /// OS Port에서 Data 읽기
         /// </summary>
         /// <returns>읽은 Data</returns>
-        public byte[] Read() => this.OSPort.Read();
+        public abstract byte[] Read();
         /// /// <summary>
         /// OS Port에 Data 쓰기
         /// </summary>
         /// <param name="bytes">전송할 Data</param>
         /// <returns>실행 결과</returns>
-        public void Write(byte[] bytes) => this.OSPort.Write(bytes);
-
-        public void Initialize() => this.OSPort.InitPort();
+        public abstract void Write(byte[] bytes);
+        public abstract void Initialize();
     }
 }

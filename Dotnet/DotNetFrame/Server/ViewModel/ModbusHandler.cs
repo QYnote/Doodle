@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.Server.ViewModel
 {
-    internal class ModbusHandler : QYViewModelHandler
+    internal class ModbusHandler : QYBindingBase
     {
         internal event EventHandler<string> ServerLog;
 

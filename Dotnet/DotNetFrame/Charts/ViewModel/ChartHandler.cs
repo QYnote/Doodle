@@ -18,7 +18,7 @@ namespace DotNetFrame.Charts.ViewModel
         WAF,
     }
 
-    internal class ChartHandler : QYViewModelHandler
+    internal class ChartHandler : QYBindingBase
     {
         private DataCreater_CPU _creater = new DataCreater_CPU();
         private DataFilter _filter = new DataFilter();
@@ -42,7 +42,7 @@ namespace DotNetFrame.Charts.ViewModel
                 if (this._creater.Interval != value)
                 {
                     this._creater.Interval = value;
-                    this.OnPopertyChanged(nameof(this.Creater_Interval));
+                    base.OnPropertyChanged(nameof(this.Creater_Interval));
                 }
             }
         }
@@ -60,7 +60,7 @@ namespace DotNetFrame.Charts.ViewModel
                 if(_filter_type_current != value)
                 {
                     this._filter_type_current = value;
-                    base.OnPopertyChanged(nameof(FilterType));
+                    base.OnPropertyChanged(nameof(FilterType));
                 }
             }
         }

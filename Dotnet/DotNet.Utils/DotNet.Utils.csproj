@@ -43,8 +43,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls\Utils\QYViewModelHandler.cs" />
-    <Compile Include="ViewModel\ViewModelUtils.cs" />
     <Compile Include="Views\Events\QYEvents.cs" />
     <Compile Include="Views\QYCircularProgressBar.cs">
       <SubType>UserControl</SubType>

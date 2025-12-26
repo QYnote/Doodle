@@ -233,9 +233,14 @@ namespace DotNetFrame.Base.View
                 if (ex.TargetSite.Name == "CheckBinding")
                 {
                     if (ex.ParamName == "PropertyName")
-                        MessageBox.Show($"DataBinding Error - Control Property명칭 오류\r\n\r\nTrace:{ex.StackTrace}");
+                        MessageBox.Show($"DataBinding Error - Control Property명칭 오류\r\nMessage:{ex.Message}\r\n\r\nTrace:{ex.StackTrace}");
                     else if (ex.ParamName == "dataMember")
-                        MessageBox.Show($"DataBinding Error - Binding Property 접근제한자(Not public) 오류\r\n\r\nTrace:{ex.StackTrace}");
+                        MessageBox.Show($"DataBinding Error - Binding Property 접근제한자(Not public) 오류\r\nMessage:{ex.Message}\r\n\r\nTrace:{ex.StackTrace}");
+                }
+                else if(ex.TargetSite.Name == "AddValueChanged")
+                {
+                    if(ex.ParamName == "component")
+                        MessageBox.Show($"DataBinding Error - Control Property명칭 오류\r\nMessage:{ex.Message}\r\n\r\nTrace:{ex.StackTrace}");
                 }
                 else
                 {

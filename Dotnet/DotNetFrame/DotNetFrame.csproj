@@ -73,7 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Charts\ViewModel\ChartHandler.cs" />
-    <Compile Include="CommTester\Model\M_CommTester.cs" />
+    <Compile Include="CommTester\Model\CommTester.cs" />
     <Compile Include="Charts\Model\DataCreater_CPU.cs" />
     <Compile Include="Charts\Model\DataFilter.cs" />
     <Compile Include="CommTester\ViewModel\CommTesterHandler.cs" />

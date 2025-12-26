@@ -101,7 +101,7 @@ namespace DotNet.Comm.ClientPorts.OSPort
         /// 동기/비동기 통신 여부<br/>
         /// true : 동기통신 / false : 비동기통신
         /// </param>
-        public QYEthernet(bool isSync) : base(CommType.Ethernet)
+        public QYEthernet(bool isSync) : base(PortType.Ethernet)
         {
             this.IsSync = isSync;
         }

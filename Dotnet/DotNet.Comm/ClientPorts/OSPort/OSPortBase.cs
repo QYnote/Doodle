@@ -1,8 +1,7 @@
-﻿namespace DotNet.Comm.ClientPorts.OSPort
-{
-    /// <summary>Port 종류</summary>
-    public delegate void PCPortLogHandler(string msg);
+﻿using System;
 
+namespace DotNet.Comm.ClientPorts.OSPort
+{
     /// <summary>
     /// OS ↔ Deivce 통신 Port 기준
     /// </summary>
@@ -11,15 +10,15 @@
         /// <summary>
         /// PCPort Log Event
         /// </summary>
-        public event PCPortLogHandler Log;
+        public event Action<string> Log;
         /// <summary>Port 종류</summary>
-        public CommType PortType { get; }
+        public PortType PortType { get; }
 
         /// <summary>
         /// PC Port 기본형태
         /// </summary>
         /// <param name="type">Port 종류</param>
-        public OSPortBase(CommType type)
+        public OSPortBase(PortType type)
         {
             this.PortType = type;
         }

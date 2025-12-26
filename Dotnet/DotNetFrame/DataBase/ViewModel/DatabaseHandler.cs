@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.DataBase.ViewModel
 {
-    internal class DatabaseHandler : QYViewModelHandler
+    internal class DatabaseHandler : QYBindingBase
     {
         private DataBaseType _type;
         private string _db_connector_datasource;
@@ -34,7 +34,7 @@ namespace DotNetFrame.DataBase.ViewModel
                 if (_type != value)
                 {
                     _type = value;
-                    this.OnPopertyChanged(nameof(Type));
+                    this.OnPropertyChanged(nameof(Type));
 
                     this.UpdateType(value);
                 }
@@ -48,7 +48,7 @@ namespace DotNetFrame.DataBase.ViewModel
                 if (this._db_connector_datasource != value)
                 {
                     this._db_connector_datasource = value;
-                    this.OnPopertyChanged(nameof(DataSource));
+                    this.OnPropertyChanged(nameof(DataSource));
                 }
             }
         }
@@ -60,7 +60,7 @@ namespace DotNetFrame.DataBase.ViewModel
                 if (this._db_connector_id != value)
                 {
                     this._db_connector_id = value;
-                    this.OnPopertyChanged(nameof(ID));
+                    this.OnPropertyChanged(nameof(ID));
                 }
             }
         }
@@ -72,7 +72,7 @@ namespace DotNetFrame.DataBase.ViewModel
                 if (this._db_connector_pw != value)
                 {
                     this._db_connector_pw = value;
-                    this.OnPopertyChanged(nameof(Password));
+                    this.OnPropertyChanged(nameof(Password));
                 }
             }
         }
@@ -84,7 +84,7 @@ namespace DotNetFrame.DataBase.ViewModel
                 if (this._db_log_dir != value)
                 {
                     this._db_log_dir = value;
-                    this.OnPopertyChanged(nameof(LogDirectory));
+                    this.OnPropertyChanged(nameof(LogDirectory));
                 }
             }
         }
@@ -99,8 +99,8 @@ namespace DotNetFrame.DataBase.ViewModel
                 if(this._db_current_table_name != value)
                 {
                     this._db_current_table_name = value;
-                    this.OnPopertyChanged(nameof(SelectedName));
-                    this.OnPopertyChanged(nameof(CurrentTable));
+                    this.OnPropertyChanged(nameof(SelectedName));
+                    this.OnPropertyChanged(nameof(CurrentTable));
                 }
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,4 +31,14 @@ namespace DotNet.Utils.Controls.Utils
             return baseBytes;
         }
     }
+
+    public class QYBindingBase : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event Action<string> ErrorMessage;
+
+        protected void OnPropertyChanged(string propertyName) => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        protected void OnErrorMessage(string message) => this.ErrorMessage?.Invoke(message);
+    }
+
 }
