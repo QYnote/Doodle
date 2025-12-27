@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace DotNetFrame.DataBase.ViewModel
 {
@@ -26,6 +27,8 @@ namespace DotNetFrame.DataBase.ViewModel
         private BindingList<string> _db_current_table_list = new BindingList<string>();
         private string _db_current_table_name;
 
+        public List<QYUtils.EnumItem<DataBaseType>> TypeList => this._type_list;
+
         public DataBaseType Type
         {
             get => _type;
@@ -34,9 +37,14 @@ namespace DotNetFrame.DataBase.ViewModel
                 if (_type != value)
                 {
                     _type = value;
-                    this.OnPropertyChanged(nameof(Type));
 
-                    this.UpdateType(value);
+                    this.UpdateType(this.Type);
+
+                    this.OnPropertyChanged(nameof(Type));
+                    base.OnPropertyChanged(nameof(this.DataSource_Enable));
+                    base.OnPropertyChanged(nameof(this.DataSource_Folder_Enable));
+                    base.OnPropertyChanged(nameof(this.ID_Enable));
+                    base.OnPropertyChanged(nameof(this.Pasword_Enable));
                 }
             }
         }
@@ -89,7 +97,56 @@ namespace DotNetFrame.DataBase.ViewModel
             }
         }
 
-        public List<QYUtils.EnumItem<DataBaseType>> TypeList => this._type_list;
+        public bool DataSource_Enable
+        {
+            get
+            {
+                switch (this.Type)
+                {
+                    case DataBaseType.SQLite: return true;
+                    case DataBaseType.SQLCe:
+                    default: return false;
+                }
+            }
+        }
+        public bool DataSource_Folder_Enable
+        {
+            get
+            {
+                switch (this.Type)
+                {
+                    case DataBaseType.SQLite: return true;
+                    case DataBaseType.SQLCe:
+                    default: return false;
+                }
+            }
+        }
+        public bool ID_Enable
+        {
+            get
+            {
+                switch (this.Type)
+                {
+                    case DataBaseType.SQLite:
+                    case DataBaseType.SQLCe:
+                    default: return false;
+                }
+            }
+        }
+        public bool Pasword_Enable
+        {
+            get
+            {
+                switch (this.Type)
+                {
+                    case DataBaseType.SQLite:
+                    case DataBaseType.SQLCe:
+                    default: return true;
+                }
+            }
+        }
+
+
         public BindingList<string> TableNames => this._db_current_table_list;
         public string SelectedName
         {
@@ -99,8 +156,9 @@ namespace DotNetFrame.DataBase.ViewModel
                 if(this._db_current_table_name != value)
                 {
                     this._db_current_table_name = value;
-                    this.OnPropertyChanged(nameof(SelectedName));
-                    this.OnPropertyChanged(nameof(CurrentTable));
+
+                    base.OnPropertyChanged(nameof(this.SelectedName));
+                    base.OnPropertyChanged(nameof(this.CurrentTable));
                 }
             }
         }
@@ -123,11 +181,10 @@ namespace DotNetFrame.DataBase.ViewModel
         private void Initialize()
         {
             this._type_list = QYUtils.GetEnumItems<DataBaseType>().ToList();
-            this.Type = DataBaseType.SQLite;
-            this._db_connector.DataSource = this.DataSource = $"{new DirectoryInfo(SQLite.DEFAULT_SQLITE_DIR).Parent.Parent.Parent.FullName}\\DotNet.Database\\Resources\\SQLite\\{SQLite.DEFAULT_SQLITE_DIR_FILENAME}";
-            this._db_connector.Password = this.Password = SQLite.DEFAULT_SQLITE_PASSWORD;
 
-            this._db_connector.GetConnection();
+            this.Type = DataBaseType.SQLite;
+            this.DataSource = $"{new DirectoryInfo(SQLite.DEFAULT_SQLITE_DIR).Parent.Parent.Parent.FullName}\\DotNet.Database\\Resources\\SQLite\\{SQLite.DEFAULT_SQLITE_DIR_FILENAME}";
+            this.Password = SQLite.DEFAULT_SQLITE_PASSWORD;
         }
 
         private void UpdateType(DataBaseType type)
@@ -160,7 +217,8 @@ namespace DotNetFrame.DataBase.ViewModel
                 base.OnErrorMessage($"Message: {ex.Message}\r\nTrace:{ex.StackTrace}");
             }
         }
-        internal bool ConnectionTest()
+
+        private bool InputDatabaseInfo()
         {
             bool result = false;
 
@@ -170,72 +228,76 @@ namespace DotNetFrame.DataBase.ViewModel
                 this._db_connector.ID = this.ID;
                 this._db_connector.Password = this.Password;
 
-                this._db_connector.GetConnection();
                 result = true;
             }
             catch(Exception ex)
             {
-                result = false;
                 base.OnErrorMessage($"Message: {ex.Message}\r\nTrace:{ex.StackTrace}");
             }
 
             return result;
         }
+
         internal bool SendQuery(string query)
         {
             bool result = false;
 
             try
             {
-                if ((query.ToUpper().Contains("CREATE") || query.ToUpper().Contains("ALTER") || query.ToUpper().Contains("DROP") ||
-                     query.ToUpper().Contains("INSERT") || query.ToUpper().Contains("UPDATE") || query.ToUpper().Contains("DELETE")
-                    )
-                    && query.ToUpper().Contains("SELECT"))
-                    throw new Exception("SELECT와 다른 명령어는 동시에 사용 불가능 - 기술 부족");
-
-                if (query.ToUpper().Contains("CREATE") || query.ToUpper().Contains("ALTER") || query.ToUpper().Contains("DROP") ||
-                    query.ToUpper().Contains("INSERT") || query.ToUpper().Contains("UPDATE") || query.ToUpper().Contains("DELETE"))
+                if (this.InputDatabaseInfo())
                 {
-                    this._db_connector.BeginTransaction();
+                    if ((query.ToUpper().Contains("CREATE") || query.ToUpper().Contains("ALTER") || query.ToUpper().Contains("DROP") ||
+                         query.ToUpper().Contains("INSERT") || query.ToUpper().Contains("UPDATE") || query.ToUpper().Contains("DELETE")
+                        )
+                        && query.ToUpper().Contains("SELECT"))
+                        throw new Exception("SELECT와 다른 명령어는 동시에 사용 불가능 - 기술 부족");
 
-                    result = this._db_connector.ExecuteNonQuery(query);
-
-                    this._db_connector.EndTransaction(result);
-
-                    if (result)
+                    //DB정보 변경사항 적용
+                    if (query.ToUpper().Contains("CREATE") || query.ToUpper().Contains("ALTER") || query.ToUpper().Contains("DROP") ||
+                            query.ToUpper().Contains("INSERT") || query.ToUpper().Contains("UPDATE") || query.ToUpper().Contains("DELETE"))
                     {
-                        //Query 로그 저장
-                        string logText =
-                            $"============================================================{Environment.NewLine}" +
-                            $"{DateTime.Now}{Environment.NewLine}" +
-                            $"{query}{Environment.NewLine}" +
-                            $"============================================================{Environment.NewLine}" +
-                            $"{Environment.NewLine}";
-                        string logpath = $"{this._db_log_dir}\\sqlLog.txt";
+                        this._db_connector.BeginTransaction();
 
-                        Directory.CreateDirectory(Path.GetDirectoryName(logpath));
+                        result = this._db_connector.ExecuteNonQuery(query);
 
-                        File.AppendAllText(logpath, logText);
+                        this._db_connector.EndTransaction(result);
+
+                        if (result)
+                        {
+                            //Query 로그 저장
+                            string logText =
+                                $"============================================================{Environment.NewLine}" +
+                                $"{DateTime.Now}{Environment.NewLine}" +
+                                $"{query}{Environment.NewLine}" +
+                                $"============================================================{Environment.NewLine}" +
+                                $"{Environment.NewLine}";
+                            string logpath = $"{this._db_log_dir}\\sqlLog.txt";
+
+                            Directory.CreateDirectory(Path.GetDirectoryName(logpath));
+
+                            File.AppendAllText(logpath, logText);
+                        }
                     }
-                }
-                else if (query.ToUpper().Contains("SELECT"))
-                {
-                    DataSet ds = null;
-
-                    ds = this._db_connector.ExecuteQuery(query);
-
-                    if (ds != null)
+                    else if (query.ToUpper().Contains("SELECT"))
                     {
-                        this._db_current = ds;
+                        DataSet ds = null;
 
-                        this.TableNames.Clear();
-                        for (int i = 0; i < this._db_current.Tables.Count; i++)
-                            this.TableNames.Add(this._db_current.Tables[i].TableName);
-                        TableNames.ResetBindings();
+                        ds = this._db_connector.ExecuteQuery(query);
 
-                        this.SelectedName = TableNames[0];
+                        if (ds != null)
+                        {
+                            this._db_current = ds;
 
-                        result = true;
+                            this.TableNames.Clear();
+                            for (int i = 0; i < this._db_current.Tables.Count; i++)
+                                this.TableNames.Add(this._db_current.Tables[i].TableName);
+                            this.TableNames.ResetBindings();
+
+                            if(this.TableNames.Count > 0)
+                                this.SelectedName = this.TableNames[0];
+
+                            result = true;
+                        }
                     }
                 }
 
@@ -250,6 +312,54 @@ namespace DotNetFrame.DataBase.ViewModel
             }
 
             return result;
+        }
+
+        internal void Open_DataSource()
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Multiselect = false;
+            ofd.RestoreDirectory = true;
+
+            if (this.Type == DataBaseType.SQLCe)
+            {
+                ofd.DefaultExt = "sdf";
+                ofd.Filter = "SQL Server Compact Edition Database Files(*.sdf)|*.sdf";
+            }
+            else if (this.Type == DataBaseType.SQLite)
+            {
+                ofd.DefaultExt = "sqlite";
+                ofd.Filter = "SQLite Database Files(*.sqlite)|*.sqlite" +
+                            "|SQLite Database Files(*.db)|*.db";
+            }
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                this.DataSource = ofd.FileName;
+            }
+        }
+        internal void OpenFolder_DataSource()
+        {
+            if (this.Type != DataBaseType.SQLite) return;
+
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = "C:\\";
+            dialog.ShowNewFolderButton = true;
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                this.DataSource = dialog.SelectedPath;
+            }
+        }
+        internal void OpenFolder_Log()
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = "C:\\";
+            dialog.ShowNewFolderButton = true;
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                this.LogDirectory = dialog.SelectedPath;
+            }
         }
     }
 }
