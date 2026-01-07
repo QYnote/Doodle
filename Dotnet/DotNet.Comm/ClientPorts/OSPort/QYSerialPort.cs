@@ -50,7 +50,7 @@ namespace DotNet.Comm.ClientPorts.OSPort
             get { return this._serialPort.IsOpen; }
         }
 
-        public QYSerialPort() : base(CommType.Serial)
+        public QYSerialPort() : base(PortType.Serial)
         {
             this.Parity = Parity.None;
             this.StopBits = StopBits.One;

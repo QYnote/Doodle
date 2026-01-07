@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.CommTester.ViewModel
 {
-    internal class SerialHandler : QYViewModelHandler
+    internal class SerialHandler : QYBindingBase
     {
         private OSPortBase _base;
 
@@ -22,16 +22,22 @@ namespace DotNetFrame.CommTester.ViewModel
             7, 8
         };
 
-        private QYSerialPort Serial => this._base as QYSerialPort;
+        public QYSerialPort Serial => this._base as QYSerialPort;
 
         public List<string> PortList => this._portname_list;
         public List<int> BaudRateList => _baudrate_list;
         public List<int> DatabitList => _databit_list;
-
-        public bool IsOpen => this.Serial?.IsOpen ?? false;
+        
         public string PortName
         {
-            get => this.Serial?.PortName ?? string.Empty;
+            get
+            {
+                if (this._portname_list.Count > 0
+                    && this.Serial != null)
+                    return this.Serial.PortName;
+
+                return string.Empty;
+            }
             set
             {
                 if (this.Serial == null) return;
@@ -106,9 +112,9 @@ namespace DotNetFrame.CommTester.ViewModel
         {
             this._base = osport;
 
-            this._portname_list = System.IO.Ports.SerialPort.GetPortNames().ToList();
-            if (this._portname_list.Count > 0)
-                this.PortName = this._portname_list[0];
+            this._portname_list = this.GetPortList();
         }
+
+        internal List<string> GetPortList() => System.IO.Ports.SerialPort.GetPortNames().ToList();
     }
 }

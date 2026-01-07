@@ -55,7 +55,7 @@ namespace DotNetFrame.CommTester.View
             num_portno.TextAlign = HorizontalAlignment.Right;
             num_portno.Minimum = 0;
             num_portno.Maximum = int.MaxValue;
-            num_portno.DataBindings.Add("Value", this._handler, nameof(this._handler.PortNo), true, DataSourceUpdateMode.OnPropertyChanged);
+            num_portno.DataBindings.Add("Value", this._handler, $"{nameof(this._handler.PortNo)}", true, DataSourceUpdateMode.OnPropertyChanged);
 
             this.Controls.Add(this.lbl_ip);
             this.Controls.Add(txt_ip);

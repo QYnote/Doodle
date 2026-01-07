@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DotNet.Comm
 {
-    public enum CommType
+    public enum PortType
     {
         Serial,
         Ethernet

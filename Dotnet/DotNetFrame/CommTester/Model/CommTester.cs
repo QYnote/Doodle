@@ -1,6 +1,4 @@
-﻿using DotNet.Comm;
-using DotNet.Comm.ClientPorts.AppPort;
-using DotNet.Comm.ClientPorts.OSPort;
+﻿using DotNet.Comm.ClientPorts.AppPort;
 using DotNet.Comm.Protocols;
 using DotNet.Comm.Protocols.Customs.HYNux;
 using DotNet.Utils.Controls.Utils;
@@ -48,13 +46,11 @@ namespace DotNetFrame.CommTester.Model
         Result_Protocol_NG,
     }
 
-    internal class M_CommTester
+    internal class CommTester : AppPort
     {
         public event EventHandler<string> OSPortLog;
         public event EventHandler<TestDataFrame> TestFrameUpdated;
 
-        /// <summary>Application ↔ OS Port</summary>
-        private AppPort _appPort = new AppPort();
         /// <summary>Protocol 종류</summary>
         private ProtocolType _protocolType = ProtocolType.None;
         /// <summary>Protocol</summary>
@@ -63,13 +59,13 @@ namespace DotNetFrame.CommTester.Model
         private BackgroundWorker _bgWorker = new BackgroundWorker();
 
         /// <summary>에러코드 추가 여부</summary>
-        private bool _errCode_add = false;
+        private bool _reg_errCode = false;
         /// <summary>반복전송 여부</summary>
-        private bool _do_repeat = false;
+        private bool _reg_repeat_enable = false;
         /// <summary>반복전송 수</summary>
-        private int _do_repeat_count = 3;
+        private int _reg_repeat_count = 3;
         /// <summary>반복전송 - 무한전송 여부</summary>
-        private bool _do_repeat_infinity = false;
+        private bool _reg_repeat_infinity = false;
 
         /// <summary>현재 전송중인 Frame</summary>
         private TestDataFrame _write_frame_current_test = null;
@@ -81,13 +77,8 @@ namespace DotNetFrame.CommTester.Model
         /// <summary>최근 Buffer 읽은 시간</summary>
         private DateTime _read_buffer_last_time = DateTime.MinValue;
 
-
-        /// <summary>OS Port 종류</summary>
-        internal CommType PortType { get => this._appPort.CommType; set => this._appPort.CommType = value; }
-        /// <summary>OS Port</summary>
-        internal OSPortBase OSPort { get => this._appPort.OSPort; }
         /// <summary>Protocol 종류</summary>
-        internal ProtocolType ProtocolType
+        public ProtocolType ProtocolType
         {
             get => this._protocolType;
             set
@@ -112,18 +103,75 @@ namespace DotNetFrame.CommTester.Model
                     }
 
                     this._protocolType = value;
+
+                    base.OnPropertyChanged(nameof(this.ProtocolType));
                 }
             }
         }
-        internal bool IsOpen_App { get => this._appPort.IsUserOpen; }
-        internal bool IsOpen_OS { get => this._appPort.OSPort.IsOpen; }
-        /// <summary>전송등록 여부</summary>
-        internal bool IsWriting { get => this._write_frame_current_test != null; }
-
-
-        internal M_CommTester()
+        /// <summary>에러코드 추가 여부</summary>
+        public bool Reg_AddErrCode
         {
-            this._appPort.ComPortLog += (obj) => { this.OSPortLog?.Invoke(this, (string)obj[0]); };
+            get => _reg_errCode;
+            set
+            {
+                if (this.ProtocolType != ProtocolType.None
+                    && this.Reg_AddErrCode != value)
+                {
+                    this._reg_errCode = value;
+
+                    base.OnPropertyChanged(nameof(this.Reg_AddErrCode));
+                }
+            }
+        }
+        /// <summary>반복전송 여부</summary>
+        public bool Reg_Repeat_Enable
+        {
+            get => _reg_repeat_enable;
+            set
+            {
+                if (this.Reg_Repeat_Enable != value)
+                {
+                    this._reg_repeat_enable = value;
+
+                    base.OnPropertyChanged(nameof(this.Reg_Repeat_Enable));
+                }
+            }
+        }
+        /// <summary>반복전송 수</summary>
+        public int Reg_Repeat_Count
+        {
+            get => _reg_repeat_count;
+            set
+            {
+                if (this.Reg_Repeat_Enable
+                    && this.Reg_Repeat_Infinity == false
+                    && this.Reg_Repeat_Count != value)
+                {
+                    this._reg_repeat_count = value;
+                }
+            }
+        }
+        /// <summary>반복전송 - 무한전송 여부</summary>
+        public bool Reg_Repeat_Infinity
+        {
+            get => _reg_repeat_infinity;
+            set
+            {
+                if (this.Reg_Repeat_Enable
+                    && this.Reg_Repeat_Infinity != value)
+                {
+                    this._reg_repeat_infinity = value;
+
+                    base.OnPropertyChanged(nameof(this.Reg_Repeat_Infinity));
+                }
+            }
+        }
+        public bool IsWriting => this._write_frame_current_test != null;
+
+        internal CommTester()
+        {
+            base.ComPortLog += (obj) => { this.OSPortLog?.Invoke(this, (string)obj[0]); };
+            this._bgWorker.WorkerSupportsCancellation = true;
             this._bgWorker.DoWork += this._bgWorker_DoWork;
         }
 
@@ -131,27 +179,88 @@ namespace DotNetFrame.CommTester.Model
         /// Port 연결
         /// </summary>
         /// <returns>연결 여부</returns>
-        internal bool Connect()
+        public override bool Connect()
         {
-            if (this._appPort.IsUserOpen) return false;
+            if (base.IsAppOpen) return false;
 
-            this._appPort.Connect();
+            base.OSPort.Open();
             this._bgWorker.RunWorkerAsync();
+
+            base.IsAppOpen = true;
 
             return true;
         }
         /// <summary>
         /// Port 연결 해제
         /// </summary>
-        internal bool Disconnect()
+        public override bool Disconnect()
         {
             if (this._bgWorker.IsBusy)
                 this._bgWorker.CancelAsync();
 
-            this._appPort.Disconnect();
+            base.OSPort.Close();
+
+            base.IsAppOpen = false;
 
             return true;
         }
+        public override void Initialize()
+        {
+            if(this._bgWorker.IsBusy) this._bgWorker.CancelAsync();
+            base.IsAppOpen = false;
+            base.OSPort.InitPort();
+
+            this._read_buffer = null;
+            this._read_buffer_last_length = 0;
+            this._read_buffer_last_time = DateTime.MinValue;
+
+            this.Reg_AddErrCode = false;
+            this.Reg_Repeat_Enable = false;
+            this.Reg_Repeat_Count = 3;
+            this.Reg_Repeat_Infinity = false;
+        }
+        public override byte[] Read()
+        {
+            byte[] readBytes = this.OSPort.Read();
+
+            if (readBytes != null)
+            {
+                if (this._read_buffer == null)
+                    this._read_buffer = readBytes;
+                else
+                {
+                    byte[] temp = new byte[this._read_buffer.Length + readBytes.Length];
+                    Buffer.BlockCopy(this._read_buffer, 0, temp, 0, this._read_buffer.Length);
+                    Buffer.BlockCopy(readBytes, 0, temp, this._read_buffer.Length, readBytes.Length);
+                    this._read_buffer = temp;
+                }
+
+                this._write_frame_current_test.Comm.Buffer = this._read_buffer;
+                this._read_buffer_last_time = DateTime.Now;
+
+                this.TestFrameUpdated?.Invoke(this, this._write_frame_current_test);
+            }
+
+            return this._read_buffer;
+        }
+        public override void Write(byte[] bytes)
+        {
+            if (this._write_frame_current_test == null) return;
+
+            this._write_frame_current_test.Status = FrameStatus.Requesting;
+            this._read_buffer = null;
+            this._read_buffer_last_length = 0;
+            this._read_buffer_last_time = DateTime.MinValue;
+
+            this._write_frame_current_test.Comm.TryCount_Cur++;
+            this._write_frame_current_test.Comm.SendingTime = DateTime.Now;
+
+            base.OSPort.Write(this._write_frame_current_test.Comm.ReqBytes);
+            this.TestFrameUpdated?.Invoke(this, this._write_frame_current_test);
+
+            this._write_frame_current_test.Status = FrameStatus.Reading;
+        }
+
         /// <summary>Port 동작 Process</summary>
         private void _bgWorker_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -159,11 +268,15 @@ namespace DotNetFrame.CommTester.Model
             {
                 try
                 {
-                    if (this._bgWorker.CancellationPending || this._appPort.IsUserOpen == false) return;
+                    if (this._bgWorker.CancellationPending || base.IsAppOpen == false) return;
 
-                    if (this._appPort.OSPort.IsOpen == false)
+                    //포트 상태값 전송
+                    base.OnPropertyChanged(nameof(this.OSPort.IsOpen));
+                    base.OnPropertyChanged(nameof(this.IsWriting));
+
+                    if (base.OSPort.IsOpen == false)
                     {
-                        this._appPort.Connect();
+                        base.OSPort.Open();
                         System.Threading.Thread.Sleep(3000);
                         continue;
                     }
@@ -182,7 +295,7 @@ namespace DotNetFrame.CommTester.Model
                                 this._read_buffer = null;
                                 this._read_buffer_last_length = 0;
 
-                                this._appPort.OSPort.InitPort();
+                                base.OSPort.InitPort();
                             }
                             else
                             {
@@ -195,101 +308,74 @@ namespace DotNetFrame.CommTester.Model
                         }
 
                         //Port 읽기
-                        byte[] readBytes = this._appPort.Read();
+                        this.Read();
 
-                        if (readBytes != null)
+                        //3. Protocol 처리
+                        if (this._protocol != null)
                         {
-                            if (this._read_buffer != null)
+                            byte[] frameBytes = this._protocol.Response_ExtractFrame(this._read_buffer, this._write_frame_current_test.Comm.ReqBytes);
+
+                            if (frameBytes != null)
                             {
-                                byte[] temp = new byte[this._read_buffer.Length + readBytes.Length];
-                                Buffer.BlockCopy(this._read_buffer, 0, temp, 0, this._read_buffer.Length);
-                                Buffer.BlockCopy(readBytes, 0, temp, this._read_buffer.Length, readBytes.Length);
-                                this._read_buffer = temp;
-                            }
-                            else
-                                this._read_buffer = readBytes;
+                                this._write_frame_current_test.Comm.RcvBytes = frameBytes;
 
-                            this._write_frame_current_test.Comm.Buffer = this._read_buffer;
-                            this._read_buffer_last_time = DateTime.Now;
-                            this.TestFrameUpdated?.Invoke(this, this._write_frame_current_test);
-
-
-                            //3. Protocol 처리
-                            if (this._protocol != null)
-                            {
-                                byte[] frameBytes = this._protocol.Response_ExtractFrame(this._read_buffer, this._write_frame_current_test.Comm.ReqBytes);
-
-                                if (frameBytes != null)
+                                //ErrorCode 확인
+                                bool isErr = false;
+                                if (this._protocol.ConfirmErrCode(this._write_frame_current_test.Comm.RcvBytes) == false)
                                 {
-                                    this._write_frame_current_test.Comm.RcvBytes = frameBytes;
+                                    isErr = true;
+                                    this._write_frame_current_test.Status = FrameStatus.Result_Protocol_ErrorCode;
+                                    this._write_frame_current_test.Result.Protocol.ErrorCode++;
+                                }
+                                else
+                                {
+                                    List<object> readItems
+                                        = this._protocol.Response_ExtractData(
+                                            this._write_frame_current_test.Comm.RcvBytes,
+                                            this._write_frame_current_test.Comm.ReqBytes
+                                            );
 
-                                    //ErrorCode 확인
-                                    bool isErr = false;
-                                    if (this._protocol.ConfirmErrCode(this._write_frame_current_test.Comm.RcvBytes) == false)
+                                    if (readItems != null && readItems.Count > 0)
                                     {
-                                        isErr = true;
-                                        this._write_frame_current_test.Status = FrameStatus.Result_Protocol_ErrorCode;
-                                        this._write_frame_current_test.Result.Protocol.ErrorCode++;
-                                    }
-                                    else
-                                    {
-                                        List<object> readItems 
-                                            = this._protocol.Response_ExtractData(
-                                                this._write_frame_current_test.Comm.RcvBytes,
-                                                this._write_frame_current_test.Comm.ReqBytes
-                                                );
-
-                                        if (readItems != null && readItems.Count > 0)
+                                        if (this._protocol is HYModbus modbus)
                                         {
-                                            if (this._protocol is HYModbus modbus)
+                                            foreach (DataFrame_Modbus frame in readItems)
                                             {
-                                                foreach (DataFrame_Modbus frame in readItems)
+                                                if (frame.FuncCode > 0x80)
                                                 {
-                                                    if (frame.FuncCode > 0x80)
-                                                    {
-                                                        //Protocol Error 처리
-                                                        this._write_frame_current_test.Status = FrameStatus.Result_Protocol_NG;
-                                                        isErr = true;
-                                                        break;
-                                                    }
+                                                    //Protocol Error 처리
+                                                    this._write_frame_current_test.Status = FrameStatus.Result_Protocol_NG;
+                                                    isErr = true;
+                                                    break;
                                                 }
                                             }
-                                            else if (this._protocol is PCLink pcLink)
-                                            {
+                                        }
+                                        else if (this._protocol is PCLink pcLink)
+                                        {
 
-                                            }
                                         }
                                     }
-
-                                    //수신 완료처리
-                                    if (isErr == false)
-                                        this._write_frame_current_test.Status = FrameStatus.Result_Comm_OK;
-
-                                    this.TestFrameUpdated?.Invoke(this, this._write_frame_current_test);
-
-                                    if (this._write_frame_current_test.Comm.TryCount_Cur >= this._write_frame_current_test.Comm.TryCount_Max)
-                                        this._write_frame_current_test.Status = FrameStatus.Ready;
-                                    else
-                                        this._write_frame_current_test = null;
-
-                                    this._read_buffer = null;
                                 }
-                            }//Protocol 처리 End
-                        }
+
+                                //수신 완료처리
+                                if (isErr == false)
+                                    this._write_frame_current_test.Status = FrameStatus.Result_Comm_OK;
+
+                                this.TestFrameUpdated?.Invoke(this, this._write_frame_current_test);
+
+                                if (this._write_frame_current_test.Comm.TryCount_Cur >= this._write_frame_current_test.Comm.TryCount_Max)
+                                    this._write_frame_current_test.Status = FrameStatus.Ready;
+                                else
+                                    this._write_frame_current_test = null;
+
+                                this._read_buffer = null;
+                            }
+                        }//Protocol 처리 End
                     }
                     else
                     {
                         //데이터 전송
-                        this._write_frame_current_test.Status = FrameStatus.Requesting;
-                        this._read_buffer = null;
-                        this._read_buffer_last_length = 0;
-
-                        this._write_frame_current_test.Comm.TryCount_Cur++;
-                        this._write_frame_current_test.Comm.SendingTime = DateTime.Now;
-
-                        this._appPort.Write(this._write_frame_current_test.Comm.ReqBytes);
-                        this.TestFrameUpdated?.Invoke(this, this._write_frame_current_test);
-                        this._write_frame_current_test.Status = FrameStatus.Reading;
+                        this.Write(this._write_frame_current_test.Comm.ReqBytes);
                     }
                 }
                 catch (Exception ex)
@@ -366,35 +452,36 @@ namespace DotNetFrame.CommTester.Model
 
             return false;
         }
+
         /// <summary>
         /// 전송 등록
         /// </summary>
         /// <param name="text">전송할 Text</param>
         /// <returns>등록 결과</returns>
-        internal bool Register_Data(byte[] bytes, int tryCount)
+        internal bool Register_Data(byte[] bytes)
         {
             if (bytes == null) return false;
 
+            //Protocol Error Code 추가
+            if (this.ProtocolType != ProtocolType.None && this.Reg_AddErrCode)
+            {
+                byte[] errCode = this._protocol.CreateErrCode(bytes);
+
+                bytes = QYUtils.Comm.BytesAppend(bytes, errCode);
+            }
+
+            //TryCount 설정
+            int tryCount = 1;
+            if (this.Reg_Repeat_Enable)
+                tryCount = this.Reg_Repeat_Infinity ? int.MaxValue : this._reg_repeat_count;
+
+            //전송 프레임 생성
             TestDataFrame testFrame = new TestDataFrame(bytes);
             testFrame.Comm.TryCount_Max = tryCount;
 
             this._write_frame_current_test = testFrame;
 
             return true;
-        }
-
-        internal byte[] Create_ErrorCode(byte[] bytes)
-        {
-            if (this._errCode_add)
-            {
-                if (this._protocol == null) return null;
-
-                byte[] errCode = this._protocol.CreateErrCode(bytes);
-
-                return errCode;
-            }
-
-            return null;
         }
     }
 

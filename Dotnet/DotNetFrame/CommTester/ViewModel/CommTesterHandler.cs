@@ -2,6 +2,7 @@
 using DotNet.Comm.ClientPorts.OSPort;
 using DotNet.Utils.Controls.Utils;
 using DotNet.Utils.Views;
+using DotNetFrame.Base.Model;
 using DotNetFrame.CommTester.Model;
 using System;
 using System.Collections.Generic;
@@ -13,138 +14,75 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace DotNetFrame.CommTester.ViewModel
 {
-    internal class CommTesterHandler : QYViewModelHandler
+    internal class CommTesterHandler : QYBindingBase
     {
         public event EventHandler<TestDataFrame> FrameUpated;
 
-        private SerialHandler _serial;
-        private EthernetHandler _ethernet;
+        private SerialHandler _serialHandler;
+        private EthernetHandler _ethernetHandler;
 
-        private M_CommTester _commTester = new M_CommTester();
-        private List<QYViewUtils.EnumItem<CommType>> _port_type_list;
+        private Model.CommTester _commTester = new Model.CommTester();
+        private List<QYViewUtils.EnumItem<PortType>> _port_type_list;
         private List<QYViewUtils.EnumItem<ProtocolType>> _port_protocol_type_list;
-        private bool _port_protocol_errorcode_add;
-        private bool _port_comm_repeat_enable;
-        private int _port_comm_repeat_count;
-        private bool _port_comm_repeat_infinity;
-        private string _port_comm_request;
+        private string _port_comm_request = string.Empty;
 
-        internal SerialHandler Serial { get => _serial; }
-        internal EthernetHandler Ethernet { get => _ethernet; }
-        public List<QYViewUtils.EnumItem<CommType>> Port_Type_List { get => _port_type_list;}
+        internal SerialHandler SerialHandler { get => _serialHandler; }
+        internal EthernetHandler EthernetHandler { get => _ethernetHandler; }
+        public List<QYViewUtils.EnumItem<PortType>> Port_Type_List { get => _port_type_list;}
         internal List<QYViewUtils.EnumItem<ProtocolType>> Port_protocol_type_list { get => _port_protocol_type_list;}
+        public Model.CommTester CommTester => this._commTester;
 
-
-        public CommType Port_Type
-        {
-            get => this._commTester.PortType;
-            set
-            {
-                if (this._commTester.PortType != value)
-                {
-                    this._commTester.PortType = value;
-                    base.OnPopertyChanged(nameof(this.Port_Type));
-                }
-            }
-        }
-        public ProtocolType Port_Protocol_Type
-        {
-            get => this._commTester.ProtocolType;
-            set
-            {
-                if(this._commTester.ProtocolType != value)
-                {
-                    this._commTester.ProtocolType = value;
-
-                    if (value == ProtocolType.None)
-                        this.Port_Protocol_ErrorCode_Add = false;
-
-                    base.OnPopertyChanged(nameof(this.Port_Protocol_Type));
-                }
-            }
-        }
-        public bool Port_Protocol_ErrorCode_Add
-        {
-            get => this._port_protocol_errorcode_add;
-            set => this._port_protocol_errorcode_add = value;
-        }
-
-        public bool Port_Comm_Repeat_Enable
-        {
-            get => this._port_comm_repeat_enable;
-            set
-            {
-                if(this._port_comm_repeat_enable != value)
-                {
-                    this._port_comm_repeat_enable = value;
-                    base.OnPopertyChanged(nameof(this.Port_Comm_Repeat_Enable));
-                }
-            }
-        }
-        public int Port_Comm_Repeat_Count
-        {
-            get => this._port_comm_repeat_count;
-            set
-            {
-                if(this._port_comm_repeat_count != value)
-                {
-                    if (value < 1)
-                        this._port_comm_repeat_count = 1;
-                    else
-                        this._port_comm_repeat_count = value;
-                }
-            }
-        }
-        public bool Port_Comm_Repeat_Infinity
-        {
-            get => this._port_comm_repeat_infinity;
-            set
-            {
-                if(this._port_comm_repeat_infinity != value)
-                {
-                    this._port_comm_repeat_infinity = value;
-                    base.OnPopertyChanged(nameof(this.Port_Comm_Repeat_Infinity));
-                }
-            }
-        }
-        public string Port_Comm_Request
-        {
-            get => this._port_comm_request;
-            set => this._port_comm_request = value;
-        }
-
-        public bool Port_IsUserOpen
-        {
-            get => this._commTester.IsOpen_App;
-            set
-            {
-                if (this._commTester.IsOpen_App != value)
-                {
-                    if (value)
-                    {
-                        this._commTester.Connect();
-                    }
-                    else
-                    {
-                        this._commTester.Disconnect();
-                    }
-
-                    base.OnPopertyChanged(nameof(this.Port_IsUserOpen));
-                }
-            }
-        }
-        public bool Port_IsPortOpen => this._commTester.IsOpen_OS;
-        public Color Port_IsPortOpen_Color
+        public string ConnectionText
         {
             get
             {
-                if (this.Port_IsPortOpen)
+                if(this.CommTester.IsAppOpen)
+                    return AppData.Lang("commtester.portproperty.disconnect.text");
+                else
+                    return AppData.Lang("commtester.portproperty.connect.text");
+            }
+        }
+        public Color ConnectionColor
+        {
+            get
+            {
+                if (this.CommTester.OSPort.IsOpen)
                     return Color.Green;
                 else
                     return Color.Red;
             }
         }
-        public bool Port_Requesting => this._commTester.IsWriting;
+
+        public bool Reg_AddErrCode_Enable
+            => this.CommTester.ProtocolType != ProtocolType.None;
+        public bool Reg_Repeat_Count_Enable
+            => this.CommTester.Reg_Repeat_Enable
+            && this.CommTester.Reg_Repeat_Infinity == false;
+        public bool Reg_Repeat_Infinity_Enable
+            => this.CommTester.Reg_Repeat_Enable;
+
+        public string Text
+        {
+            get => this._port_comm_request;
+            set
+            {
+                if (this.Text != value)
+                {
+                    this._port_comm_request = value;
+                }
+            }
+        }
+        public string RequestButtonText
+        {
+            get
+            {
+                if(this.CommTester.IsWriting)
+                    return AppData.Lang("commtester.commproperty.stop.text");
+                else
+                    return AppData.Lang("commtester.commproperty.send.text");
+            }
+        }
+
 
         internal CommTesterHandler()
         {
@@ -154,34 +92,71 @@ namespace DotNetFrame.CommTester.ViewModel
         private void Initialize()
         {
             this._commTester.TestFrameUpdated += (s, e) => { this.FrameUpated?.Invoke(s, e.CopyFrom()); };
-            this._serial = new SerialHandler(this._commTester.OSPort as QYSerialPort);
-            this._ethernet = new EthernetHandler(this._commTester.OSPort as QYEthernet);
+            this._commTester.PropertyChanged += _commTester_PropertyChanged;
+            this._serialHandler = new SerialHandler(this._commTester.OSPort);
+            this._ethernetHandler = new EthernetHandler(this._commTester.OSPort);
 
-            this._port_type_list = QYViewUtils.GetEnumItems<CommType>().ToList();
+            this._port_type_list = QYViewUtils.GetEnumItems<PortType>().ToList();
             this._port_protocol_type_list = QYViewUtils.GetEnumItems<ProtocolType>().ToList();
 
-            this.Port_Type = CommType.Serial;
+            this.CommTester.PortType = PortType.Serial;
+            this.CommTester.ProtocolType = ProtocolType.None;
         }
+
+        private void _commTester_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(sender is Model.CommTester tester)
+            {
+                if(e.PropertyName == nameof(tester.IsAppOpen))
+                {
+                    base.OnPropertyChanged(nameof(this.ConnectionText));
+                }
+                else if(e.PropertyName == nameof(tester.ProtocolType))
+                {
+                    base.OnPropertyChanged(nameof(this.Reg_AddErrCode_Enable));
+                }
+                else if(e.PropertyName == nameof(tester.Reg_Repeat_Enable))
+                {
+                    base.OnPropertyChanged(nameof(this.Reg_Repeat_Count_Enable));
+                    base.OnPropertyChanged(nameof(this.Reg_Repeat_Infinity_Enable));
+                }
+                else if(e.PropertyName == nameof(tester.Reg_Repeat_Infinity))
+                {
+                    base.OnPropertyChanged(nameof(this.Reg_Repeat_Count_Enable));
+                }
+                else if(e.PropertyName == nameof(tester.IsWriting))
+                {
+                    base.OnPropertyChanged(nameof(this.RequestButtonText));
+                }
+            }
+            else if(sender is OSPortBase osPort)
+            {
+                if(e.PropertyName == nameof(osPort.IsOpen))
+                {
+                    base.OnPropertyChanged(nameof(this.ConnectionColor));
+                }
+            }
+        }
+
+        public void Connection()
+        {
+            if (this.CommTester.IsAppOpen)
+                this.CommTester.Disconnect();
+            else
+                this.CommTester.Connect();
+        }
+
 
         internal void Data_Register()
         {
-            byte[] bytes = this.ConvertTextToByte(this.Port_Comm_Request);
+            if (this.Text == null || this.Text == string.Empty) return;
+
+            byte[] bytes = this.ConvertTextToByte(this.Text);
             if (bytes == null) return;
 
-            if (this.Port_Protocol_ErrorCode_Add)
-            {
-                byte[] errCode = this._commTester.Create_ErrorCode(bytes);
-                if (errCode == null) return;
-
-                bytes = QYUtils.Comm.BytesAppend(bytes, errCode);
-            }
-
-            int tryCount = this.Port_Comm_Repeat_Enable ? (this.Port_Comm_Repeat_Infinity ? int.MaxValue : this.Port_Comm_Repeat_Count) : 1;
-
-            this._commTester.Register_Data(bytes, tryCount);
+            this._commTester.Register_Data(bytes);
         }
         
-
         /// <summary>
         /// Text → Byte 변환
         /// </summary>

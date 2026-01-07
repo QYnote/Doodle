@@ -14,7 +14,7 @@ namespace DotNetFrame.Server.ViewModel
         Modbus,
     }
 
-    internal class ServerHandler : QYViewModelHandler
+    internal class ServerHandler : QYBindingBase
     {
         private List<QYViewUtils.EnumItem<ServerType>> _server_List;
         private ServerType _server_current;
@@ -29,7 +29,7 @@ namespace DotNetFrame.Server.ViewModel
                 {
                     _server_current = value;
 
-                    base.OnPopertyChanged(nameof(this.Server_Current));
+                    base.OnPropertyChanged(nameof(this.Server_Current));
                 }
             }
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNet.Utils.Controls.Utils;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlServerCe;
@@ -14,7 +15,7 @@ namespace DotNet.Database
         SQLite,
     }
 
-    public abstract class DBBase
+    public abstract class DBBase : QYBindingBase
     {
         public delegate void DBLoghandler(string errorMessage);
         public event DBLoghandler LogEvent;
@@ -60,6 +61,7 @@ namespace DotNet.Database
                 }
             }
         }
+        public bool IsConnect => this.BaseConn != null && this.BaseConn.State != ConnectionState.Closed;
         /// <summary>
         /// DataBase 연결 String
         /// </summary>

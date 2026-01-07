@@ -83,8 +83,6 @@ namespace DotNetFrame.CommTester.View
 
         private CommTesterHandler _handler = new CommTesterHandler();
 
-        private int[] _baudrateList = new int[] { 9600, 19200, 38400, 57600, 115200, 921600 };
-        private byte[] _databitsList = new byte[] { 7, 8 };
         private DataTable _dtDataLog = new DataTable();
         private DataTable _dtDataResult = new DataTable();
         private DataTable _dtProtocolResult = new DataTable();
@@ -101,6 +99,7 @@ namespace DotNetFrame.CommTester.View
             this.InitText_AfterUI();
             this.InitComponent();
 
+            
         }
 
         private void InitText()
@@ -165,11 +164,14 @@ namespace DotNetFrame.CommTester.View
             cbo_config_port_list.DataSource = this._handler.Port_Type_List;
             cbo_config_port_list.DisplayMember = "DisplayText";
             cbo_config_port_list.ValueMember = "Value";
-            cbo_config_port_list.DataBindings.Add("SelectedValue", this._handler, nameof(this._handler.Port_Type), true, DataSourceUpdateMode.OnPropertyChanged);
+            cbo_config_port_list.DataBindings.Add("SelectedValue", this._handler,
+                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.PortType)}",
+                true, DataSourceUpdateMode.OnPropertyChanged);
             cbo_config_port_list.DropDownStyle = ComboBoxStyle.DropDownList;
 
             this.btn_config_port_connection.Left = cbo_config_port_list.Right + 3;
             this.btn_config_port_connection.Top = cbo_config_port_list.Top - 1;
+            this.btn_config_port_connection.DataBindings.Add("Text", this._handler, nameof(this._handler.ConnectionText));
             this.btn_config_port_connection.Click += Btn_config_port_connection_Click;
 
             
@@ -177,11 +179,12 @@ namespace DotNetFrame.CommTester.View
             this.lbl_config_port_connection_status.Top = this.btn_config_port_connection.Top;
             this.lbl_config_port_connection_status.Height = this.btn_config_port_connection.Height;
             this.lbl_config_port_connection_status.Width = this.lbl_config_port_connection_status.Height;
+            this.lbl_config_port_connection_status.DataBindings.Add("BackColor", this._handler, nameof(this._handler.ConnectionColor));
 
-            this.uc_config_port_serial = new UcSerial(this._handler.Serial);
+            this.uc_config_port_serial = new UcSerial(this._handler.SerialHandler);
             this.uc_config_port_serial.Dock = DockStyle.Fill;
 
-            this.uc_config_port_ethernet = new UcEthernet(this._handler.Ethernet);
+            this.uc_config_port_ethernet = new UcEthernet(this._handler.EthernetHandler);
             this.uc_config_port_ethernet.Dock = DockStyle.Fill;
 
             pnl_config_port.Controls.Add(cbo_config_port_list);
@@ -194,7 +197,7 @@ namespace DotNetFrame.CommTester.View
 
         private void Btn_config_port_connection_Click(object sender, EventArgs e)
         {
-            this._handler.Port_IsUserOpen = !this._handler.Port_IsUserOpen;
+            this._handler.Connection();
         }
 
         private void InitUI_Comm(GroupBox gbx)
@@ -207,23 +210,31 @@ namespace DotNetFrame.CommTester.View
             cbo_config_comm_protocol_type.DataSource = this._handler.Port_protocol_type_list;
             cbo_config_comm_protocol_type.DisplayMember = "DisplayText";
             cbo_config_comm_protocol_type.ValueMember = "Value";
-            cbo_config_comm_protocol_type.DataBindings.Add("SelectedValue", this._handler, nameof(this._handler.Port_Protocol_Type), true, DataSourceUpdateMode.OnPropertyChanged);
+            cbo_config_comm_protocol_type.DataBindings.Add("SelectedValue", this._handler,
+                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.ProtocolType)}",
+                true, DataSourceUpdateMode.OnPropertyChanged);
             cbo_config_comm_protocol_type.DropDownStyle = ComboBoxStyle.DropDownList;
 
             this.chk_config_comm_protocol_errorcode_add.Left = this.lbl_config_comm_protocol_type.Left;
             this.chk_config_comm_protocol_errorcode_add.Top = this.lbl_config_comm_protocol_type.Bottom + 3;
             this.chk_config_comm_protocol_errorcode_add.Width = this.lbl_config_comm_protocol_type.Width + 20;
-            this.chk_config_comm_protocol_errorcode_add.DataBindings.Add("Checked", this._handler, nameof(this._handler.Port_Protocol_ErrorCode_Add), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.chk_config_comm_protocol_errorcode_add.DataBindings.Add("Checked", this._handler,
+                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_AddErrCode)}",
+                true, DataSourceUpdateMode.OnPropertyChanged);
             this.chk_config_comm_protocol_errorcode_add.CheckAlign = ContentAlignment.MiddleRight;
             this.chk_config_comm_protocol_errorcode_add.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_config_comm_protocol_errorcode_add.DataBindings.Add("Enabled", this._handler, nameof(this._handler.Reg_AddErrCode_Enable));
 
 
             this.chk_config_comm_repeat_enable.Left = this.chk_config_comm_protocol_errorcode_add.Left;
             this.chk_config_comm_repeat_enable.Top = this.chk_config_comm_protocol_errorcode_add.Bottom + 3;
             this.chk_config_comm_repeat_enable.Width = this.chk_config_comm_protocol_errorcode_add.Width;
-            this.chk_config_comm_repeat_enable.DataBindings.Add("Checked", this._handler, nameof(this._handler.Port_Comm_Repeat_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
             this.chk_config_comm_repeat_enable.CheckAlign = ContentAlignment.MiddleRight;
             this.chk_config_comm_repeat_enable.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_config_comm_repeat_enable.DataBindings.Add("Checked", this._handler,
+                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_Repeat_Enable)}",
+                true, DataSourceUpdateMode.OnPropertyChanged);
+            
 
             this.num_config_comm_repeat_count.Left = this.chk_config_comm_repeat_enable.Right + 3;
             this.num_config_comm_repeat_count.Top = this.chk_config_comm_repeat_enable.Top;
@@ -233,19 +244,26 @@ namespace DotNetFrame.CommTester.View
             this.num_config_comm_repeat_count.Minimum = 1;
             this.num_config_comm_repeat_count.Maximum = int.MaxValue;
             this.num_config_comm_repeat_count.TextAlign = HorizontalAlignment.Right;
-            this.num_config_comm_repeat_count.DataBindings.Add("Value", this._handler, nameof(this._handler.Port_Comm_Repeat_Count), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.num_config_comm_repeat_count.DataBindings.Add("Value", this._handler,
+                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_Repeat_Count)}",
+                true, DataSourceUpdateMode.OnPropertyChanged);
+            this.num_config_comm_repeat_count.DataBindings.Add("Enabled", this._handler, nameof(this._handler.Reg_Repeat_Count_Enable));
 
             this.chk_config_comm_repeat_infinity.Left = this.chk_config_comm_repeat_enable.Left;
             this.chk_config_comm_repeat_infinity.Top = this.chk_config_comm_repeat_enable.Bottom + 3;
             this.chk_config_comm_repeat_infinity.Width = this.chk_config_comm_repeat_enable.Width;
-            this.chk_config_comm_repeat_infinity.DataBindings.Add("Checked", this._handler, nameof(this._handler.Port_Comm_Repeat_Infinity), true, DataSourceUpdateMode.OnPropertyChanged);
             this.chk_config_comm_repeat_infinity.CheckAlign = ContentAlignment.MiddleRight;
             this.chk_config_comm_repeat_infinity.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_config_comm_repeat_infinity.DataBindings.Add("Checked", this._handler,
+                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_Repeat_Infinity)}",
+                true, DataSourceUpdateMode.OnPropertyChanged);
+            this.chk_config_comm_repeat_infinity.DataBindings.Add("Enabled", this._handler, nameof(this._handler.Reg_Repeat_Infinity_Enable));
 
 
             this.btn_config_comm_request.Left = gbx.Right - (this.btn_config_port_connection.Width + 3);
             this.btn_config_comm_request.Top = gbx.Bottom - (this.btn_config_comm_request.Height + 4);
             this.btn_config_comm_request.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            this.btn_config_comm_request.DataBindings.Add("Text", this._handler, nameof(this._handler.RequestButtonText));
             this.btn_config_comm_request.Click += Btn_config_comm_request_Click;
 
             TextBox txt_config_comm_request = new TextBox();
@@ -253,7 +271,9 @@ namespace DotNetFrame.CommTester.View
             txt_config_comm_request.Top = this.btn_config_comm_request.Top + 1;
             txt_config_comm_request.Width = this.btn_config_comm_request.Left - (txt_config_comm_request.Left + 3);
             txt_config_comm_request.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            txt_config_comm_request.DataBindings.Add("Text", this._handler, nameof(this._handler.Port_Comm_Request), true, DataSourceUpdateMode.OnPropertyChanged);
+            txt_config_comm_request.DataBindings.Add("Text", this._handler,
+                nameof(this._handler.Text),
+                true, DataSourceUpdateMode.OnPropertyChanged);
             txt_config_comm_request.KeyDown += Txt_config_comm_request_KeyDown;
 
             this.lbl_config_comm_request_description.Left = txt_config_comm_request.Left;
@@ -283,7 +303,6 @@ namespace DotNetFrame.CommTester.View
             if(e.KeyCode == Keys.Enter)
                 this._handler.Data_Register();
         }
-
 
         private void InitUI_Log(GroupBox gbx)
         {
@@ -535,54 +554,13 @@ namespace DotNetFrame.CommTester.View
 
         private void InitComponent()
         {
-            this._handler.PropertyChanged += _handler_PropertyChanged;
             this._handler.FrameUpated += _handler_FrameUpated;
-            _handler_PropertyChanged(this._handler, new PropertyChangedEventArgs(nameof(this._handler.Port_Type)));
-            _handler_PropertyChanged(this._handler, new PropertyChangedEventArgs(nameof(this._handler.Port_Comm_Repeat_Enable)));
 
-            this.FormClosing += (s, e) => this._handler.Port_IsUserOpen = false;
+            this.FormClosing += (s, e) => this._handler.CommTester.Disconnect();
 
             this.BgWorker.WorkerSupportsCancellation = true;
-            this.BgWorker.DoWork += BgWorker_DoWork;
-            this.BgWorker.RunWorkerAsync();
-        }
-
-        private void _handler_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            CommTesterHandler handler = sender as CommTesterHandler;
-
-            if (e.PropertyName == nameof(handler.Port_Type))
-            {
-                if (handler.Port_Type == CommType.Serial)
-                {
-                    this.uc_config_port_serial.Show();
-                    this.uc_config_port_ethernet.Hide();
-                }
-                else if (handler.Port_Type == CommType.Ethernet)
-                {
-                    this.uc_config_port_serial.Hide();
-                    this.uc_config_port_ethernet.Show();
-                }
-            }
-            else if (e.PropertyName == nameof(handler.Port_IsUserOpen))
-            {
-                this.uc_config_port_serial.Enabled = !handler.Port_IsUserOpen;
-                this.uc_config_port_ethernet.Enabled = !handler.Port_IsUserOpen;
-
-                if (handler.Port_IsUserOpen)
-                    this.btn_config_port_connection.Text = AppData.Lang("commtester.portproperty.disconnect.text");
-                else
-                    this.btn_config_port_connection.Text = AppData.Lang("commtester.portproperty.connect.text");
-            }
-            else if (e.PropertyName == nameof(handler.Port_Comm_Repeat_Enable))
-            {
-                this.num_config_comm_repeat_count.Enabled = handler.Port_Comm_Repeat_Enable;
-                this.chk_config_comm_repeat_infinity.Enabled = handler.Port_Comm_Repeat_Enable;
-            }
-            else if (e.PropertyName == nameof(handler.Port_Comm_Repeat_Infinity))
-            {
-                this.num_config_comm_repeat_count.Enabled = !handler.Port_Comm_Repeat_Infinity;
-            }
+            //this.BgWorker.DoWork += BgWorker_DoWork;
+            //this.BgWorker.RunWorkerAsync();
         }
 
         private void _handler_FrameUpated(object sender, TestDataFrame e)
@@ -689,47 +667,6 @@ namespace DotNetFrame.CommTester.View
 
             //TextLog Update
             this.txtLog.AppendText(text);
-        }
-
-        private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            while (true)
-            {
-                try
-                {
-                    if (this.BgWorker.CancellationPending)
-                        break;
-                    else
-                    {
-                        this.UpdateUI();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(string.Format(
-                        "FrmCommTester.cs - BgWorker_Dowork()\r\n" +
-                        "{0}\r\n\r\n" +
-                        "{1}",
-                        ex.Message, ex.StackTrace));
-                }
-
-                System.Threading.Thread.Sleep(5);
-            }
-        }
-        private void UpdateUI()
-        {
-            if (this.IsDisposed || this.Disposing) return;
-
-            if (this.InvokeRequired)
-                this.BeginInvoke((MethodInvoker)delegate { UpdateUI(); });
-            else
-            {
-                //연결 상태
-                if (this._handler.Port_IsPortOpen)
-                    this.lbl_config_port_connection_status.BackColor = Color.Green;
-                else
-                    this.lbl_config_port_connection_status.BackColor = Color.Red;
-            }
         }
     }
 }
