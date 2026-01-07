@@ -9,6 +9,8 @@ namespace QYDevExpress._20._2
 {
     public class Utils
     {
+        public static DevExpress.Skins.Skin CurrentSkin => DevExpress.Skins.SkinManager.Default.GetSkin(DevExpress.Skins.SkinProductId.Grid, DevExpress.LookAndFeel.UserLookAndFeel.Default.ActiveLookAndFeel);
+
         public static void SetLookupComboBox(DevExpress.XtraEditors.Repository.RepositoryItemLookUpEdit rpoLup, object dataSource, string displayMember = "", string valueMemeber = "")
         {
             rpoLup.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
