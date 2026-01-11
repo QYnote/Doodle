@@ -448,7 +448,7 @@ namespace DotNetFrame.CommTester.Model
                 }
             }
 
-            this._read_buffer_last_length = this._read_buffer == null ? 0 : this._read_buffer.Length;
+            this._read_buffer_last_length = this._read_buffer?.Length ?? 0;
 
             return false;
         }

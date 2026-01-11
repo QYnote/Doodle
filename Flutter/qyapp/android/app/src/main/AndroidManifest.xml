@@ -23,6 +23,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+                <!--Application에서 USB 장치 인식 가능하도록 설정-->
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
