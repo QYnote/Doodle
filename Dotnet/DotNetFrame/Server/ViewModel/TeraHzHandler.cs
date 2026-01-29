@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DotNetFrame.Server.ViewModel
 {
-    internal class TeraHzHandler : QYBindingBase
+    internal class TeraHzHandler : QYViewModel
     {
         internal event EventHandler<string> ServerLog;
 

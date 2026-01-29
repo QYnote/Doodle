@@ -73,13 +73,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Charts\ViewModel\ChartHandler.cs" />
-    <Compile Include="CommTester\Model\CommTester.cs" />
     <Compile Include="Charts\Model\DataCreater_CPU.cs" />
     <Compile Include="Charts\Model\DataFilter.cs" />
-    <Compile Include="CommTester\ViewModel\CommTesterHandler.cs" />
-    <Compile Include="CommTester\ViewModel\EthernetHandler.cs" />
-    <Compile Include="CommTester\ViewModel\SerialHandler.cs" />
+    <Compile Include="CommTester\Model\ComTesterPort.cs" />
+    <Compile Include="CommTester\ViewModel\CommTesterVM.cs" />
+    <Compile Include="CommTester\ViewModel\EthernetVM.cs" />
     <Compile Include="Base\Model\AppData.cs" />
+    <Compile Include="CommTester\ViewModel\SerialVM.cs" />
     <Compile Include="CommTester\View\UcEthernet.cs">
       <SubType>UserControl</SubType>
     </Compile>

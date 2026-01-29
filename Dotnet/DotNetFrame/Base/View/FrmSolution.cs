@@ -103,12 +103,12 @@ namespace DotNetFrame.Base.View
             this.btnClose.Location = new Point(this.pnlTitleBar.Width - this.btnClose.Width, 0);
             this.btnClose.Click += (s, e) =>
             {
-                if (this._curForm == null)
+                if (this._curForm == null
+                    || (this._curForm != null && this._curForm.Name == "Main"))
                     Application.Exit();
                 else
                 {
-                    this._curForm.Close();
-                    this._openForm.Remove(this._curForm.Name);
+                    this._curForm.Hide();
                     this._curForm = null;
 
                     foreach (var frm in this._openForm.Values)
@@ -116,6 +116,11 @@ namespace DotNetFrame.Base.View
                         this._curForm = frm;
                         this._curForm.Show();
                         break;
+                    }
+
+                    if (this._curForm.Name == "Main")
+                    {
+
                     }
                 }
             };

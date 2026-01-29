@@ -14,7 +14,7 @@ namespace DotNet.Comm.ClientPorts.AppPort
     /// <remarks>
     /// Application ↔ OS 통신 Port
     /// </remarks>
-    public abstract class AppPort : QYBindingBase
+    public abstract class AppPort
     {
         /// <summary>
         /// 통신 Port Log
@@ -23,7 +23,7 @@ namespace DotNet.Comm.ClientPorts.AppPort
         /// 이 이벤트가 있는 Class는 통신 Port가 아닌 Application Port임<br/>
         /// Param[0] = Log 내용
         /// </remarks>
-        public event Utils.Controls.Utils.Update_WithParam ComPortLog;
+        public event Action<string> ComPortLog;
 
         private PortType _commType = PortType.Serial;
         private OSPort.OSPortBase _osPort = new OSPort.QYSerialPort();
@@ -40,17 +40,17 @@ namespace DotNet.Comm.ClientPorts.AppPort
             get => this._commType;
             set
             {
-                if(this._commType != value)
+                this._osPort = null;
+
+                if (value == PortType.Serial)
+                    this._osPort = new OSPort.QYSerialPort();
+                else if (value == PortType.Ethernet)
+                    this._osPort = new OSPort.QYEthernet(false);
+
+                if (this._osPort != null)
                 {
-                    if (value == PortType.Serial)
-                        this._osPort = new OSPort.QYSerialPort();
-                    else if (value == PortType.Ethernet)
-                        this._osPort = new OSPort.QYEthernet(false);
                     this._osPort.Log += (msg) => { this.ComPortLog?.Invoke(msg); };
-
                     this._commType = value;
-
-                    base.OnPropertyChanged(nameof(this.PortType));
                 }
             }
         }
@@ -61,19 +61,7 @@ namespace DotNet.Comm.ClientPorts.AppPort
         /// <summary>
         /// Application Port Open여부
         /// </summary>
-        public bool IsAppOpen
-        {
-            get => this._isAppOpen;
-            protected set
-            {
-                if(this.IsAppOpen != value)
-                {
-                    this._isAppOpen = value;
-
-                    base.OnPropertyChanged(nameof(this.IsAppOpen));
-                }
-            }
-        }
+        public bool IsAppOpen { get => this._isAppOpen; protected set => this._isAppOpen = value; }
         /// <summary>
         /// Port 연결
         /// </summary>

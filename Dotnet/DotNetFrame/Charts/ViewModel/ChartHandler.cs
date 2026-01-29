@@ -1,4 +1,5 @@
 ﻿using DotNet.Utils.Controls.Utils;
+using DotNet.Utils.Views;
 using DotNetFrame.Chart.Model;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace DotNetFrame.Charts.ViewModel
         WAF,
     }
 
-    internal class ChartHandler : QYBindingBase
+    internal class ChartHandler : QYViewModel
     {
         private DataCreater_CPU _creater = new DataCreater_CPU();
         private DataFilter _filter = new DataFilter();
@@ -32,7 +33,7 @@ namespace DotNetFrame.Charts.ViewModel
         private bool _peak_show_all;
         private bool _peak_show_detect_value;
 
-        private List<QYUtils.EnumItem<FilterType>> _filter_type_list;
+        private List<QYItem> _filter_type_list;
 
         public int Creater_Interval
         {
@@ -71,7 +72,7 @@ namespace DotNetFrame.Charts.ViewModel
         public double Peak_Detect_Value { get => _peak_detect_value; set => _peak_detect_value = value; }
         public bool Peak_Show_All { get => _peak_show_all; set => _peak_show_all = value; }
         public bool Peak_Show_Detect_Value { get => _peak_show_detect_value; set => _peak_show_detect_value = value; }
-        internal List<QYUtils.EnumItem<FilterType>> Filter_Type_List { get => _filter_type_list; }
+        internal List<QYItem> Filter_Type_List { get => _filter_type_list; }
 
         internal ChartHandler()
         {
@@ -80,7 +81,7 @@ namespace DotNetFrame.Charts.ViewModel
 
         private void Initialize()
         {
-            this._filter_type_list = QYUtils.GetEnumItems<FilterType>().ToList();
+            this._filter_type_list = QYViewUtils.EnumToItem<FilterType>().ToList();
 
             this.FilterType = FilterType.WAF;
             this.Filter_Kernal_Size = DataFilter.DEFAULT_FILTER_KERNAL_SIZE;

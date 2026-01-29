@@ -15,7 +15,7 @@ namespace DotNet.Database
         SQLite,
     }
 
-    public abstract class DBBase : QYBindingBase
+    public abstract class DBBase : QYViewModel
     {
         public delegate void DBLoghandler(string errorMessage);
         public event DBLoghandler LogEvent;
@@ -146,6 +146,7 @@ namespace DotNet.Database
                 }
 
                 this.BaseTransaction.Dispose();
+                this.BaseTransaction = null;
             }
         }
         /// <summary>

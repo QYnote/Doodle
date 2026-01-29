@@ -23,7 +23,7 @@ namespace DotNet.Comm.Protocols
 
         public override byte[] Response_ExtractFrame(byte[] buffer, params object[] subData)
         {
-            if (subData[0] == null || (subData[0] is byte[]) == false) return null;
+            if (buffer == null || subData[0] == null || (subData[0] is byte[]) == false) return null;
             byte[] reqFrame = subData[0] as byte[];
 
             int idxHandle = 0,

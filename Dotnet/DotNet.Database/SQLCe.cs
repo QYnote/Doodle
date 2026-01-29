@@ -164,6 +164,25 @@ namespace DotNet.Database
             try
             {
                 string[] spltQuery = query.Split(';');
+                List<string> queryList = new List<string>();
+
+                for (int i = 0; i < spltQuery.Length; i++)
+                {
+                    if (spltQuery[i].Length > 2)
+                    {
+                        //1. 주석 Line일 경우 해당 라인 제거
+                        if (spltQuery[i][0] == '-' && spltQuery[i][1] == '-')
+                        {
+                            int descEndIndex = spltQuery[i].IndexOf("\r\n");
+
+                            spltQuery[i] = spltQuery[i].Substring(descEndIndex + 2, spltQuery[i].Length - (descEndIndex + 2));
+                        }
+
+                        //2. 줄바꿈 제거
+                        spltQuery[i] = spltQuery[i].Replace("\r\n", " ").Trim();
+                    }
+                }
+
                 cmd = new SqlCeCommand();
                 cmd.Connection = this.Conn;
                 if (base.BaseTransaction != null)
@@ -182,9 +201,10 @@ namespace DotNet.Database
 
                         cmd.CommandText = spltQuery[i];
                         cmd.ExecuteNonQuery();
+
+                        result = true;
                     }
                 }
-                result = true;
             }
             catch (SqlCeException ex)
             {

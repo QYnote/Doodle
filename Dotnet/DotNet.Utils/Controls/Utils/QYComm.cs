@@ -32,7 +32,7 @@ namespace DotNet.Utils.Controls.Utils
         }
     }
 
-    public class QYBindingBase : INotifyPropertyChanged
+    public class QYViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public event Action<string> ErrorMessage;

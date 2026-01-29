@@ -1,5 +1,4 @@
-﻿using DotNet.Utils.Controls;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +8,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 {
     public class HYModbus : Modbus
     {
+        //#01#03#00#00#00#01
         private bool _isTCP = false;
         public bool IsAscii { get; set; } = false;
         public bool IsEXP { get; set; } = false;
@@ -34,7 +34,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
         public override byte[] Response_ExtractFrame(byte[] buffer, params object[] subData)
         {
-            if (subData[0] == null) return null;
+            if (buffer == null || subData[0] == null) return null;
             byte[] reqBytes = subData[0] as byte[],
                 headerBytes;
             byte cmd;

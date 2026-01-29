@@ -12,14 +12,10 @@ using System.Windows.Forms;
 
 namespace DotNetFrame.CommTester.View
 {
-    public partial class UcSerial : UserControl
+    public partial class UcSerial : QYUserControl
     {
-        private SerialHandler _handler;
-
-        internal UcSerial(SerialHandler handler)
+        internal UcSerial()
         {
-            this._handler = handler;
-
             InitializeComponent();
             InitUI();
         }
@@ -31,88 +27,55 @@ namespace DotNetFrame.CommTester.View
 
             ComboBox cbo_portname = new ComboBox();
             cbo_portname.Location = new Point(3, 3);
-            cbo_portname.DataSource = this._handler.PortList;
+            cbo_portname.ValueMember = nameof(QYItem.Value);
+            cbo_portname.DisplayMember = nameof(QYItem.DisplayText);
             cbo_portname.DropDownStyle = ComboBoxStyle.DropDownList;
-            cbo_portname.DataBindings.Add("SelectedValue", this._handler, nameof(this._handler.PortName), true, DataSourceUpdateMode.OnPropertyChanged);
+            cbo_portname.DataBindings.Add("DataSource", base.BindingSource, nameof(SerialVM.PortNameList));
+            cbo_portname.DataBindings.Add("SelectedValue", base.BindingSource, nameof(SerialVM.PortName), true, DataSourceUpdateMode.OnPropertyChanged);
 
             pnl.Height = cbo_portname.Bottom + 3;
 
-            GroupBox gbx_baudrate = new GroupBox();
-            gbx_baudrate.Padding = new Padding(3);
-            gbx_baudrate.Dock = DockStyle.Left;
-            gbx_baudrate.Width = 80;
-            gbx_baudrate.Text = "BaudRate";
-            for (int i = 0; i < this._handler.BaudRateList.Count; i++)
-            {
-                RadioButton rdo = new RadioButton();
-                rdo.Dock = DockStyle.Top;
-                rdo.Height = 20;
-                rdo.Text = this._handler.BaudRateList[i].ToString("#,#");
-                rdo.TextAlign = ContentAlignment.MiddleLeft;
+            QYRadioGroup rdo_baudrate = new QYRadioGroup();
+            rdo_baudrate.Dock = DockStyle.Left;
+            rdo_baudrate.Width = 80;
+            rdo_baudrate.Caption = "BaudRate";
+            rdo_baudrate.ValueMember = nameof(QYItem.Value);
+            rdo_baudrate.DisplayMember = nameof(QYItem.DisplayText);
+            rdo_baudrate.DataBindings.Add("DataSource", base.BindingSource, nameof(SerialVM.BaudRateList));
+            rdo_baudrate.DataBindings.Add("SelectedValue", base.BindingSource, nameof(SerialVM.BaudRate), true, DataSourceUpdateMode.OnPropertyChanged);
 
-                QYViewUtils.BindingRadioButton(rdo, this._handler, nameof(this._handler.BaudRate), this._handler.BaudRateList[i]);
-                gbx_baudrate.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            gbx_baudrate.Height = gbx_baudrate.Controls[0].Bottom + 3;
+            QYRadioGroup rdo_parity = new QYRadioGroup();
+            rdo_parity.Dock = DockStyle.Left;
+            rdo_parity.Width = 65;
+            rdo_parity.Caption = "Parity";
+            rdo_parity.ValueMember = nameof(QYItem.Value);
+            rdo_parity.DisplayMember = nameof(QYItem.DisplayText);
+            rdo_parity.DataBindings.Add("DataSource", base.BindingSource, nameof(SerialVM.ParityList));
+            rdo_parity.DataBindings.Add("SelectedValue", base.BindingSource, nameof(SerialVM.Parity), true, DataSourceUpdateMode.OnPropertyChanged);
 
-            GroupBox gbx_parity = new GroupBox();
-            gbx_parity.Padding = new Padding(3);
-            gbx_parity.Dock = DockStyle.Left;
-            gbx_parity.Width = 65;
-            gbx_parity.Text = "Parity";
-            RadioButton[] rdo_parity = QYViewUtils.CreateEnumRadioButton<System.IO.Ports.Parity>();
-            foreach (var rdo in rdo_parity)
-            {
-                rdo.Dock = DockStyle.Top;
-                rdo.Height = 20;
-                QYViewUtils.BindingRadioButton(rdo, _handler, nameof(_handler.Parity), rdo.Tag);
-                
-                gbx_parity.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            gbx_baudrate.Height = gbx_parity.Controls[0].Bottom + 3;
+            QYRadioGroup rdo_stopbits = new QYRadioGroup();
+            rdo_stopbits.Dock = DockStyle.Left;
+            rdo_stopbits.Width = 103;
+            rdo_stopbits.Caption = "StopBits";
+            rdo_stopbits.ValueMember = nameof(QYItem.Value);
+            rdo_stopbits.DisplayMember = nameof(QYItem.DisplayText);
+            rdo_stopbits.DataBindings.Add("DataSource", base.BindingSource, nameof(SerialVM.StopBitsList));
+            rdo_stopbits.DataBindings.Add("SelectedValue", base.BindingSource, nameof(SerialVM.StopBits), true, DataSourceUpdateMode.OnPropertyChanged);
 
-            GroupBox gbx_stopbits = new GroupBox();
-            gbx_stopbits.Padding = new Padding(3);
-            gbx_stopbits.Dock = DockStyle.Left;
-            gbx_stopbits.Width = 103;
-            gbx_stopbits.Text = "StopBits";
-            RadioButton[] rdo_stopbits = QYViewUtils.CreateEnumRadioButton<System.IO.Ports.StopBits>();
-            foreach (var rdo in rdo_stopbits)
-            {
-                rdo.Dock = DockStyle.Top;
-                rdo.Height = 20;
-                QYViewUtils.BindingRadioButton(rdo, _handler, nameof(_handler.StopBits), rdo.Tag);
-
-                gbx_stopbits.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            gbx_stopbits.Height = gbx_stopbits.Controls[0].Bottom + 3;
-
-            GroupBox gbx_databits = new GroupBox();
-            gbx_databits.Padding = new Padding(3);
-            gbx_databits.Dock = DockStyle.Left;
-            gbx_databits.Width = 65;
-            gbx_databits.Text = "DataBits";
-            for (int i = 0; i < this._handler.DatabitList.Count; i++)
-            {
-                RadioButton rdo = new RadioButton();
-                rdo.Dock = DockStyle.Top;
-                rdo.Height = 20;
-                rdo.Text = this._handler.DatabitList[i].ToString();
-
-                QYViewUtils.BindingRadioButton(rdo, this._handler, nameof(this._handler.DataBits), this._handler.DatabitList[i]);
-                gbx_databits.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            gbx_databits.Height = gbx_databits.Controls[0].Bottom + 3;
+            QYRadioGroup rdo_databits = new QYRadioGroup();
+            rdo_databits.Dock = DockStyle.Left;
+            rdo_databits.Width = 65;
+            rdo_databits.Caption = "DataBits";
+            rdo_databits.ValueMember = nameof(QYItem.Value);
+            rdo_databits.DisplayMember = nameof(QYItem.DisplayText);
+            rdo_databits.DataBindings.Add("DataSource", base.BindingSource, nameof(SerialVM.DataBitsList));
+            rdo_databits.DataBindings.Add("SelectedValue", base.BindingSource, nameof(SerialVM.DataBits), true, DataSourceUpdateMode.OnPropertyChanged);
 
             pnl.Controls.Add(cbo_portname);
-            this.Controls.Add(gbx_databits);
-            this.Controls.Add(gbx_stopbits);
-            this.Controls.Add(gbx_parity);
-            this.Controls.Add(gbx_baudrate);
+            this.Controls.Add(rdo_databits);
+            this.Controls.Add(rdo_stopbits);
+            this.Controls.Add(rdo_parity);
+            this.Controls.Add(rdo_baudrate);
             this.Controls.Add(pnl);
         }
     }

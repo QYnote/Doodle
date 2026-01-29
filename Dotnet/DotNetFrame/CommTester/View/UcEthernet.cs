@@ -12,16 +12,13 @@ using System.Windows.Forms;
 
 namespace DotNetFrame.CommTester.View
 {
-    internal class UcEthernet : UserControl
+    internal class UcEthernet : QYUserControl
     {
         private Label lbl_ip = new Label();
         private Label lbl_portno = new Label();
 
-        EthernetHandler _handler;
-
-        internal UcEthernet(EthernetHandler handler)
+        internal UcEthernet()
         {
-            this._handler = handler;
             this.InitText();
             this.InitUI();
         }
@@ -42,7 +39,7 @@ namespace DotNetFrame.CommTester.View
             txt_ip.Width = 80;
             txt_ip.TextAlign = HorizontalAlignment.Center;
             txt_ip.KeyPress += QYUtils.Event_KeyPress_IP;
-            txt_ip.DataBindings.Add("Text", this._handler, nameof(this._handler.IP), true, DataSourceUpdateMode.OnPropertyChanged);
+            txt_ip.DataBindings.Add("Text", base.BindingSource, nameof(EthernetVM.IP), true, DataSourceUpdateMode.OnValidation);
 
             this.lbl_portno.Left = this.lbl_ip.Left;
             this.lbl_portno.Top = this.lbl_ip.Bottom + 3;
@@ -55,7 +52,7 @@ namespace DotNetFrame.CommTester.View
             num_portno.TextAlign = HorizontalAlignment.Right;
             num_portno.Minimum = 0;
             num_portno.Maximum = int.MaxValue;
-            num_portno.DataBindings.Add("Value", this._handler, $"{nameof(this._handler.PortNo)}", true, DataSourceUpdateMode.OnPropertyChanged);
+            num_portno.DataBindings.Add("Value", base.BindingSource, $"{nameof(EthernetVM.PortNo)}", true, DataSourceUpdateMode.OnValidation);
 
             this.Controls.Add(this.lbl_ip);
             this.Controls.Add(txt_ip);
