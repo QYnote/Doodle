@@ -42,7 +42,7 @@ namespace DotNetFrame.Server.View
 
         #endregion UI Controls
 
-        private TeraHzHandler _teraHzHandler = new TeraHzHandler();
+        private TeraHzViewModel _viewmodel = new TeraHzViewModel();
 
         internal UcTeraHzProperty(TextBox txtLog)
         {
@@ -99,7 +99,7 @@ namespace DotNetFrame.Server.View
             this.txt_server_ip.Width = 80;
             this.txt_server_ip.TextAlign = HorizontalAlignment.Center;
             this.txt_server_ip.KeyPress += QYUtils.Event_KeyPress_IP;
-            this.txt_server_ip.DataBindings.Add("Text", this._teraHzHandler, nameof(this._teraHzHandler.Server_IPAddress), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.txt_server_ip.DataBindings.Add("Text", this._viewmodel, nameof(this._viewmodel.Server_IPAddress), true, DataSourceUpdateMode.OnPropertyChanged);
 
             this.lbl_server_portno.Left = this.lbl_server_ip.Left;
             this.lbl_server_portno.Top = this.lbl_server_ip.Bottom + 3;
@@ -111,7 +111,7 @@ namespace DotNetFrame.Server.View
             this.num_server_portno.TextAlign = HorizontalAlignment.Right;
             this.num_server_portno.Minimum = 0;
             this.num_server_portno.Maximum = int.MaxValue;
-            this.num_server_portno.DataBindings.Add("Value", this._teraHzHandler, nameof(this._teraHzHandler.Server_PortNo), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.num_server_portno.DataBindings.Add("Value", this._viewmodel, nameof(this._viewmodel.Server_PortNo), true, DataSourceUpdateMode.OnPropertyChanged);
 
             
             this.btn_server_connection.Left = this.num_server_portno.Left;
@@ -135,7 +135,7 @@ namespace DotNetFrame.Server.View
 
             if ((bool)btn.Tag)
             {
-                this._teraHzHandler.Close();
+                this._viewmodel.Close();
 
                 this.txt_server_ip.Enabled = true;
                 this.num_server_portno.Enabled = true;
@@ -148,7 +148,7 @@ namespace DotNetFrame.Server.View
             {
                 this.txtLog.Text = string.Empty;
 
-                this._teraHzHandler.Open();
+                this._viewmodel.Open();
 
                 this.txt_server_ip.Enabled = false;
                 this.num_server_portno.Enabled = false;
@@ -169,7 +169,7 @@ namespace DotNetFrame.Server.View
             this.track_sensor_count.Width = 200;
             this.track_sensor_count.Minimum = 6;
             this.track_sensor_count.Maximum = 9;
-            this.track_sensor_count.DataBindings.Add("Value", this._teraHzHandler, nameof(this._teraHzHandler.Sensor_Count), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.track_sensor_count.DataBindings.Add("Value", this._viewmodel, nameof(this._viewmodel.Sensor_Count), true, DataSourceUpdateMode.OnPropertyChanged);
 
             Label lblmin = new Label();
             lblmin.Width = 27;
@@ -196,12 +196,30 @@ namespace DotNetFrame.Server.View
 
         private void InitUI_Data(GroupBox gbx)
         {
-            this.chk_data_span_offset.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
+            ComboBox data_type_cbo = new ComboBox();
+            data_type_cbo.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
+            data_type_cbo.DataSource = this._viewmodel.WriteType_List;
+            data_type_cbo.ValueMember = nameof(QYItem.Value);
+            data_type_cbo.DisplayMember = nameof(QYItem.DisplayText);
+            data_type_cbo.DropDownStyle = ComboBoxStyle.DropDownList;
+            data_type_cbo.DataBindings.Add(nameof(ComboBox.SelectedValue), this._viewmodel, nameof(TeraHzViewModel.WriteType), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            CheckBox data_sequantial_chk = new CheckBox();
+            data_sequantial_chk.Left = data_type_cbo.Left;
+            data_sequantial_chk.Top = data_type_cbo.Bottom + 3;
+            data_sequantial_chk.CheckAlign = ContentAlignment.MiddleRight;
+            data_sequantial_chk.TextAlign = ContentAlignment.MiddleLeft;
+            data_sequantial_chk.Text = "연속 데이터";
+            data_sequantial_chk.DataBindings.Add(nameof(CheckBox.Checked), this._viewmodel, nameof(TeraHzViewModel.Write_Sequantial_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
+
+
+            this.chk_data_span_offset.Left = data_sequantial_chk.Left;
+            this.chk_data_span_offset.Top = data_sequantial_chk.Bottom + 3;
             this.chk_data_span_offset.Width = this.lbl_sensor_count.Width;
             this.chk_data_span_offset.CheckAlign = ContentAlignment.MiddleRight;
             this.chk_data_span_offset.Checked = false;
             this.chk_data_span_offset.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_data_span_offset.DataBindings.Add("Checked", this._teraHzHandler, nameof(this._teraHzHandler.Data_Span_Run), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.chk_data_span_offset.DataBindings.Add("Checked", this._viewmodel, nameof(TeraHzViewModel.Write_Max_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
             this.num_data_offset.Left = this.chk_data_span_offset.Right + 3;
             this.num_data_offset.Top = this.chk_data_span_offset.Top;
             this.num_data_offset.Width = this.txt_server_ip.Width;
@@ -209,7 +227,7 @@ namespace DotNetFrame.Server.View
             this.num_data_offset.TextAlign = HorizontalAlignment.Right;
             this.num_data_offset.Minimum = 0;
             this.num_data_offset.Maximum = UInt16.MaxValue;
-            this.num_data_offset.DataBindings.Add("Value", this._teraHzHandler, nameof(this._teraHzHandler.Data_Span_Offset), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.num_data_offset.DataBindings.Add("Value", this._viewmodel, nameof(TeraHzViewModel.Write_Max_Offset), true, DataSourceUpdateMode.OnPropertyChanged);
 
             this.chk_data_object_offset.Left = this.chk_data_span_offset.Left;
             this.chk_data_object_offset.Top = this.chk_data_span_offset.Bottom + 3;
@@ -217,7 +235,7 @@ namespace DotNetFrame.Server.View
             this.chk_data_object_offset.CheckAlign = ContentAlignment.MiddleRight;
             this.chk_data_object_offset.Checked = false;
             this.chk_data_object_offset.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_data_object_offset.DataBindings.Add("Checked", this._teraHzHandler, nameof(this._teraHzHandler.Data_Object_Run), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.chk_data_object_offset.DataBindings.Add("Checked", this._viewmodel, nameof(TeraHzViewModel.Write_Detect_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
             this.num_data_offset_Object.Left = this.chk_data_object_offset.Right + 3;
             this.num_data_offset_Object.Top = this.chk_data_object_offset.Top;
             this.num_data_offset_Object.Width = this.txt_server_ip.Width;
@@ -225,7 +243,7 @@ namespace DotNetFrame.Server.View
             this.num_data_offset_Object.TextAlign = HorizontalAlignment.Right;
             this.num_data_offset_Object.Minimum = 0;
             this.num_data_offset_Object.Maximum = UInt16.MaxValue;
-            this.num_data_offset_Object.DataBindings.Add("Value", this._teraHzHandler, nameof(this._teraHzHandler.Data_Object_Offset), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.num_data_offset_Object.DataBindings.Add("Value", this._viewmodel, nameof(TeraHzViewModel.Write_Detect_Offset), true, DataSourceUpdateMode.OnPropertyChanged);
 
 
             this.chk_data_randomvalue_scale.Left = this.chk_data_object_offset.Left;
@@ -234,7 +252,7 @@ namespace DotNetFrame.Server.View
             this.chk_data_randomvalue_scale.CheckAlign = ContentAlignment.MiddleRight;
             this.chk_data_randomvalue_scale.Checked = true;
             this.chk_data_randomvalue_scale.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_data_randomvalue_scale.DataBindings.Add("Checked", this._teraHzHandler, nameof(this._teraHzHandler.Data_RandomValue_Run), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.chk_data_randomvalue_scale.DataBindings.Add("Checked", this._viewmodel, nameof(TeraHzViewModel.Write_Random_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
             this.num_data_randomvalue_scale.Left = this.chk_data_randomvalue_scale.Right + 3;
             this.num_data_randomvalue_scale.Top = this.chk_data_randomvalue_scale.Top;
             this.num_data_randomvalue_scale.Width = this.txt_server_ip.Width;
@@ -242,54 +260,64 @@ namespace DotNetFrame.Server.View
             this.num_data_randomvalue_scale.TextAlign = HorizontalAlignment.Right;
             this.num_data_randomvalue_scale.Minimum = 0;
             this.num_data_randomvalue_scale.Maximum = UInt16.MaxValue;
-            this.num_data_randomvalue_scale.DataBindings.Add("Value", this._teraHzHandler, nameof(this._teraHzHandler.Data_RandomValue_Offset), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.num_data_randomvalue_scale.DataBindings.Add("Value", this._viewmodel, nameof(TeraHzViewModel.Write_Random_Scale), true, DataSourceUpdateMode.OnPropertyChanged);
 
+            gbx.Controls.Add(data_type_cbo);
+            gbx.Controls.Add(data_sequantial_chk);
             gbx.Controls.Add(this.chk_data_object_offset);
             gbx.Controls.Add(this.num_data_offset_Object);
             gbx.Controls.Add(this.chk_data_span_offset);
             gbx.Controls.Add(this.num_data_offset);
             gbx.Controls.Add(this.chk_data_randomvalue_scale);
             gbx.Controls.Add(this.num_data_randomvalue_scale);
+
+            int bottom = gbx.Bottom;
+            foreach (Control ctrl in gbx.Controls)
+            {
+                if (bottom < ctrl.Bottom)
+                    bottom = ctrl.Bottom;
+            }
+            gbx.Height = gbx.Top + bottom + 3;
         }
 
         private void InitComponet()
         {
-            this._teraHzHandler.PropertyChanged += _teraHzHandler_PropertyChanged;
-            this._teraHzHandler.ServerLog += _teraHzHandler_ServerLog;
+            this._viewmodel.PropertyChanged += _viewmodel_PropertyChanged;
+            this._viewmodel.ServerLog += _viewmodel_ServerLog;
 
             this.VisibleChanged += UcTeraHzProperty_VisibleChanged;
 
-            _teraHzHandler_PropertyChanged(this._teraHzHandler, new PropertyChangedEventArgs(nameof(this._teraHzHandler.Data_Span_Run)));
-            _teraHzHandler_PropertyChanged(this._teraHzHandler, new PropertyChangedEventArgs(nameof(this._teraHzHandler.Data_Object_Run)));
-            _teraHzHandler_PropertyChanged(this._teraHzHandler, new PropertyChangedEventArgs(nameof(this._teraHzHandler.Data_RandomValue_Run)));
+            _viewmodel_PropertyChanged(this._viewmodel, new PropertyChangedEventArgs(nameof(TeraHzViewModel.Write_Max_Enable)));
+            _viewmodel_PropertyChanged(this._viewmodel, new PropertyChangedEventArgs(nameof(TeraHzViewModel.Write_Detect_Enable)));
+            _viewmodel_PropertyChanged(this._viewmodel, new PropertyChangedEventArgs(nameof(TeraHzViewModel.Write_Random_Enable)));
         }
 
-        private void _teraHzHandler_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void _viewmodel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == nameof(this._teraHzHandler.Data_Span_Run))
+            if(e.PropertyName == nameof(TeraHzViewModel.Write_Max_Enable))
             {
-                this.chk_data_object_offset.Enabled = !this._teraHzHandler.Data_Span_Run;
+                this.chk_data_object_offset.Enabled = !this._viewmodel.Write_Max_Enable;
 
-                this.num_data_offset.Enabled = this._teraHzHandler.Data_Span_Run;
+                this.num_data_offset.Enabled = this._viewmodel.Write_Max_Enable;
             }
-            else if (e.PropertyName == nameof(this._teraHzHandler.Data_Object_Run))
+            else if (e.PropertyName == nameof(TeraHzViewModel.Write_Detect_Enable))
             {
-                this.chk_data_span_offset.Enabled = !this._teraHzHandler.Data_Object_Run;
+                this.chk_data_span_offset.Enabled = !this._viewmodel.Write_Detect_Enable;
 
-                this.num_data_offset_Object.Enabled = this._teraHzHandler.Data_Object_Run;
+                this.num_data_offset_Object.Enabled = this._viewmodel.Write_Detect_Enable;
             }
-            else if (e.PropertyName == nameof(this._teraHzHandler.Data_RandomValue_Run))
+            else if (e.PropertyName == nameof(TeraHzViewModel.Write_Random_Enable))
             {
-                this.num_data_randomvalue_scale.Enabled = this._teraHzHandler.Data_RandomValue_Run;
+                this.num_data_randomvalue_scale.Enabled = this._viewmodel.Write_Random_Enable;
             }
         }
 
-        private void _teraHzHandler_ServerLog(object sender, string e)
+        private void _viewmodel_ServerLog(object sender, string e)
         {
             if (this.IsDisposed) return;
 
             if (this.InvokeRequired)
-                this.BeginInvoke(new EventHandler<string>(_teraHzHandler_ServerLog), sender, e);
+                this.Invoke(new EventHandler<string>(_viewmodel_ServerLog), sender, e);
             else
             {
                 this.txtLog.AppendText(string.Format("{0}: {1}\r\n", DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff"), e));
@@ -300,7 +328,7 @@ namespace DotNetFrame.Server.View
         {
             if (this.Visible == false)
             {
-                this._teraHzHandler.Close();
+                this._viewmodel.Close();
             }
         }
     }

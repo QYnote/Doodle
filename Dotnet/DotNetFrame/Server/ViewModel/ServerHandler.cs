@@ -16,6 +16,8 @@ namespace DotNetFrame.Server.ViewModel
 
     internal class ServerHandler : QYViewModel
     {
+        public event EventHandler<string> ServerLog;
+
         private List<QYItem> _server_List;
         private ServerType _server_current;
 
