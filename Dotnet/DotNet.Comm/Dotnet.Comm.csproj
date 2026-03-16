@@ -45,21 +45,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientPorts\AppPort\AppPort.cs" />
-    <Compile Include="ClientPorts\OSPort\OSPortBase.cs" />
-    <Compile Include="ClientPorts\OSPort\QYEthernet.cs" />
-    <Compile Include="ClientPorts\OSPort\QYSerialPort.cs" />
-    <Compile Include="Enums.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="Transport\ITransport.cs" />
+    <Compile Include="Transport\QYSocketPort.cs" />
+    <Compile Include="Transport\QYSerialPort.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocols\Customs\HYNux\HYModbus.cs" />
-    <Compile Include="Protocols\Customs\HYNux\PCLink.cs" />
-    <Compile Include="Protocols\Modbus.cs" />
-    <Compile Include="Protocols\ProtocolBase.cs" />
+    <Compile Include="Protocols\ModbusRTU.cs" />
+    <Compile Include="Protocols\Customs\HYNux\ModbusRTU_HYExpand.cs" />
+    <Compile Include="Protocols\Customs\HYNux\ModbusTCP_HY.cs" />
+    <Compile Include="Protocols\Customs\HYNux\PCLinkSTD.cs" />
+    <Compile Include="Protocols\Customs\HYNux\PCLinkSTD_TH300500.cs" />
+    <Compile Include="Protocols\Customs\HYNux\PCLinkSUM.cs" />
+    <Compile Include="Protocols\Customs\HYNux\PCLinkSUM_TD300500.cs" />
+    <Compile Include="Protocols\Customs\HYNux\PCLinkSUM_TH300500.cs" />
+    <Compile Include="Protocols\IProtocolResult.cs" />
+    <Compile Include="Protocols\ModbusAscii.cs" />
+    <Compile Include="Protocols\Customs\HYNux\ModbusAscii_HYExpand.cs" />
     <Compile Include="Servers\ServerBase.cs" />
     <Compile Include="Servers\TCPServer.cs" />
     <Compile Include="Servers\UDPServer.cs" />

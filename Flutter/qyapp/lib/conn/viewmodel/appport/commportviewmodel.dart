@@ -13,6 +13,12 @@ class CommPortViewModel extends ChangeNotifier{
   bool _isRepeatIninity = false;
   int _lastRepeatCount = 3;
   String _text = "";
+  final List<String> _logs = [];
+
+  //2.Property - Status
+  List<String> get logs => _logs;
+  bool get isAppOpen => _port.isAppOpen;
+  bool get isPortOpen => _port.osPort.isOpen;
 
   //2.Property - Port Option
   int get portType => _port.type;
@@ -28,6 +34,7 @@ class CommPortViewModel extends ChangeNotifier{
       }
     }
   late SerialViewModel serialViewModel;
+  bool get isrequesting => _port.isRunning;
 
   //2. Property - Protocol Option
   final List<ComboItem> protocolTypeList = [
@@ -111,29 +118,56 @@ class CommPortViewModel extends ChangeNotifier{
         super.notifyListeners();
       }
     }
+  
 
   //3. 생성자
   CommPortViewModel(){
     _port.onRead.listen((bytes){
-      
     });
     _port.onWrite.listen((bytes){
+      String ary = _convertByteToText(bytes);
+      logs.add("[SEND]$ary");
 
+      super.notifyListeners();
     });
     _port.onResponseError.listen((events){
       final (type, bytes) = events;
+      String ary = _convertByteToText(bytes);
+      logs.add("[RECV - ERR($type)]$ary");
+      
+      super.notifyListeners();
     });
     _port.onResponseFinish.listen((events){
       final (type, frame, items) = events;
+      String ary = _convertByteToText(frame);
+
+      logs.add("[RECV]$ary");
+      super.notifyListeners();
     });
 
     _init();
+  }
+
+
+  //4. Method
+  void connection(){
+    if(_port.isAppOpen){
+      _port.disconnect();
+      print('disconnect');
+    }
+    else{
+      _port.connect();
+      print('connect');
+    }
+
+    super.notifyListeners();
   }
 
   void send(){
     Uint8List? bytes = _convertTextToByte(text);
     if(bytes == null) return;
 
+    _logs.clear();
     _port.regist(bytes);
   }
 
@@ -191,6 +225,10 @@ class CommPortViewModel extends ChangeNotifier{
     else{
         return Uint8List.fromList(bytes);
     }
+  }
+
+  String _convertByteToText(Uint8List bytes){
+    return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
   }
 
   void _init(){

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:qyapp/conn/model/osport/osport.dart';
@@ -62,4 +63,30 @@ abstract class AppPortBase {
   void write(Uint8List bytes);
   ///Port 초기화
   void initialize();
+
+
+  //0. Event
+  void Function(dynamic)? dataToThread;
+
+  //1. Fields
+
+  //2. Property
+  ReceivePort threadPort = ReceivePort();
+  SendPort? threadSender;
+  
+  //3. 생성자
+  AppPortBase(){
+    _init();
+
+    
+  }
+
+  //4. Method
+  void _init() async {
+    Isolate threadHandler = await Isolate.spawn(threadDoWork, threadPort.sendPort);
+
+    threadPort.listen(dataToThread);
+  }
+
+  void threadDoWork(SendPort appPort);
 }

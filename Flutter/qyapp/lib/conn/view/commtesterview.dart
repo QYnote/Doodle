@@ -37,14 +37,14 @@ class _CommTetserViewState extends State<CommTesterView>{
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    bool isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     _theme = Theme.of(context);
 
-    if(screenWidth > 600){
-      return _desktopLayout();
+    if(isPortrait){
+      return _mobileLayout();
     }
     else{
-      return _mobileLayout();
+      return _desktopLayout();
     }
   }//End Build
 
@@ -192,6 +192,7 @@ class _CommTetserViewState extends State<CommTesterView>{
 
       return Column(
         children: [
+          //연결 Port
           Container(
             decoration: boxDecoration,
             padding: EdgeInsets.all(7),
@@ -545,10 +546,108 @@ class _CommTetserViewState extends State<CommTesterView>{
   }
 
   Widget _testerMain(){
+    BoxDecoration boxDecoration = BoxDecoration(
+          color: _theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _theme.colorScheme.outline)
+      );
+    TextEditingController text = TextEditingController(
+      text: _port.text
+    );
+
     return Container(
       color: _theme.colorScheme.surfaceContainer,
       padding: EdgeInsets.all(10),
-      child: Text('메인화면'),
+      child: Column(
+        children: [
+          //통신 연결
+          Row(
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _theme.colorScheme.primary,
+                  foregroundColor: _theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4)
+                  ),
+                  minimumSize: const Size(80, 45)
+                ),
+                child: Text('Connect'),
+                onPressed: (){ _port.connection(); }, 
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                Icons.radio_button_checked,
+                color: _port.isPortOpen ? Colors.green : Colors.red
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          //전송 로그
+          Expanded(
+            child: Container(
+              decoration: boxDecoration,
+              padding: EdgeInsets.all(7),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '통신 로그',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16
+                    ),
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _port.logs.length,
+                      itemBuilder: (context, index){
+                        return Text(
+                          _port.logs[index],
+                        );
+                      }
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ),
+          const SizedBox(height: 10),
+          //전송값 상자
+          Row(children: [
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: _theme.colorScheme.surface,
+                  labelText: "전송값",
+                  border: OutlineInputBorder(),
+                  hintText: "Dec: @255 / Hex:#FF",
+                ),
+                keyboardType: TextInputType.text,
+                controller: text,
+                onChanged: (value){
+                  _port.text = value;
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _theme.colorScheme.primary,
+                foregroundColor: _theme.colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4)
+                ),
+                minimumSize: const Size(80, 55)
+              ),
+              child: Text('전송'),
+              onPressed: (){_port.send(); }, 
+            ),
+          ],)
+        ],
+      ),
     );
   }
 }
