@@ -1,7 +1,7 @@
-﻿using DotNet.Utils.Controls.Utils;
+﻿using DotNet.CommTester.ViewModel;
+using DotNet.Utils.Controls.Utils;
 using DotNet.Utils.Views;
 using DotNetFrame.Base.Model;
-using DotNetFrame.CommTester.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

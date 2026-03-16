@@ -681,7 +681,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
 
                 if (errCode != null)
                 {
-                    result = Utils.Controls.Utils.QYUtils.Comm.BytesAppend(frame, errCode);
+                    result = Utils.Controls.Utils.QYUtils.BytesAppend(frame, errCode);
 
                     if (this.IsAscii)
                     {
@@ -716,7 +716,7 @@ namespace DotNet.Comm.Protocols.Customs.HYNux
                 tcpFrame[4] = (byte)((frame.Length >> 8) & 0xFF);
                 tcpFrame[5] = (byte)(frame.Length & 0xFF);
 
-                byte[] temp = Utils.Controls.Utils.QYUtils.Comm.BytesAppend(tcpFrame, frame);
+                byte[] temp = Utils.Controls.Utils.QYUtils.BytesAppend(tcpFrame, frame);
 
                 tcpList.Add(temp);
             }

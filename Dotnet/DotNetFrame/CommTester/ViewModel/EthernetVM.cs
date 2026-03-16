@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFrame.CommTester.ViewModel
+namespace DotNet.CommTester.ViewModel
 {
     internal class EthernetVM : QYViewModel
     {

@@ -112,6 +112,11 @@ namespace DotNetFrame.Charts.ViewModel
             return rawData;
         }
 
+        /// <summary>
+        /// Array의 봉우리 목록
+        /// </summary>
+        /// <param name="ary"></param>
+        /// <returns></returns>
         internal List<int> Peak_Index_List_Get(double[] ary) => this._filter.GetPeakIndexList(ary, this.Peak_Kernal_Size);
     }
 }

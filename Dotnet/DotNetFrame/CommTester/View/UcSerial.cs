@@ -1,5 +1,5 @@
 ﻿using DotNet.Utils.Views;
-using DotNetFrame.CommTester.ViewModel;
+using DotNet.CommTester.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,8 +30,9 @@ namespace DotNetFrame.CommTester.View
             cbo_portname.ValueMember = nameof(QYItem.Value);
             cbo_portname.DisplayMember = nameof(QYItem.DisplayText);
             cbo_portname.DropDownStyle = ComboBoxStyle.DropDownList;
-            cbo_portname.DataBindings.Add("DataSource", base.BindingSource, nameof(SerialVM.PortNameList));
-            cbo_portname.DataBindings.Add("SelectedValue", base.BindingSource, nameof(SerialVM.PortName), true, DataSourceUpdateMode.OnPropertyChanged);
+            cbo_portname.DataBindings.Add(nameof(ComboBox.DataSource), base.BindingSource, nameof(SerialVM.PortNameList));
+            cbo_portname.DataBindings.Add(nameof(ComboBox.SelectedValue), base.BindingSource, nameof(SerialVM.PortName), true, DataSourceUpdateMode.OnPropertyChanged);
+            cbo_portname.DataBindings.Add(nameof(ComboBox.Enabled), base.BindingSource, nameof(SerialVM.PortName_EditEnable), true, DataSourceUpdateMode.OnPropertyChanged);
 
             pnl.Height = cbo_portname.Bottom + 3;
 

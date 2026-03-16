@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNetFrame.CommTester.ViewModel
+namespace DotNet.CommTester.ViewModel
 {
     internal class SerialVM : QYViewModel
     {
@@ -27,7 +27,7 @@ namespace DotNetFrame.CommTester.ViewModel
             set
             {
                 if (this.PortName != value
-                    && this._serialPort.IsOpen == false)
+                    && this.PortName_EditEnable)
                 {
                     this._serialPort.PortName = value;
 
@@ -35,6 +35,7 @@ namespace DotNetFrame.CommTester.ViewModel
                 }
             }
         }
+        public bool PortName_EditEnable => this._serialPort.IsOpen == false;
         public int BaudRate
         {
             get { return this._serialPort.BaudRate; }
@@ -94,11 +95,23 @@ namespace DotNetFrame.CommTester.ViewModel
         public List<QYItem> ParityList => this._parity_list;
         public List<QYItem> StopBitsList => this._stopbits_list;
 
-        internal SerialVM(QYSerialPort serialPort)
+        internal SerialVM(QYSerialPort serialPort, CommTesterVM tester)
         {
             this._serialPort = serialPort;
+            tester.PropertyChanged += Tester_PropertyChanged;
 
             this.InitList();
+        }
+
+        private void Tester_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if(sender is CommTesterVM tester)
+            {
+                if(e.PropertyName == nameof(CommTesterVM.Connection))
+                {
+                    base.OnPropertyChanged(nameof(SerialVM.PortName_EditEnable));
+                }
+            }
         }
 
         private void InitList()

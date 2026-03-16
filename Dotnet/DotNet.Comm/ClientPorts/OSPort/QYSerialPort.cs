@@ -15,13 +15,11 @@ namespace DotNet.Comm.ClientPorts.OSPort
                     this._serialPort.PortName = value;
             }
         }
-
         public int BaudRate
         {
             get { return this._serialPort.BaudRate; }
             set { this._serialPort.BaudRate = value; }
         }
-
         public int DataBits
         {
             get { return this._serialPort.DataBits; }
@@ -35,14 +33,7 @@ namespace DotNet.Comm.ClientPorts.OSPort
         public StopBits StopBits
         {
             get { return this._serialPort.StopBits; }
-            set
-            {
-                if (value == StopBits.None
-                    || value == StopBits.OnePointFive)
-                    this._serialPort.StopBits = StopBits.One;
-                else
-                    this._serialPort.StopBits = value;
-            }
+            set { this._serialPort.StopBits = value; }
         }
 
         public override bool IsOpen
@@ -80,7 +71,6 @@ namespace DotNet.Comm.ClientPorts.OSPort
 
             return false;
         }
-
         public override bool Close()
         {
             if(this.IsOpen)
@@ -103,7 +93,6 @@ namespace DotNet.Comm.ClientPorts.OSPort
 
             return false;
         }
-
         public override byte[] Read()
         {
             byte[] readBytes = null;
@@ -127,7 +116,6 @@ namespace DotNet.Comm.ClientPorts.OSPort
                 this._serialPort.Write(bytes, 0, bytes.Length);
             }
         }
-
         public override void InitPort()
         {
             if (this._serialPort != null)

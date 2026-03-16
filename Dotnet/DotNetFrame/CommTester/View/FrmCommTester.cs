@@ -1,7 +1,8 @@
 ﻿using DotNet.Comm;
+using DotNet.CommTester.Model;
+using DotNet.CommTester.ViewModel;
 using DotNet.Utils.Views;
 using DotNetFrame.Base.Model;
-using DotNetFrame.CommTester.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,7 +13,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace DotNetFrame.CommTester.View
 {
@@ -70,7 +70,7 @@ namespace DotNetFrame.CommTester.View
 
         private CommTesterVM _viewmodel = new CommTesterVM();
 
-        private DataTable _dtDataLog = new DataTable();
+        //private DataTable _dtDataLog = new DataTable();
         private BackgroundWorker BgWorker = new BackgroundWorker();
         private const int RESULT_COLUMN_COUNT = 512;
 
@@ -179,6 +179,7 @@ namespace DotNetFrame.CommTester.View
             cbo_config_comm_protocol_type.DropDownStyle = ComboBoxStyle.DropDownList;
             cbo_config_comm_protocol_type.DataBindings.Add("SelectedValue", this._viewmodel, nameof(CommTesterVM.ProtocolType), true, DataSourceUpdateMode.OnPropertyChanged);
             cbo_config_comm_protocol_type.SelectedValue = ProtocolType.None;
+            DotNet.Utils.Views.Events.QYEvents.BestFitPopupWidth(cbo_config_comm_protocol_type, this._viewmodel.ProtocolList);
 
             this.chk_config_comm_protocol_errorcode_add.Left = this.lbl_config_comm_protocol_type.Left;
             this.chk_config_comm_protocol_errorcode_add.Top = this.lbl_config_comm_protocol_type.Bottom + 3;
@@ -261,7 +262,7 @@ namespace DotNetFrame.CommTester.View
 
         private void Runstop(string txt)
         {
-            this._dtDataLog.Rows.Clear();
+            //this._dtDataLog.Rows.Clear();
 
             this._viewmodel.RunStop(txt);
         }
@@ -323,18 +324,23 @@ namespace DotNetFrame.CommTester.View
             this.lbl_log_count_comm_trycount_value.TextAlign = ContentAlignment.MiddleCenter;
             this.lbl_log_count_comm_trycount_value.Dock = DockStyle.Fill;
             this.lbl_log_count_comm_trycount_value.AutoSize = false;
+            this.lbl_log_count_comm_trycount_value.DataBindings.Add(nameof(Label.Text), this._viewmodel, nameof(CommTesterVM.SendingCount), true, DataSourceUpdateMode.OnPropertyChanged);
             this.lbl_log_count_comm_success_value.TextAlign = ContentAlignment.MiddleCenter;
             this.lbl_log_count_comm_success_value.Dock = DockStyle.Fill;
             this.lbl_log_count_comm_success_value.AutoSize = false;
+            this.lbl_log_count_comm_success_value.DataBindings.Add(nameof(Label.Text), this._viewmodel, nameof(CommTesterVM.SucessCount), true, DataSourceUpdateMode.OnPropertyChanged);
             this.lbl_log_count_comm_none_value.TextAlign = ContentAlignment.MiddleCenter;
             this.lbl_log_count_comm_none_value.Dock = DockStyle.Fill;
             this.lbl_log_count_comm_none_value.AutoSize = false;
+            this.lbl_log_count_comm_none_value.DataBindings.Add(nameof(Label.Text), this._viewmodel, nameof(CommTesterVM.Error_Timeout_None_Count), true, DataSourceUpdateMode.OnPropertyChanged);
             this.lbl_log_count_comm_stop_value.TextAlign = ContentAlignment.MiddleCenter;
             this.lbl_log_count_comm_stop_value.Dock = DockStyle.Fill;
             this.lbl_log_count_comm_stop_value.AutoSize = false;
+            this.lbl_log_count_comm_stop_value.DataBindings.Add(nameof(Label.Text), this._viewmodel, nameof(CommTesterVM.Error_Timeout_Stop_Count), true, DataSourceUpdateMode.OnPropertyChanged);
             this.lbl_log_count_comm_long_value.TextAlign = ContentAlignment.MiddleCenter;
             this.lbl_log_count_comm_long_value.Dock = DockStyle.Fill;
             this.lbl_log_count_comm_long_value.AutoSize = false;
+            this.lbl_log_count_comm_long_value.DataBindings.Add(nameof(Label.Text), this._viewmodel, nameof(CommTesterVM.Error_Timeout_Long_Count), true, DataSourceUpdateMode.OnPropertyChanged);
 
             layout_log_count_comm.Controls.Add(this.lbl_log_count_comm_trycount_value, 0, 1);
             layout_log_count_comm.Controls.Add(this.lbl_log_count_comm_success_value, 1, 1);
@@ -397,10 +403,10 @@ namespace DotNetFrame.CommTester.View
 
         private void InitUI_Log_Grid(DataGridView gv)
         {
-            this._dtDataLog = new DataTable();
-            this._dtDataLog.Columns.Add(new DataColumn("Time", typeof(DateTime)));
-            this._dtDataLog.Columns.Add(new DataColumn("Type", typeof(string)));
-            this._dtDataLog.Columns.Add(new DataColumn("Color", typeof(Color)) { DefaultValue = Color.Transparent});
+            //this._dtDataLog = new DataTable();
+            //this._dtDataLog.Columns.Add(new DataColumn("Time", typeof(DateTime)));
+            //this._dtDataLog.Columns.Add(new DataColumn("Type", typeof(string)));
+            //this._dtDataLog.Columns.Add(new DataColumn("Color", typeof(Color)) { DefaultValue = Color.Transparent});
 
             gv.Dock = DockStyle.Fill;
             gv.AutoSize = false;
@@ -409,7 +415,7 @@ namespace DotNetFrame.CommTester.View
             gv.AllowUserToAddRows = false;
             gv.AllowUserToResizeColumns = false;
             gv.AllowUserToResizeRows = false;
-            gv.DataSource = this._dtDataLog;
+            gv.DataSource = this._viewmodel.Results;
             gv.RowsAdded += GvDataLog_RowsAdded;
 
             DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
@@ -424,7 +430,7 @@ namespace DotNetFrame.CommTester.View
 
             DataGridViewTextBoxColumn colType = new DataGridViewTextBoxColumn();
             colType.Name = "Type";
-            colType.DataPropertyName = "Type";
+            colType.DataPropertyName = "ItemType";
             colType.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colType.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colType.HeaderText = "Type";
@@ -437,7 +443,7 @@ namespace DotNetFrame.CommTester.View
             {
                 string colName = $"{i}";
 
-                this._dtDataLog.Columns.Add(new DataColumn(colName, typeof(string)));
+                //this._dtDataLog.Columns.Add(new DataColumn(colName, typeof(string)));
 
                 DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
                 col.DataPropertyName = colName;
@@ -457,12 +463,33 @@ namespace DotNetFrame.CommTester.View
         {
             DataGridView gv = sender as DataGridView;
 
-            if (gv.Columns[e.ColumnIndex].Name == "Type")
+            if (gv.Columns[e.ColumnIndex].DataPropertyName == "ItemType")
             {
-                Color color = (Color)this._dtDataLog.Rows[e.RowIndex]["Color"];
+                ResultType type = this._viewmodel.Results[e.RowIndex].Type;
+                if (type == ResultType.Response)
+                    e.CellStyle.BackColor = Color.PaleGreen;
+                else if(type == ResultType.Error_Protocol_ErrorCode
+                    || type == ResultType.Error_Protocol_Frame)
+                    e.CellStyle.BackColor = Color.Orange;
+                else if(type == ResultType.Error_Timeout_None ||
+                    type == ResultType.Error_Timeout_Stop ||
+                    type == ResultType.Error_Timeout_Long
+                    )
+                    e.CellStyle.BackColor = Color.LightCoral;
+            }
 
-                if(color != Color.Transparent)
-                    e.CellStyle.BackColor = color;
+            if (gv.Rows[e.RowIndex].DataBoundItem is TesterResult rst)
+            {
+                if (gv.Columns[e.ColumnIndex].DataPropertyName == "Time")
+                {
+                    e.Value = rst.Time.ToString("MM-dd HH:mm:ss.fff");
+                }
+                else if (gv.Columns[e.ColumnIndex].DataPropertyName != "ItemType" &&
+                    gv.Columns[e.ColumnIndex].DataPropertyName != "Time")
+                {
+                    e.Value = rst[Convert.ToInt32(gv.Columns[e.ColumnIndex].DataPropertyName)];
+                    e.FormattingApplied = true;
+                }
             }
         }
 
@@ -491,7 +518,7 @@ namespace DotNetFrame.CommTester.View
             this.BgWorker.RunWorkerAsync();
         }
 
-        private void _viewmodel_GetResult(CommResult obj)
+        private void _viewmodel_GetResult(TesterResult obj)
         {
             this.Invoke(new Action(() => {
                 this.AddResult(obj);
@@ -499,27 +526,27 @@ namespace DotNetFrame.CommTester.View
             }));
         }
 
-        private void AddResult(CommResult rst)
+        private void AddResult(TesterResult rst)
         {
-            DataRow dr = this._dtDataLog.NewRow();
+            //DataRow dr = this._dtDataLog.NewRow();
 
-            dr["Time"] = DateTime.Now;
-            dr["Type"] = rst.Type == "Write" ? "Req" : "Rcv";
-            dr["Color"] = rst.Type == "Write" || rst.Type == "Read" ? Color.Transparent : Color.LightCoral;
+            //dr["Time"] = DateTime.Now;
+            //dr["Type"] = rst.Type == "Write" ? "Req" : "Rcv";
+            //dr["Color"] = rst.Type == "Write" || rst.Type == "Read" ? Color.Transparent : Color.LightCoral;
 
-            if (rst.Data != null)
-            {
-                for (int i = 0; i < rst.Data.Length; i++)
-                    dr[$"{i}"] = $"{rst.Data[i]:X2}";
-            }
+            ////if (rst.Data != null)
+            ////{
+            ////    for (int i = 0; i < rst.Data.Length; i++)
+            ////        dr[$"{i}"] = $"{rst.Data[i]:X2}";
+            ////}
 
-            this._dtDataLog.Rows.Add(dr);
+            //this._dtDataLog.Rows.Add(dr);
         }
-        private void WriteResult(CommResult rst)
+        private void WriteResult(TesterResult rst)
         {
             string log = string.Empty;
 
-            log = $"{rst.Type}: {ByteToString(rst.Data)}";
+            //log = $"{rst.Type}: {ByteToString(rst.Data)}";
 
             log += Environment.NewLine;
             log += Environment.NewLine;
