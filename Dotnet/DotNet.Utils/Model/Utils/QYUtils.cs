@@ -121,60 +121,6 @@ namespace DotNet.Utils.Controls.Utils
         }
 
         /// <summary>
-        /// Enum을 DataItem으로 변환
-        /// </summary>
-        /// <typeparam name="T">변환할 Enum</typeparam>
-        /// <returns>변환된 DataItem 목록</returns>
-        static public EnumItem<T>[] GetEnumItems<T>() where T : Enum
-        {
-            return Enum.GetValues(typeof(T))
-                .Cast<T>()
-                .Select(e => new EnumItem<T>(e))
-                .ToArray();
-        }
-        /// <summary>
-        /// Enum Item 목록
-        /// </summary>
-        /// <typeparam name="T">사용된 Enum</typeparam>
-        public class EnumItem<T> where T : Enum
-        {
-            /// <summary>
-            /// Enum값
-            /// </summary>
-            public T Value { get; }
-            /// <summary>
-            /// Enum Text
-            /// </summary>
-            public string DisplayText { get; }
-
-            public EnumItem(T item)
-            {
-                this.Value = item;
-                this.DisplayText = GetDescription(item);
-            }
-
-            private string GetDescription(Enum value)
-            {
-                System.Reflection.FieldInfo info = value.GetType().GetField(value.ToString());
-                System.ComponentModel.DescriptionAttribute[] attributes =
-                    (System.ComponentModel.DescriptionAttribute[])info.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
-
-                if (attributes != null && attributes.Length > 0)
-                    return attributes[0].Description;
-
-                return value.ToString();
-            }
-        }
-
-        public static QYItem[] EnumToItems<T>() where T: Enum
-        {
-            return Enum.GetValues(typeof(T))
-                .Cast<T>()
-                .Select(e => new QYItem(e))
-                .ToArray();
-        }
-
-        /// <summary>
         /// 숫자형 변환
         /// </summary>
         /// <param name="obj">변환할 object</param>
@@ -525,12 +471,4 @@ namespace DotNet.Utils.Controls.Utils
     public delegate void Update_WithParam(params object[] obj);
     public delegate void Update_WithoutParam();
 
-    public class QYLang : Attribute
-    {
-        public string Text { get; }
-        public QYLang(string text)
-        {
-            Text = text;
-        }
-    }
 }

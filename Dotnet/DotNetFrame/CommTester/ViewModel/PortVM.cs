@@ -1,6 +1,7 @@
 ﻿using DotNet.Comm.Transport;
 using DotNet.Utils.Controls.Utils;
 using DotNet.Utils.ViewModel;
+using DotNet.Utils.Views;
 using DotNetFrame.CommTester.Model;
 using DotNetFrame.CommTester.Model.Protocol;
 using System;
@@ -139,8 +140,8 @@ namespace DotNetFrame.CommTester.ViewModel.Port
 
         internal PortVM()
         {
-            this._list_port_type = QYUtils.EnumToItems<PortType>().ToList();
-            this._list_protocol_type = QYUtils.EnumToItems<ProtocolType>().ToList();
+            this._list_port_type = QYViewUtils.EnumToItem<PortType>().ToList();
+            this._list_protocol_type = QYViewUtils.EnumToItem<ProtocolType>().ToList();
             this._log.ListChanged += _log_ListChanged;
             this._port.Log += _port_Log;
             this.PropertyChanged += PortVM_PropertyChanged;

@@ -253,11 +253,6 @@ namespace DotNetFrame.DataBase.View
 
         private void InitComponent()
         {
-            this._dbHandler.ErrorMessage += _dbHandler_ErrorMessage;
-        }
-        private void _dbHandler_ErrorMessage(string obj)
-        {
-            MessageBox.Show(obj);
         }
     }
 }

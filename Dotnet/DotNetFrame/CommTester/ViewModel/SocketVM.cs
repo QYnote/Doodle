@@ -1,5 +1,5 @@
 ﻿using DotNet.Comm.Transport;
-using DotNet.Utils.ViewModel;
+using DotNet.Utils.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +39,7 @@ namespace DotNetFrame.CommTester.ViewModel.Port
         internal SocketVM(QYSocketPort port)
         {
             this.Socket = port;
-            this._list_protocol = QYUtils_ViewModel.GetEnumItems<System.Net.Sockets.ProtocolType>().ToList();
+            this._list_protocol = QYViewUtils.EnumToItem<System.Net.Sockets.ProtocolType>().ToList();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using DotNet.Utils.Controls.Utils;
-using DotNet.Utils.ViewModel;
+using DotNet.Utils.Views;
 using DotNetFrame.CommTester.ViewModel.Port;
 using System;
 using System.Collections.Generic;

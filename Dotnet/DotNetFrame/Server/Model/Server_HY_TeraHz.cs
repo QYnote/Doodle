@@ -30,7 +30,7 @@ namespace DotNetFrame.Server.Model
 
         //1. Fields - Port Item
         private bool _send_allow = false;
-        private bool _cali_allow = false;
+        //private bool _cali_allow = false;
         private bool _cmd_send_cali_allow = false;
 
         public bool IsOpen => this._server.IsOpen;

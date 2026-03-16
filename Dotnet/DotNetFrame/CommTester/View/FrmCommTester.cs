@@ -1,5 +1,4 @@
-﻿using DotNet.Utils.ViewModel;
-using DotNetFrame.CommTester.Model;
+﻿using DotNet.Utils.Views;
 using DotNetFrame.CommTester.ViewModel.Port;
 using System;
 using System.Data;

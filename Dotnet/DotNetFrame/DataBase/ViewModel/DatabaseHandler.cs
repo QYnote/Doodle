@@ -1,9 +1,8 @@
 ﻿using DotNet.Database;
-using DotNet.Utils.Controls.Utils;
+using DotNet.Utils.ViewModel;
 using DotNet.Utils.Views;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
@@ -213,9 +212,9 @@ namespace DotNetFrame.DataBase.ViewModel
                 this._db_current = null;
                 this.SelectedName = null;
             }
-            catch (Exception ex)
+            catch
             {
-                base.OnErrorMessage($"Message: {ex.Message}\r\nTrace:{ex.StackTrace}");
+
             }
         }
 
@@ -231,9 +230,9 @@ namespace DotNetFrame.DataBase.ViewModel
 
                 result = true;
             }
-            catch(Exception ex)
+            catch
             {
-                base.OnErrorMessage($"Message: {ex.Message}\r\nTrace:{ex.StackTrace}");
+
             }
 
             return result;
@@ -304,12 +303,12 @@ namespace DotNetFrame.DataBase.ViewModel
 
                 return result;
             }
-            catch (Exception ex)
+            catch
             {
                 result = false;
                 this._db_connector.EndTransaction(result);
 
-                base.OnErrorMessage($"Message: {ex.Message}\r\nTrace:{ex.StackTrace}");
+
             }
 
             return result;

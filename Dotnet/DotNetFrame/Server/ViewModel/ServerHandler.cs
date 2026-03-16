@@ -1,4 +1,4 @@
-﻿using DotNet.Utils.Controls.Utils;
+﻿using DotNet.Utils.ViewModel;
 using DotNet.Utils.Views;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ namespace DotNetFrame.Server.ViewModel
 
     internal class ServerHandler : QYViewModel
     {
-        public event EventHandler<string> ServerLog;
+        //public event EventHandler<string> ServerLog;
 
         private List<QYItem> _server_List;
         private ServerType _server_current;

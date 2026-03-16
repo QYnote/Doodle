@@ -1,4 +1,4 @@
-﻿using DotNet.Utils.Controls.Utils;
+﻿using DotNet.Utils.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Data;

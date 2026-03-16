@@ -1,5 +1,6 @@
 ﻿using DotNet.Comm.Transport;
 using DotNet.Utils.ViewModel;
+using DotNet.Utils.Views;
 using DotNetFrame.CommTester.Model;
 using System;
 using System.Collections.Generic;
@@ -54,8 +55,8 @@ namespace DotNetFrame.CommTester.ViewModel.Port
             this.Serial = port;
 
             this.RefreshPortList();
-            this._list_parity = QYUtils_ViewModel.GetEnumItems<Parity>().ToList();
-            this._list_stopbits = QYUtils_ViewModel.GetEnumItems<StopBits>().ToList();
+            this._list_parity = QYViewUtils.EnumToItem<Parity>().ToList();
+            this._list_stopbits = QYViewUtils.EnumToItem<StopBits>().ToList();
         }
 
         internal void RefreshPortList()
