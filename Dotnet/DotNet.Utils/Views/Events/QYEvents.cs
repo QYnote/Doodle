@@ -58,5 +58,23 @@ namespace DotNet.Utils.Views.Events
         }
 
         #endregion 마우스 선택 영역  Rectangle 가져오기
+
+        public static void BestFitPopupWidth(ComboBox cbo, List<QYItem> items)
+        {
+            int maxWidth = cbo.Width;
+            Graphics g = cbo.CreateGraphics();
+            Font font = cbo.Font;
+            int margin = 3;
+
+            foreach (var item in items)
+            {
+                int itemWidth = (int)g.MeasureString(item.DisplayText, font).Width + margin;
+
+                if (itemWidth > maxWidth)
+                    maxWidth = itemWidth;
+            }
+
+            cbo.DropDownWidth = maxWidth;
+        }
     }
 }

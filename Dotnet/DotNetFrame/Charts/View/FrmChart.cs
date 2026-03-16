@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using static DotNet.Utils.Views.QYViewUtils;
 
 namespace DotNetFrame.Chart.View
 {
@@ -21,7 +22,6 @@ namespace DotNetFrame.Chart.View
         private Label lbl_cre_maxseconds = new Label();
 
         private GroupBox gbx_filter = new GroupBox();
-        private GroupBox gbx_filter_type = new GroupBox();
         private Label lbl_filter_kernal_size = new Label();
         private NumericUpDown num_filter_kernal_size = new NumericUpDown();
         private Label lbl_filter_quantity = new Label();
@@ -110,22 +110,18 @@ namespace DotNetFrame.Chart.View
 
         private void InitUI_Filter(GroupBox gbx)
         {
-            this.gbx_filter_type.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
-            RadioButton[] rdo_filter_type = QYViewUtils.CreateEnumRadioButton<FilterType>();
-            for (int i = 0; i < rdo_filter_type.Length; i++)
-            {
-                RadioButton rdo = rdo_filter_type[i];
-                rdo.Dock = DockStyle.Top;
-                QYViewUtils.BindingRadioButton(rdo, this._chartHandler, nameof(this._chartHandler.FilterType), rdo.Tag);
-
-                this.gbx_filter_type.Controls.Add(rdo);
-                rdo.BringToFront();
-            }
-            this.gbx_filter_type.Height = 92;
+            QYRadioGroup filter_type = new QYRadioGroup();
+            filter_type.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
+            filter_type.Height = 92;
+            filter_type.Caption = AppData.Lang("chart.filter.type");
+            filter_type.ValueMember = nameof(QYItem.Value);
+            filter_type.DisplayMember = nameof(QYItem.DisplayText);
+            filter_type.DataSource = QYViewUtils.EnumToItem<FilterType>().ToList();
+            filter_type.DataBindings.Add(nameof(QYRadioGroup.SelectedValue), this._chartHandler, nameof(ChartHandler.FilterType), true, DataSourceUpdateMode.OnPropertyChanged);
 
             
-            this.lbl_filter_kernal_size.Left = this.gbx_filter_type.Left;
-            this.lbl_filter_kernal_size.Top = this.gbx_filter_type.Bottom + 3;
+            this.lbl_filter_kernal_size.Left = filter_type.Left;
+            this.lbl_filter_kernal_size.Top = filter_type.Bottom + 3;
             this.lbl_filter_kernal_size.Width = this.lbl_cre_maxseconds.Width;
             this.lbl_filter_kernal_size.TextAlign = ContentAlignment.MiddleLeft;
             this.num_filter_kernal_size.Left = this.lbl_filter_kernal_size.Right + 3;
@@ -151,10 +147,10 @@ namespace DotNetFrame.Chart.View
             this.num_filter_quantity.Maximum = int.MaxValue;
             this.num_filter_quantity.DataBindings.Add("Value", this._chartHandler, nameof(this._chartHandler.Filter_Process_Count), true, DataSourceUpdateMode.OnPropertyChanged);
 
-            this.gbx_filter_type.Width = this.num_filter_kernal_size.Right - this.gbx_filter_type.Left;
+            filter_type.Width = this.num_filter_kernal_size.Right - filter_type.Left;
             gbx.Height = this.lbl_filter_quantity.Bottom + 3;
 
-            gbx.Controls.Add(this.gbx_filter_type);
+            gbx.Controls.Add(filter_type);
             gbx.Controls.Add(this.lbl_filter_kernal_size);
             gbx.Controls.Add(this.num_filter_kernal_size);
             gbx.Controls.Add(this.lbl_filter_quantity);
@@ -257,7 +253,7 @@ namespace DotNetFrame.Chart.View
             this.lbl_cre_maxseconds.Text = AppData.Lang("chart.cre.length");
 
             this.gbx_filter.Text = AppData.Lang("chart.filter.title");
-            this.gbx_filter_type.Text = AppData.Lang("chart.filter.type");
+            //this.gbx_filter_type.Text = AppData.Lang("chart.filter.type");
             this.lbl_filter_kernal_size.Text = AppData.Lang("chart.filter.kernal");
             this.lbl_filter_quantity.Text = AppData.Lang("chart.filter.count");
 

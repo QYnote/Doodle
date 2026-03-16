@@ -17,52 +17,36 @@ namespace DotNetFrame.Server.Model
         internal const int SENSOR_PER_CHIP = 16;
 
         public event EventHandler<string> ServerLog;
-
-        private int _device_sensor_count = DEFAULT_SENSOR_COUNT;
-        private bool _device_sensor_apply_object = false;
-        private Int16 _device_sensor_offset_object = DEFAULT_SENSOR_OFFSET_OBJECT;
-        private bool _device_sensor_apply_max = false;
-        private Int16 _device_sensor_offset_max = DEFAULT_SENSOR_OFFSET_MAX;
-        private bool _device_sensor_apply_random = true;
-        private Int16 _device_sensor_offset_boundScale = DEFAULT_SENSOR_OFFSET_BOUNDSCALE;
-
         private TCPServer _server = new TCPServer();
-        private Int16[] _write_min_values = new Int16[DEFAULT_SENSOR_COUNT];
-        private Random _write_rnd = new Random();
-        private bool _write_isValidating = false;
+        
+        //1. Fields - Communication
+        private object _write_lock = new object();
         private byte[] _read_buffer = null;
+        private byte[] _write_buffer = null;
+        private DateTime _write_time_last = DateTime.Now;
 
-        private bool _cmd_send_allow = false;
+
+        private int _write_interval = 1000 / 240;
+
+        //1. Fields - Port Item
+        private bool _send_allow = false;
+        private bool _cali_allow = false;
         private bool _cmd_send_cali_allow = false;
 
         public bool IsOpen => this._server.IsOpen;
         public string IP { get => this._server.IP; set => this._server.IP = value; }
         public int PortNo { get => this._server.PortNo; set => this._server.PortNo = value; }
-        public int SensorCount
+        public byte[] WriteBuffer
         {
-            get => _device_sensor_count;
-            set
-            {
-                //2의 제곱승에 속하는지 검사
-                if ((value > 0 && ((value & (value - 1)) == 0)) == false)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-
-                this._write_isValidating = true;
-
-                this._device_sensor_count = value;
-                this._write_min_values = new Int16[value];
-                this.UpdateSensorCount();
-
-                this._write_isValidating = false;
-            }
+            get => this._write_buffer;
+            set { lock (this._write_lock) { this._write_buffer = value; } }
+        }
+        public int Interval
+        {
+            get => this._write_interval;
+            set => this._write_interval = value;
         }
 
-        public bool ApplyObject { get => _device_sensor_apply_object; set => _device_sensor_apply_object = value; }
-        public short OffsetObject { get => _device_sensor_offset_object; set => _device_sensor_offset_object = value; }
-        public bool ApplyMax { get => _device_sensor_apply_max; set => _device_sensor_apply_max = value; }
-        public short OffsetMax { get => _device_sensor_offset_max; set => _device_sensor_offset_max = value; }
-        public bool ApplyRandom { get => _device_sensor_apply_random; set => _device_sensor_apply_random = value; }
-        public short OffsetBoundScale { get => _device_sensor_offset_boundScale; set => _device_sensor_offset_boundScale = value; }
 
         internal Server_HY_TeraHz()
         {
@@ -71,74 +55,26 @@ namespace DotNetFrame.Server.Model
             this._server.Log += (msg) => { this.ServerLog?.Invoke(this, msg); };
             this._server.PeriodicSendEvent += _server_PeriodicSendEvent;
             this._server.CreateResponseEvent += _server_CreateResponseEvent;
-
-            this.UpdateSensorCount();
-        }
-
-        private void UpdateSensorCount()
-        {
-            double rndValue = 1;
-            for (int i = 0; i < this._device_sensor_count; i++)
-            {
-                if (this._device_sensor_apply_random)
-                {
-                    if (i % SENSOR_PER_CHIP == 0)
-                        rndValue = this._write_rnd.Next(0, 10000) / 10000d;
-
-                    this._write_min_values[i] = Convert.ToInt16(0x7FFF * rndValue);
-                }
-                else
-                {
-                    this._write_min_values[i] = (Int16)(0x7FFF * (i / (float)this._device_sensor_count));
-                }
-
-                if (this._write_min_values[i] < 0)
-                    this._write_min_values[i] = 0;
-                else if (this._write_min_values[i] > 0x7FFF)
-                    this._write_min_values[i] = 0x7FFF;
-            }
         }
 
         private byte[] _server_PeriodicSendEvent()
         {
-            if (this._cmd_send_allow == false || this._write_isValidating) return null;
+            if (this._server.IsOpen == false || this._send_allow == false || this._write_buffer == null) return null;
 
-            Int16[] outputValue = new Int16[this._device_sensor_count];
-            byte[] returnBuffer = new byte[this._device_sensor_count * sizeof(Int16)];
-
-            for (int i = 0; i < this._device_sensor_count; i++)
+            byte[] buffer = null;
+            lock (this._write_lock)
             {
-                int temp = this._write_min_values[i];
-
-                if (this._device_sensor_apply_random)
-                    temp += Convert.ToInt16(this._device_sensor_offset_boundScale * (this._write_rnd.Next(-1000, 1000) / 1000d));
-
-                //Max교정값 전송
-                if (this._device_sensor_apply_max)
-                    temp += this._device_sensor_offset_max;
-
-                //물체 감지 적용
-                if (this._device_sensor_apply_object)
-                    temp += this._device_sensor_offset_object;
-
-                if (temp > 0x7FFF)
-                    outputValue[i] = 0x7FFF;
-                else if (temp < 0)
-                    outputValue[i] = 0;
-                else
-                    outputValue[i] = (Int16)temp;
+                buffer = this.WriteBuffer;
             }
 
-            Buffer.BlockCopy(outputValue, 0, returnBuffer, 0, returnBuffer.Length);
+            System.Threading.Thread.Sleep(1);
 
-            System.Threading.Thread.Sleep(2);
-
-            return returnBuffer;
+            return buffer;
         }
 
         private byte[] _server_CreateResponseEvent(byte[] request)
         {
-            if (request == null || this._write_isValidating) return null;
+            if (request == null) return null;
 
             //0. Test용 수신 Buffer 표기
             this.ServerLog?.Invoke(this, $"Buffer: {ByteToString(request)}");
@@ -161,11 +97,11 @@ namespace DotNetFrame.Server.Model
             {
                 if (this._read_buffer.Length < 6) return null;
 
-                int handle = QYUtils.Find(this._read_buffer, Encoding.ASCII.GetBytes("TS"));
+                int handle = this._read_buffer.Find(Encoding.ASCII.GetBytes("TS"));
                 if (handle < 0)
                 {
                     this._read_buffer = null;
-                    this.ServerLog?.Invoke(this, $"비정상 Request: {ByteToString(this._read_buffer)}");
+                    this.ServerLog?.Invoke(this, $"비정상 Request: {this.ByteToString(this._read_buffer)}");
 
                     this._read_buffer = null;
                     return null;
@@ -178,6 +114,8 @@ namespace DotNetFrame.Server.Model
                 int cmdN = Convert.ToInt32(reqStr.Substring(4, 2));
                 string resStr = string.Empty;
 
+                this.ServerLog?.Invoke(this, $"Request Bytes: {this.ByteToString(reqBytes)}");
+
                 if (cmdG == "TSN")
                 {
                     if (cmdN == 0)
@@ -187,12 +125,12 @@ namespace DotNetFrame.Server.Model
                     else if (cmdN == 1)
                     {
                         resStr = "TSN,OK";
-                        this._cmd_send_allow = true;
+                        this._send_allow = true;
                     }
                     else if (cmdN == 2)
                     {
                         resStr = "TSN,OK";
-                        this._cmd_send_allow = false;
+                        this._send_allow = false;
                     }
                     else if (cmdN == 3)
                     {
@@ -206,9 +144,9 @@ namespace DotNetFrame.Server.Model
                     }
                     else if (cmdN == 5 || cmdN == 6)
                     {
-                        resStr = $"TSN,OK,{this._device_sensor_count.ToString("D4")}";
-                        for (int i = 0; i < this._device_sensor_count; i++)
-                            resStr += string.Format(",0000");
+                        //resStr = $"TSN,OK,{this._device_sensor_count.ToString("D4")}";
+                        //for (int i = 0; i < this._device_sensor_count; i++)
+                        //    resStr += string.Format(",0000");
                     }
                 }
                 else if (cmdG == "TST")
@@ -229,7 +167,6 @@ namespace DotNetFrame.Server.Model
                 this._read_buffer = null;
             }
 
-
             return null;
         }
 
@@ -246,13 +183,7 @@ namespace DotNetFrame.Server.Model
             return str;
         }
 
-        internal void Open()
-        {
-            this.UpdateSensorCount();
-
-            this._server.Open();
-        }
-
+        internal void Open() => this._server.Open();
         internal void Close() => this._server.Close();
     }
 }

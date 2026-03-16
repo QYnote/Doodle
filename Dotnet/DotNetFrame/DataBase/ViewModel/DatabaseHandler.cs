@@ -1,5 +1,6 @@
 ﻿using DotNet.Database;
 using DotNet.Utils.Controls.Utils;
+using DotNet.Utils.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,7 +14,7 @@ using System.Windows.Forms;
 
 namespace DotNetFrame.DataBase.ViewModel
 {
-    internal class DatabaseHandler : QYBindingBase
+    internal class DatabaseHandler : QYViewModel
     {
         private DataBaseType _type;
         private string _db_connector_datasource;
@@ -22,12 +23,12 @@ namespace DotNetFrame.DataBase.ViewModel
         private string _db_log_dir;
 
         private DBBase _db_connector;
-        private List<QYUtils.EnumItem<DataBaseType>> _type_list;
+        private List<QYItem> _type_list;
         private DataSet _db_current;
         private BindingList<string> _db_current_table_list = new BindingList<string>();
         private string _db_current_table_name;
 
-        public List<QYUtils.EnumItem<DataBaseType>> TypeList => this._type_list;
+        public List<QYItem> TypeList => this._type_list;
 
         public DataBaseType Type
         {
@@ -180,7 +181,7 @@ namespace DotNetFrame.DataBase.ViewModel
 
         private void Initialize()
         {
-            this._type_list = QYUtils.GetEnumItems<DataBaseType>().ToList();
+            this._type_list = QYViewUtils.EnumToItem<DataBaseType>().ToList();
 
             this.Type = DataBaseType.SQLite;
             this.DataSource = $"{new DirectoryInfo(SQLite.DEFAULT_SQLITE_DIR).Parent.Parent.Parent.FullName}\\DotNet.Database\\Resources\\SQLite\\{SQLite.DEFAULT_SQLITE_DIR_FILENAME}";

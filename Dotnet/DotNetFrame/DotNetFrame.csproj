@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{4C8CC7A6-458E-42CD-86D5-72BD43F25688}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>DotNetFrame</RootNamespace>
+    <RootNamespace>DotNet</RootNamespace>
     <AssemblyName>DotNetFrame</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -102,7 +102,7 @@
     <Compile Include="Server\Model\Server_Modbus.cs" />
     <Compile Include="Server\ViewModel\ModbusHandler.cs" />
     <Compile Include="Server\ViewModel\ServerHandler.cs" />
-    <Compile Include="Server\ViewModel\TeraHzHandler.cs" />
+    <Compile Include="Server\ViewModel\TeraHzViewModel.cs" />
     <Compile Include="Charts\View\FrmChart.cs">
       <SubType>Form</SubType>
     </Compile>

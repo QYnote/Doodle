@@ -33,14 +33,7 @@ namespace DotNet.Comm.Transport
         public StopBits StopBits
         {
             get { return this._serialPort.StopBits; }
-            set
-            {
-                if (value == StopBits.None
-                    || value == StopBits.OnePointFive)
-                    this._serialPort.StopBits = StopBits.One;
-                else
-                    this._serialPort.StopBits = value;
-            }
+            set { this._serialPort.StopBits = value; }
         }
         public bool IsOpen
         {

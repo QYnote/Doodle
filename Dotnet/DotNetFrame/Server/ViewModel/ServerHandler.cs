@@ -14,12 +14,14 @@ namespace DotNetFrame.Server.ViewModel
         Modbus,
     }
 
-    internal class ServerHandler : QYBindingBase
+    internal class ServerHandler : QYViewModel
     {
-        private List<QYViewUtils.EnumItem<ServerType>> _server_List;
+        public event EventHandler<string> ServerLog;
+
+        private List<QYItem> _server_List;
         private ServerType _server_current;
 
-        public List<QYViewUtils.EnumItem<ServerType>> ServerList { get => _server_List; }
+        public List<QYItem> ServerList { get => _server_List; }
         public ServerType Server_Current
         {
             get => _server_current;
@@ -41,7 +43,7 @@ namespace DotNetFrame.Server.ViewModel
 
         private void Initialize()
         {
-            this._server_List = QYViewUtils.GetEnumItems<ServerType>().ToList();
+            this._server_List = QYViewUtils.EnumToItem<ServerType>().ToList();
             this.Server_Current = ServerType.TeraHz;
         }
     }

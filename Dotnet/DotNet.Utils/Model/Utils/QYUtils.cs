@@ -9,10 +9,28 @@ using System.Windows.Forms;
 
 namespace DotNet.Utils.Controls.Utils
 {
+    public class QYLangCode : Attribute
+    {
+        public string Code { get; }
+        /// <summary>
+        /// Description 처럼 Enum에 설정할 값 Attrubute
+        /// </summary>
+        /// <remarks>
+        /// enum 목록에서
+        /// [QYLangCode("코드값")]
+        /// enumValue
+        /// 이런식으로 enum에 코드값 지정
+        /// </remarks>
+        /// <param name="code">코드값</param>
+        public QYLangCode(string code)
+        {
+            this.Code = code;
+        }
+    }
+
     public static class QYUtils
     {
         public static QYMath QYMath = new QYMath();
-        public static QYComm Comm = new QYComm();
 
         /// <summary>
         /// 원본에 손상이 가지 않도록 복제품 생성
@@ -185,164 +203,25 @@ namespace DotNet.Utils.Controls.Utils
         }
 
         /// <summary>
-        /// Rectange 안에서 시작, 종료 Point로 Rectangle 안의 Rectangle 구하기
+        /// Byte Array 합치기
         /// </summary>
-        /// <remarks>
-        /// Point가 기준 Rect밖에 있을 경우 기준 Rect 끝으로 취급
-        /// </remarks>
-        /// <param name="baseRect">기준 Rectangle</param>
-        /// <param name="sp">시작 Point</param>
-        /// <param name="ep">종료 Point</param>
-        /// <returns>기준 Rectangle 속 Rectangle</returns>
-        static public Rectangle RectInRect(Rectangle baseRect, Point sp, Point ep)
+        /// <param name="baseBytes">앞에위치할 Byte Array</param>
+        /// <param name="backBytes">뒤에 위치할 Byte Array</param>
+        /// <returns></returns>
+        public static byte[] BytesAppend(byte[] baseBytes, byte[] backBytes)
         {
-            int spx, spy, epx, epy, x, y, width, height;
+            if (backBytes == null) return baseBytes;
+            byte[] containByts = new byte[baseBytes.Length + backBytes.Length];
 
-            //시작 X좌표 변경
-            if (sp.X < baseRect.X)
-                //Diagram 좌측 밖 시작
-                spx = baseRect.X;
-            else if (sp.X > baseRect.X + baseRect.Width)
-            {
-                //Diagram 우측 밖 시작
-                if (ep.X < baseRect.X)
-                    //Diagram 좌측 밖 종료
-                    spx = baseRect.X;
-                else if (ep.X > baseRect.X + baseRect.Width)
-                    //Diagram 우측 밖 종료
-                    spx = baseRect.X + baseRect.Width;
-                else
-                    //Diagram 내부 종료
-                    spx = ep.X;
-            }
-            else
-            {
-                //Diagram 내부 시작
-                if (ep.X < baseRect.X)
-                    //Diagram 좌측 밖 종료
-                    spx = baseRect.X;
-                else if (ep.X > baseRect.X + baseRect.Width)
-                    //Diagram 우측 밖 종료
-                    spx = sp.X;
-                else if (sp.X < ep.X)
-                    //내부 종료 - 시작X < 종료X
-                    spx = sp.X;
-                else
-                    //내부 종료 - 시작X > 종료X
-                    spx = ep.X;
-            }
-            //시작 Y좌표 변경
-            if (sp.Y < baseRect.Y)
-                //Diagram 상단 밖 시작
-                spy = baseRect.Y;
-            else if (sp.Y > baseRect.Y + baseRect.Height)
-            {
-                //Diagram 하단 밖 시작
-                if (ep.Y < baseRect.Y)
-                    //Diagram 상단 밖 종료
-                    spy = baseRect.Y;
-                else if (ep.Y > baseRect.Y + baseRect.Height)
-                    //Diagram 하단 밖 종료
-                    spy = baseRect.Y + baseRect.Height;
-                else
-                    //Diagram 내부 종료
-                    spy = ep.Y;
-            }
-            else
-            {
-                //Diagram 내부 시작
-                if (ep.Y < baseRect.Y)
-                    //Diagram 상단 밖 종료
-                    spy = baseRect.Y;
-                else if (ep.Y > baseRect.Y + baseRect.Height)
-                    //Diagram 하단 밖 종료
-                    spy = sp.Y;
-                else if (sp.Y < ep.Y)
-                    //내부 종료 - 시작Y < 종료Y
-                    spy = sp.Y;
-                else
-                    //내부 종료 - 시작Y > 종료Y
-                    spy = ep.Y;
-            }
-            //종료 X좌표 변경
-            if (sp.X < baseRect.X)
-            {
-                //Diagram 좌측 밖 시작
-                if (ep.X < baseRect.X)
-                    //Diagram 좌측 밖 종료
-                    epx = baseRect.X;
-                else if (ep.X > baseRect.X + baseRect.Width)
-                    //Diagram 우측 밖 종료
-                    epx = baseRect.X + baseRect.Width;
-                else
-                    //Diagram 내부 종료
-                    epx = ep.X;
-            }
-            else if (sp.X > baseRect.X + baseRect.Width)
-                //Diagram 우측 밖 시작
-                epx = baseRect.X + baseRect.Width;
-            else
-            {
-                //Diagram 내부 시작
-                if (ep.X < baseRect.X)
-                    //Diagram 좌측 밖 종료
-                    epx = sp.X;
-                else if (ep.X > baseRect.X + baseRect.Width)
-                    //Diagram 우측 밖 종료
-                    epx = baseRect.X + baseRect.Width;
-                else if (sp.X < ep.X)
-                    //내부 종료 - 시작X < 종료X
-                    epx = ep.X;
-                else
-                    //내부 종료 - 시작X > 종료X
-                    epx = sp.X;
-            }
-            //종료 Y좌표 변경
-            if (sp.Y < baseRect.Y)
-            {
-                //Diagram 상단 밖 시작
-                if (ep.Y < baseRect.Y)
-                    //Diagram 상단 밖 종료
-                    epy = baseRect.Y;
-                else if (ep.Y > baseRect.Y + baseRect.Height)
-                    //Diagram 하단 밖 종료
-                    epy = baseRect.Y + baseRect.Height;
-                else
-                    //Diagram 내부 종료
-                    epy = ep.Y;
-            }
-            else if (sp.Y > baseRect.Y + baseRect.Height)
-                //Diagram 하단 밖 시작
-                epy = baseRect.Y + baseRect.Height;
-            else
-            {
-                //Diagram 내부 시작
-                if (ep.Y < baseRect.Y)
-                    //Diagram 상단 밖 종료
-                    epy = baseRect.Y;
-                else if (ep.Y > baseRect.Y + baseRect.Height)
-                    //Diagram 하단 밖 종료
-                    epy = baseRect.Y + baseRect.Height;
-                else if (sp.Y < ep.Y)
-                    //내부 종료 - 시작Y < 종료Y
-                    epy = ep.Y;
-                else
-                    //내부 종료 - 시작Y > 종료Y
-                    epy = sp.Y;
-            }
+            //옮길 Array, 옮길 Array 시작 index, 넘겨받은 Array, 넘겨받을 Array index, 옮길 Array 수
+            Buffer.BlockCopy(baseBytes, 0, containByts, 0, baseBytes.Length);
+            Buffer.BlockCopy(backBytes, 0, containByts, baseBytes.Length, backBytes.Length);
 
-            x = Math.Min(spx, epx);
-            y = Math.Min(spy, epy);
-            width = spx < epx ? Math.Abs(spx - epx) : 0;
-            height = spy < epy ? Math.Abs(spy - epy) : 0;
+            baseBytes = containByts;
 
-
-            return new Rectangle(
-                x,
-                y,
-                width,
-                height
-                );
+            //메모리 초기화
+            containByts = null;
+            return baseBytes;
         }
 
         #region Event
