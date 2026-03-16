@@ -14,7 +14,7 @@ namespace DotNetFrame.Server.Model
         public event EventHandler<string> ServerLog;
 
         private TCPServer _server = new TCPServer();
-        private ProtocolBase _protocol = null;
+        //private ProtocolBase _protocol = null;
 
         private byte[] _read_buffer = null;
 
@@ -31,7 +31,7 @@ namespace DotNetFrame.Server.Model
             this._server.Log += (msg) => { this.ServerLog?.Invoke(this, msg); };
             this._server.CreateResponseEvent += _server_CreateResponseEvent;
 
-            this._protocol = new Modbus(false);
+            //this._protocol = new Modbus(false);
         }
 
         private byte[] _server_CreateResponseEvent(byte[] request)
@@ -54,26 +54,26 @@ namespace DotNetFrame.Server.Model
             }
 
 
-            //2. Reqeust Frame 추출
-            if (this._read_buffer != null)
-            {
-                byte[] reqFrame = this._protocol.Request_ExtractFrame(this._read_buffer);
+            ////2. Reqeust Frame 추출
+            //if (this._read_buffer != null)
+            //{
+            //    byte[] reqFrame = this._protocol.Request_ExtractFrame(this._read_buffer);
 
-                if (reqFrame != null)
-                {
-                    this.ServerLog?.Invoke(this, $"Request Frame: {ByteToString(reqFrame)}");
-                    //3. Response Frame 생성
-                    byte[] resFrame = this._protocol.Request_CreateResponse(reqFrame, this._server_items);
+            //    if (reqFrame != null)
+            //    {
+            //        this.ServerLog?.Invoke(this, $"Request Frame: {ByteToString(reqFrame)}");
+            //        //3. Response Frame 생성
+            //        byte[] resFrame = this._protocol.Request_CreateResponse(reqFrame, this._server_items);
 
-                    if (resFrame != null)
-                    {
-                        this.ServerLog?.Invoke(this, $"Response Frame: {ByteToString(resFrame)}");
+            //        if (resFrame != null)
+            //        {
+            //            this.ServerLog?.Invoke(this, $"Response Frame: {ByteToString(resFrame)}");
 
-                        this._read_buffer = null;
-                        return resFrame;
-                    }
-                }
-            }
+            //            this._read_buffer = null;
+            //            return resFrame;
+            //        }
+            //    }
+            //}
 
             return null;
         }

@@ -1,12 +1,12 @@
 ﻿using System.IO.Ports;
 
-namespace DotNet.Comm.ClientPorts.OSPort
+namespace DotNet.Comm.Transport
 {
-    public class QYSerialPort : OSPortBase
+    public class QYSerialPort : ITransport
     {
         private SerialPort _serialPort = new SerialPort();
 
-        public override string PortName
+        public string PortName
         {
             get { return this._serialPort.PortName; }
             set
@@ -15,13 +15,11 @@ namespace DotNet.Comm.ClientPorts.OSPort
                     this._serialPort.PortName = value;
             }
         }
-
         public int BaudRate
         {
             get { return this._serialPort.BaudRate; }
             set { this._serialPort.BaudRate = value; }
         }
-
         public int DataBits
         {
             get { return this._serialPort.DataBits; }
@@ -44,13 +42,12 @@ namespace DotNet.Comm.ClientPorts.OSPort
                     this._serialPort.StopBits = value;
             }
         }
-
-        public override bool IsOpen
+        public bool IsOpen
         {
             get { return this._serialPort.IsOpen; }
         }
 
-        public QYSerialPort() : base(PortType.Serial)
+        public QYSerialPort()
         {
             this.Parity = Parity.None;
             this.StopBits = StopBits.One;
@@ -58,53 +55,19 @@ namespace DotNet.Comm.ClientPorts.OSPort
             this.BaudRate = 9600;
         }
 
-        public override bool Open()
+        public void Open()
         {
             if (this.IsOpen == false)
-            {
-                try
-                {
-                    this._serialPort.Open();
-
-                    return true;
-                }
-                catch
-                {
-                    base.LogRun("[Error]Port Open Fail");
-                }
-            }
-            else
-            {
-                base.LogRun("[Alart]Port already Open");
-            }
-
-            return false;
+                this._serialPort.Open();
         }
 
-        public override bool Close()
+        public void Close()
         {
             if(this.IsOpen)
-            {
-                try
-                {
-                    this._serialPort.Close();
-
-                    return true;
-                }
-                catch
-                {
-                    base.LogRun("[Error]Port Close Fail");
-                }
-            }
-            else
-            {
-                base.LogRun("[Alart]Port already Close");
-            }
-
-            return false;
+                this._serialPort.Close();
         }
 
-        public override byte[] Read()
+        public byte[] Read()
         {
             byte[] readBytes = null;
 
@@ -120,7 +83,7 @@ namespace DotNet.Comm.ClientPorts.OSPort
 
             return readBytes;
         }
-        public override void Write(byte[] bytes)
+        public void Write(byte[] bytes)
         {
             if (this.IsOpen)
             {
@@ -128,14 +91,10 @@ namespace DotNet.Comm.ClientPorts.OSPort
             }
         }
 
-        public override void InitPort()
+        public void Initialize()
         {
             if (this._serialPort != null)
                 this._serialPort.Close();
-            this.Parity = Parity.None;
-            this.StopBits = StopBits.One;
-            this.DataBits = 8;
-            this.BaudRate = 9600;
         }
     }
 }

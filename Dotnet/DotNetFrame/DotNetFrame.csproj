@@ -73,21 +73,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Charts\ViewModel\ChartHandler.cs" />
-    <Compile Include="CommTester\Model\CommTester.cs" />
     <Compile Include="Charts\Model\DataCreater_CPU.cs" />
     <Compile Include="Charts\Model\DataFilter.cs" />
-    <Compile Include="CommTester\ViewModel\CommTesterHandler.cs" />
-    <Compile Include="CommTester\ViewModel\EthernetHandler.cs" />
-    <Compile Include="CommTester\ViewModel\SerialHandler.cs" />
+    <Compile Include="CommTester\Model\CommPort.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\ModbusAscii_HYExpand.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\ModbusRTU_HYExpand.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\ModbusTCP_HY.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\PCLinkSTD.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\PCLinkSTD_TH300500.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\PCLinkSUM.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\PCLinkSUM_TD300500.cs" />
+    <Compile Include="CommTester\Model\Protocol\Custom\HYNux\PCLinkSUM_TH300500.cs" />
+    <Compile Include="CommTester\Model\Protocol\IProtocol.cs" />
+    <Compile Include="CommTester\Model\Protocol\ModbusAscii.cs" />
+    <Compile Include="CommTester\Model\Protocol\ModbusRTU.cs" />
+    <Compile Include="CommTester\ViewModel\PortVM.cs" />
+    <Compile Include="CommTester\ViewModel\SerialVM.cs" />
+    <Compile Include="CommTester\ViewModel\SocketVM.cs" />
     <Compile Include="Base\Model\AppData.cs" />
-    <Compile Include="CommTester\View\UcEthernet.cs">
+    <Compile Include="CommTester\View\UcSocket.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="CommTester\View\UcSerial.cs">
       <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="CommTester\View\UcSerial.Designer.cs">
-      <DependentUpon>UcSerial.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBase\ViewModel\DatabaseHandler.cs" />
     <Compile Include="Server\Model\Server_HY_TeraHz.cs" />

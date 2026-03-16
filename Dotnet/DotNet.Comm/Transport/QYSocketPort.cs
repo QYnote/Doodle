@@ -3,19 +3,19 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace DotNet.Comm.ClientPorts.OSPort
+namespace DotNet.Comm.Transport
 {
     /*개발Log
      * 비동기 Timeout은 Application Port에서 판단하도록 한다
      * 사유: 정말로 연결하고 Timeout안주고 무한정 연결할 수도 있기때문
      */
-    public class QYEthernet : OSPortBase
+    public class QYSocketPort : ITransport
     {
         #region Fields
         /// <summary>연결 Ethernet Socket</summary>
         private Socket _clientSocket = null;
+        private object _lock_buffer = new object();
         private byte[] _asyncBuffer = null;
-        private System.Threading.SemaphoreSlim semaphore = new System.Threading.SemaphoreSlim(1, 1);    //Method 실행 순서 처리기
 
         private ProtocolType _socketProtocol = ProtocolType.Tcp;
         private IPAddress _ipAddress = null;
@@ -54,7 +54,7 @@ namespace DotNet.Comm.ClientPorts.OSPort
         #endregion 설정용 Property
         #region 편의용 Property
 
-        public override bool IsOpen
+        public bool IsOpen
         {
             get
             {
@@ -74,25 +74,6 @@ namespace DotNet.Comm.ClientPorts.OSPort
             }
         }
 
-        public override string PortName
-        {
-            get
-            {
-                if (this._ipAddress == null)
-                    return string.Empty;
-
-                return string.Format("{0}:{1}", this._ipAddress.ToString(), this._portNo);
-            }
-            set => throw new NotImplementedException();
-        }
-
-        public void InitComm()
-        {
-            this.Close();
-            this._clientSocket = null;
-            this._asyncBuffer = null;
-        }
-
         #endregion 편의용 Property
         /// <summary>
         /// Ethernet PCPort
@@ -101,12 +82,12 @@ namespace DotNet.Comm.ClientPorts.OSPort
         /// 동기/비동기 통신 여부<br/>
         /// true : 동기통신 / false : 비동기통신
         /// </param>
-        public QYEthernet(bool isSync) : base(PortType.Ethernet)
+        public QYSocketPort(bool isSync = false)
         {
             this.IsSync = isSync;
         }
 
-        public override bool Open()
+        public void Open()
         {
             if (this.IsOpen == false)
             {
@@ -126,7 +107,7 @@ namespace DotNet.Comm.ClientPorts.OSPort
                         if (connectResult == true)
                         {
                             this._clientSocket.EndConnect(asyncResult);//연결시도 종료
-
+                            
                             //비동기 이벤트 설정
                             SocketAsyncEventArgs asyncEvent = new SocketAsyncEventArgs();
                             asyncEvent.SetBuffer(new byte[this.MaxBufferSize], 0, this.MaxBufferSize);
@@ -139,42 +120,26 @@ namespace DotNet.Comm.ClientPorts.OSPort
                             this._clientSocket.Close();
                     }
 
-                    return true;
+                    return;
                 }
-                catch(Exception ex)
+                catch 
                 {
                     this._clientSocket = null;
-                    base.LogRun(string.Format("[Error]Port Open Fail - {0}", ex.Message));
                 }
             }
-            else
-            {
-                base.LogRun("[Alart]Port already open");
-            }
-
-            return false;
         }
         /// <summary>
         /// 비동기통신 수신 종료 이벤트
         /// </summary>
-        private async void AsyncEvent_Completed(object sender, SocketAsyncEventArgs e)
+        private void AsyncEvent_Completed(object sender, SocketAsyncEventArgs e)
         {
             //연결 끊김 확인
             Socket client = sender as Socket;
             if (client == null || client.Connected == false) return;
 
-            await this.Async_SocketRead(client, e);
-        }
-
-        private async Task Async_SocketRead(Socket client, SocketAsyncEventArgs e)
-        {
-            await this.semaphore.WaitAsync();//Method 실행 순서 대기
-
-            try
+            if (client.Connected && e.BytesTransferred > 0)
             {
-                if (client == null || client.Connected == false) return;
-
-                if (client.Connected && e.BytesTransferred > 0)
+                lock (this._lock_buffer)
                 {
                     if (this._asyncBuffer == null)
                     {
@@ -186,67 +151,29 @@ namespace DotNet.Comm.ClientPorts.OSPort
                         byte[] temp = new byte[this._asyncBuffer.Length + e.BytesTransferred];
                         Buffer.BlockCopy(this._asyncBuffer, 0, temp, 0, this._asyncBuffer.Length);
                         Buffer.BlockCopy(e.Buffer, 0, temp, this._asyncBuffer.Length, e.BytesTransferred);
-                        
+
                         this._asyncBuffer = temp;
                     }
                 }
+            }
 
-                client.ReceiveAsync(e);
-            }
-            finally
-            {
-                //순서대기 해제
-                this.semaphore.Release();
-            }
+            client.ReceiveAsync(e);
         }
 
-        public override bool Close()
-        {
-            //동기식 연결일 경우 IsOpen일 경우 Close처리
-            //비동기식 연결일 경우 바로 Close처리
-            if (this.IsSync) return SyncClose();
-            else return AsyncClose();
-        }
-
-        private bool SyncClose()
+        public void Close()
         {
             if (this._clientSocket != null && this._clientSocket.Connected)
             {
                 this._clientSocket.Shutdown(SocketShutdown.Both);
                 this._clientSocket.Close();      //Socket 닫기
                 this._clientSocket = null;
-
-                return true;
-            }
-            else
-            {
-                base.LogRun("[Alart]Port already close");
-                return true;
-            }
-        }
-        private bool AsyncClose()
-        {
-            if(this._clientSocket != null && this._clientSocket.Connected)
-            {
-                this._clientSocket.Shutdown(SocketShutdown.Both);
-                this._clientSocket.Close();      //Socket 닫기
-                this._clientSocket = null;
-
-                return true;
-            }
-            else
-            {
-                base.LogRun("[Alart]Port already close");
-                return true;
             }
         }
 
-        public override byte[] Read()
+        public byte[] Read()
         {
-            if (this.IsSync)
-                return SyncRead();
-            else
-                return AsyncRead();
+            if (this.IsSync) return this.SyncRead();
+            else return this.AsyncRead();
         }
         /// <summary>
         /// 동기통신 읽기처리
@@ -270,8 +197,7 @@ namespace DotNet.Comm.ClientPorts.OSPort
         /// <returns>PCPort에 담겨있던 Buffer</returns>
         private byte[] AsyncRead()
         {
-            this.semaphore.Wait();//Method 실행순서 대기
-            try
+            lock (this._lock_buffer)
             {
                 if (this._asyncBuffer != null && this._asyncBuffer.Length > 0)
                 {
@@ -283,20 +209,14 @@ namespace DotNet.Comm.ClientPorts.OSPort
                     return readBytes;
                 }
             }
-            finally
-            {
-                this.semaphore.Release();//순서대기 해제
-            }
 
             return null;
         }
 
-        public override void Write(byte[] bytes)
+        public void Write(byte[] bytes)
         {
-            if (this.IsSync)
-                SyncWrite(bytes);
-            else
-                AsyncWrite(bytes);
+            if (this.IsSync) this.SyncWrite(bytes);
+            else this.AsyncWrite(bytes);
         }
         /// <summary>
         /// 동기통신 Data 쓰기
@@ -318,12 +238,12 @@ namespace DotNet.Comm.ClientPorts.OSPort
                 SocketAsyncEventArgs args = new SocketAsyncEventArgs();
                 args.SetBuffer(bytes, 0, bytes.Length);
                 this._clientSocket.SendAsync(args);
-
+                
                 args.Dispose();
             }
         }
 
-        public override void InitPort()
+        public void Initialize()
         {
             this.Close();
             this._clientSocket = null;

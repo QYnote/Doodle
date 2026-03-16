@@ -1,11 +1,7 @@
-﻿using DotNet.Comm;
-using DotNet.Utils.Controls.Utils;
-using DotNet.Utils.Views;
-using DotNetFrame.Base.Model;
+﻿using DotNet.Utils.ViewModel;
 using DotNetFrame.CommTester.Model;
-using DotNetFrame.CommTester.ViewModel;
+using DotNetFrame.CommTester.ViewModel.Port;
 using System;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO.Ports;
@@ -18,655 +14,241 @@ namespace DotNetFrame.CommTester.View
 {
     public partial class FrmCommTester : Form
     {
-        public delegate void UIUpdateHandler(string cmd);
-        public delegate void BytesLogHandler(string type, params byte[] data);
+        private ComboBox cbo_port = new ComboBox();
+        private ComboBox cbo_protocol = new ComboBox();
+        private CheckBox chk_error_create = new CheckBox();
+        private CheckBox chk_reapeat_enable = new CheckBox();
+        private NumericUpDown num_repeat_count = new NumericUpDown();
+        private CheckBox chk_repeat_infinity = new CheckBox();
 
-        #region UI Controls
+        private Panel pnl_transport = new Panel();
+        private Button btn_connection = new Button();
+        private Button btn_send = new Button();
+        private TextBox txt_request = new TextBox();
+        private TextBox txt_log = new TextBox();
 
-        private GroupBox gbx_config_port = new GroupBox();
-        private Button btn_config_port_connection = new Button();
-        private Label lbl_config_port_connection_status = new Label();
-        private UcSerial uc_config_port_serial;
-        private UcEthernet uc_config_port_ethernet;
-
-        private GroupBox gbx_config_comm = new GroupBox();
-        private Label lbl_config_comm_protocol_type = new Label();
-        private CheckBox chk_config_comm_protocol_errorcode_add = new CheckBox();
-        private CheckBox chk_config_comm_repeat_enable = new CheckBox();
-        private NumericUpDown num_config_comm_repeat_count = new NumericUpDown();
-        private CheckBox chk_config_comm_repeat_infinity = new CheckBox();
-        private Label lbl_config_comm_request_description = new Label();
-        private Button btn_config_comm_request = new Button();
-
-
-        private GroupBox gbx_log = new GroupBox();
-
-        private GroupBox gbxPortSet = new GroupBox();
-        private ComboBox cboPortType = new ComboBox();
-
-        private Panel pnlPort_Serial = new Panel();
-        private ComboBox cboPortList = new ComboBox();
-        private Button btnConnect = new Button();
-        private Label lblConnState = new Label();
-        private GroupBox gbxBaudRate = new GroupBox();
-        private GroupBox gbxParity = new GroupBox();
-        private GroupBox gbxStopBits = new GroupBox();
-        private GroupBox gbxDataBits = new GroupBox();
-
-        private Panel pnlPort_Ethernet = new Panel();
-        private Label lblEthernetIP = new Label();
-        private TextBox txtEthernetIP = new TextBox();
-        private Label lblPortNo = new Label();
-        private NumericUpDown txtPortNo = new NumericUpDown();
-
-        private GroupBox gbxProtocolSet = new GroupBox();
-        private CheckBox chkAddErrChk = new CheckBox();
-
-        private GroupBox gbxCommSet = new GroupBox();
-        private CheckBox chkRewrite = new CheckBox();
-        private Label lblRewrite = new Label();
-        private NumericUpDown numRewrite = new NumericUpDown();
-        private Label lblRewriteUnit = new Label();
-        private CheckBox chkRewriteInfi = new CheckBox();
-        private TextBox txtWrite = new TextBox();
-        private Button btnSend = new Button();
-        private Label lblWriteTooltip = new Label();
-
-        private GroupBox gbxLog = new GroupBox();
-        private DataGridView gvCommResult = new DataGridView();
-        private DataGridView gvProtocolResult = new DataGridView();
-        private DataGridView gvDataLog = new DataGridView();
-        private DataGridView gvBuffer = new DataGridView();
-        private TextBox txtLog = new TextBox();
-
-        #endregion UI Controls
-
-        private CommTesterHandler _handler = new CommTesterHandler();
-
-        private DataTable _dtDataLog = new DataTable();
-        private DataTable _dtDataResult = new DataTable();
-        private DataTable _dtProtocolResult = new DataTable();
-        private DataTable _dtBuffer = new DataTable();
-        private BackgroundWorker BgWorker = new BackgroundWorker();
-        private const int BUFFER_COLUMN_COUNT = 15;
-        private const int RESULT_COLUMN_COUNT = 512;
+        private BindingSource _binding = new BindingSource();
+        private PortVM VM = new PortVM();
 
         public FrmCommTester()
         {
-            InitializeComponent();
-            this.InitText();
+            this.BindingControl();
             this.InitUI();
-            this.InitText_AfterUI();
-            this.InitComponent();
 
-            
+            this.VM.PropertyChanged += VM_PropertyChanged;
         }
 
-        private void InitText()
+        private void BindingControl()
         {
-            this.gbx_config_port.Text = AppData.Lang("commtester.portproperty.title");
-            this.btn_config_port_connection.Text = AppData.Lang("commtester.portproperty.connect.text");
+            this._binding.DataSource = this.VM;
 
-            this.gbx_config_comm.Text = AppData.Lang("commtester.commproperty.title");
-            this.lbl_config_comm_protocol_type.Text = AppData.Lang("commtester.protocolproperty.title");
-            this.chk_config_comm_protocol_errorcode_add.Text = AppData.Lang("commtester.protocolproperty.errorcode.create.title");
-            this.chk_config_comm_repeat_enable.Text = AppData.Lang("commtester.commproperty.repeat.enable.title");
-            this.chk_config_comm_repeat_infinity.Text = AppData.Lang("commtester.commproperty.repeat.infinity.title");
-            this.lbl_config_comm_request_description.Text = AppData.Lang("commtester.commproperty.tooltip.text");
-            this.btn_config_comm_request.Text = AppData.Lang("commtester.commproperty.send.text");
+            this.cbo_port.ValueMember = nameof(QYItem.Value);
+            this.cbo_port.DisplayMember = nameof(QYItem.DisplayText);
+            this.cbo_port.DataSource = this.VM.PortTypeList;
+            this.cbo_port.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cbo_port.DataBindings.Add(nameof(ComboBox.SelectedValue), this._binding, nameof(PortVM.PortType), true, DataSourceUpdateMode.OnPropertyChanged);
 
-            this.gbx_log.Text = AppData.Lang("commtester.log.title");
+            this.cbo_protocol.ValueMember = nameof(QYItem.Value);
+            this.cbo_protocol.DisplayMember = nameof(QYItem.DisplayText);
+            this.cbo_protocol.DataSource = this.VM.ProtocolTypeList;
+            this.cbo_protocol.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cbo_protocol.DataBindings.Add(nameof(ComboBox.SelectedValue), this._binding, nameof(PortVM.ProtocolType), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.chk_error_create.CheckAlign = ContentAlignment.MiddleRight;
+            this.chk_error_create.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_error_create.CheckAlign = ContentAlignment.MiddleLeft;
+            this.chk_error_create.DataBindings.Add(nameof(CheckBox.Checked), this._binding, nameof(PortVM.CreateErrorCode), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.chk_error_create.DataBindings.Add(nameof(CheckBox.Enabled), this._binding, nameof(PortVM.ErrorCode_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.chk_reapeat_enable.CheckAlign = ContentAlignment.MiddleRight;
+            this.chk_reapeat_enable.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_reapeat_enable.CheckAlign = ContentAlignment.MiddleLeft;
+            this.chk_reapeat_enable.DataBindings.Add(nameof(CheckBox.Checked), this._binding, nameof(PortVM.Repeat_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.num_repeat_count.DecimalPlaces = 0;
+            this.num_repeat_count.TextAlign = HorizontalAlignment.Right;
+            this.num_repeat_count.Minimum = 0;
+            this.num_repeat_count.Maximum = int.MaxValue;
+            this.num_repeat_count.DataBindings.Add(nameof(NumericUpDown.Value), this._binding, nameof(PortVM.Repeat_Count), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.num_repeat_count.DataBindings.Add(nameof(NumericUpDown.Enabled), this._binding, nameof(PortVM.Repeat_Count_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.chk_repeat_infinity.CheckAlign = ContentAlignment.MiddleRight;
+            this.chk_repeat_infinity.TextAlign = ContentAlignment.MiddleLeft;
+            this.chk_repeat_infinity.CheckAlign = ContentAlignment.MiddleLeft;
+            this.chk_repeat_infinity.DataBindings.Add(nameof(CheckBox.Checked), this._binding, nameof(PortVM.Repeat_Infinity), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.chk_repeat_infinity.DataBindings.Add(nameof(CheckBox.Enabled), this._binding, nameof(PortVM.Repeat_Enable), true, DataSourceUpdateMode.OnPropertyChanged);
+
+            this.txt_log.Dock = DockStyle.Fill;
+            this.txt_log.Multiline = true;
+            this.txt_log.ReadOnly = true;
+            this.txt_log.ScrollBars = ScrollBars.Vertical;
+            this.txt_log.DataBindings.Add(nameof(TextBox.Text), this._binding, nameof(PortVM.LogText), true, DataSourceUpdateMode.OnPropertyChanged);
+            this.txt_log.TextChanged += Txt_log_TextChanged;
         }
 
-        private void InitText_AfterUI()
+        private void Txt_log_TextChanged(object sender, EventArgs e)
         {
-            this.gvCommResult.Columns["TryCount"].HeaderText = AppData.Lang("commtester.log.commresult.trycount");
-            this.gvCommResult.Columns["Success"].HeaderText = AppData.Lang("commtester.log.commresult.success");
-            this.gvCommResult.Columns["None Receive"].HeaderText = AppData.Lang("commtester.log.commresult.none");
-            this.gvCommResult.Columns["Receive Stop"].HeaderText = AppData.Lang("commtester.log.commresult.stop");
-            this.gvCommResult.Columns["Receive Too Long"].HeaderText = AppData.Lang("commtester.log.commresult.infinity");
-
-            this.gvProtocolResult.Columns["ErrChk"].HeaderText = AppData.Lang("commtester.log.protocolresult.errorcode");
-            this.gvProtocolResult.Columns["ProtocolErr"].HeaderText = AppData.Lang("commtester.log.protocolresult.protocolerror");
+            TextBox txt = sender as TextBox;
+            txt.SelectionStart = txt.Text.Length;
+            txt.ScrollToCaret();
         }
 
         private void InitUI()
         {
-            Panel pnl_config = new Panel();
-            pnl_config.Dock = DockStyle.Top;
-            pnl_config.Padding = new Padding(3);
-            pnl_config.Height = 218;
+            Panel pnl_property = new Panel();
+            pnl_property.Dock = DockStyle.Top;
+            pnl_property.Height = 200;
+            GroupBox gbx_config = new GroupBox();
+            gbx_config.Dock = DockStyle.Left;
+            gbx_config.Text = "Transport 설정";
+            this.InitUI_Config(gbx_config);
 
-            this.gbx_config_port.Dock = DockStyle.Left;
-            this.gbx_config_port.Width = 319;
-            this.InitUI_Port(this.gbx_config_port);
+            GroupBox gbx_protocol = new GroupBox();
+            gbx_protocol.Dock = DockStyle.Fill;
+            gbx_protocol.Text = "통신 설정";
+            this.InitUI_Protocol(gbx_protocol);
 
-            this.gbx_config_comm.Dock = DockStyle.Fill;
-            this.InitUI_Comm(this.gbx_config_comm);
+            Panel pnl_text = new Panel();
+            pnl_text.Dock = DockStyle.Top;
+            pnl_text.Height = 23;
+            this.InitUI_Request(pnl_text);
 
-            this.gbx_log.Dock = DockStyle.Fill;
-            this.InitUI_Log(this.gbx_log);
+            GroupBox gbx_log = new GroupBox();
+            gbx_log.Dock = DockStyle.Fill;
+            gbx_log.Text = "로그";
 
-            pnl_config.Controls.Add(this.gbx_config_comm);
-            pnl_config.Controls.Add(this.gbx_config_port);
-            this.Controls.Add(this.gbx_log);
-            this.Controls.Add(pnl_config);
+            pnl_property.Controls.Add(gbx_protocol);
+            pnl_property.Controls.Add(gbx_config);
+            gbx_log.Controls.Add(this.txt_log);
+            this.Controls.Add(gbx_log);
+            this.Controls.Add(pnl_text);
+            this.Controls.Add(pnl_property);
         }
 
-        private void InitUI_Port(GroupBox gbx)
+        private void InitUI_Config(GroupBox gbx)
         {
-            Panel pnl_config_port = new Panel();
-            pnl_config_port.Dock = DockStyle.Top;
-            pnl_config_port.Height = 26;
+            Panel pnl_port = new Panel();
+            pnl_port.Dock = DockStyle.Top;
+            pnl_port.Height = 23;
+            this.cbo_port.Dock = DockStyle.Left;
+            this.btn_connection.Dock = DockStyle.Left;
+            this.btn_connection.Text = "연결";
 
-            ComboBox cbo_config_port_list = new ComboBox();
-            cbo_config_port_list.Location = new Point(3, 3);
-            cbo_config_port_list.DataSource = this._handler.Port_Type_List;
-            cbo_config_port_list.DisplayMember = "DisplayText";
-            cbo_config_port_list.ValueMember = "Value";
-            cbo_config_port_list.DataBindings.Add("SelectedValue", this._handler,
-                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.PortType)}",
-                true, DataSourceUpdateMode.OnPropertyChanged);
-            cbo_config_port_list.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.pnl_transport.Dock = DockStyle.Fill;
 
-            this.btn_config_port_connection.Left = cbo_config_port_list.Right + 3;
-            this.btn_config_port_connection.Top = cbo_config_port_list.Top - 1;
-            this.btn_config_port_connection.DataBindings.Add("Text", this._handler, nameof(this._handler.ConnectionText));
-            this.btn_config_port_connection.Click += Btn_config_port_connection_Click;
-
-            
-            this.lbl_config_port_connection_status.Left = this.btn_config_port_connection.Right + 3;
-            this.lbl_config_port_connection_status.Top = this.btn_config_port_connection.Top;
-            this.lbl_config_port_connection_status.Height = this.btn_config_port_connection.Height;
-            this.lbl_config_port_connection_status.Width = this.lbl_config_port_connection_status.Height;
-            this.lbl_config_port_connection_status.DataBindings.Add("BackColor", this._handler, nameof(this._handler.ConnectionColor));
-
-            this.uc_config_port_serial = new UcSerial(this._handler.SerialHandler);
-            this.uc_config_port_serial.Dock = DockStyle.Fill;
-
-            this.uc_config_port_ethernet = new UcEthernet(this._handler.EthernetHandler);
-            this.uc_config_port_ethernet.Dock = DockStyle.Fill;
-
-            pnl_config_port.Controls.Add(cbo_config_port_list);
-            pnl_config_port.Controls.Add(this.btn_config_port_connection);
-            pnl_config_port.Controls.Add(this.lbl_config_port_connection_status);
-            gbx.Controls.Add(this.uc_config_port_serial);
-            gbx.Controls.Add(this.uc_config_port_ethernet);
-            gbx.Controls.Add(pnl_config_port);
+            pnl_port.Controls.Add(this.cbo_port);
+            pnl_port.Controls.Add(this.btn_connection);
+            gbx.Controls.Add(this.pnl_transport);
+            gbx.Controls.Add(pnl_port);
         }
 
-        private void Btn_config_port_connection_Click(object sender, EventArgs e)
+        private void InitUI_Protocol(GroupBox gbx)
         {
-            this._handler.Connection();
+            TableLayoutPanel layout = new TableLayoutPanel();
+            layout.Location = new Point(0, 18);
+            layout.Width = 250;
+            layout.Height = 155;
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 105));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+
+            layout.RowStyles.Add(new RowStyle());
+            layout.RowStyles.Add(new RowStyle());
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 10));
+            layout.RowStyles.Add(new RowStyle());
+            layout.RowStyles.Add(new RowStyle());
+            layout.RowStyles.Add(new RowStyle());
+
+            Label lbl_protocol = new Label();
+            lbl_protocol.Dock = DockStyle.Fill;
+            lbl_protocol.TextAlign = ContentAlignment.MiddleLeft;
+            lbl_protocol.Text = "Protocol 종류";
+
+            Label lbl_error_create = new Label();
+            lbl_error_create.Dock = DockStyle.Fill;
+            lbl_error_create.TextAlign = ContentAlignment.MiddleLeft;
+            lbl_error_create.Text = "CheckSum 생성";
+
+            Label lbl_repeat_enable = new Label();
+            lbl_repeat_enable.Dock = DockStyle.Fill;
+            lbl_repeat_enable.TextAlign = ContentAlignment.MiddleLeft;
+            lbl_repeat_enable.Text = "반복 진행";
+
+            Label lbl_repeat_count = new Label();
+            lbl_repeat_count.Dock = DockStyle.Fill;
+            lbl_repeat_count.TextAlign = ContentAlignment.MiddleLeft;
+            lbl_repeat_count.Text = "반복 횟수";
+
+            Label lbl_repeat_infinity = new Label();
+            lbl_repeat_infinity.Dock = DockStyle.Fill;
+            lbl_repeat_infinity.TextAlign = ContentAlignment.MiddleLeft;
+            lbl_repeat_infinity.Text = "무한 반복";
+
+            layout.Controls.Add(lbl_protocol, 0, 0);
+            layout.Controls.Add(lbl_error_create, 0, 1);
+            layout.Controls.Add(lbl_repeat_enable, 0, 3);
+            layout.Controls.Add(lbl_repeat_count, 0, 4);
+            layout.Controls.Add(lbl_repeat_infinity, 0, 5);
+
+            layout.Controls.Add(this.cbo_protocol, 1, 0);
+            layout.Controls.Add(this.chk_error_create, 1, 1);
+            layout.Controls.Add(this.chk_reapeat_enable, 1, 3);
+            layout.Controls.Add(this.num_repeat_count, 1, 4);
+            layout.Controls.Add(this.chk_repeat_infinity, 1, 5);
+
+            gbx.Controls.Add(layout);
         }
 
-        private void InitUI_Comm(GroupBox gbx)
+        private void InitUI_Request(Panel pnl)
         {
-            this.lbl_config_comm_protocol_type.Location = new Point(3, (int)QYViewUtils.GroupBox_Caption_Hight(gbx) + 3);
-            this.lbl_config_comm_protocol_type.TextAlign = ContentAlignment.MiddleLeft;
-            ComboBox cbo_config_comm_protocol_type = new ComboBox();
-            cbo_config_comm_protocol_type.Left = this.lbl_config_comm_protocol_type.Right + 3;
-            cbo_config_comm_protocol_type.Top = this.lbl_config_comm_protocol_type.Top;
-            cbo_config_comm_protocol_type.DataSource = this._handler.Port_protocol_type_list;
-            cbo_config_comm_protocol_type.DisplayMember = "DisplayText";
-            cbo_config_comm_protocol_type.ValueMember = "Value";
-            cbo_config_comm_protocol_type.DataBindings.Add("SelectedValue", this._handler,
-                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.ProtocolType)}",
-                true, DataSourceUpdateMode.OnPropertyChanged);
-            cbo_config_comm_protocol_type.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            this.chk_config_comm_protocol_errorcode_add.Left = this.lbl_config_comm_protocol_type.Left;
-            this.chk_config_comm_protocol_errorcode_add.Top = this.lbl_config_comm_protocol_type.Bottom + 3;
-            this.chk_config_comm_protocol_errorcode_add.Width = this.lbl_config_comm_protocol_type.Width + 20;
-            this.chk_config_comm_protocol_errorcode_add.DataBindings.Add("Checked", this._handler,
-                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_AddErrCode)}",
-                true, DataSourceUpdateMode.OnPropertyChanged);
-            this.chk_config_comm_protocol_errorcode_add.CheckAlign = ContentAlignment.MiddleRight;
-            this.chk_config_comm_protocol_errorcode_add.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_config_comm_protocol_errorcode_add.DataBindings.Add("Enabled", this._handler, nameof(this._handler.Reg_AddErrCode_Enable));
-
-
-            this.chk_config_comm_repeat_enable.Left = this.chk_config_comm_protocol_errorcode_add.Left;
-            this.chk_config_comm_repeat_enable.Top = this.chk_config_comm_protocol_errorcode_add.Bottom + 3;
-            this.chk_config_comm_repeat_enable.Width = this.chk_config_comm_protocol_errorcode_add.Width;
-            this.chk_config_comm_repeat_enable.CheckAlign = ContentAlignment.MiddleRight;
-            this.chk_config_comm_repeat_enable.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_config_comm_repeat_enable.DataBindings.Add("Checked", this._handler,
-                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_Repeat_Enable)}",
-                true, DataSourceUpdateMode.OnPropertyChanged);
-            
-
-            this.num_config_comm_repeat_count.Left = this.chk_config_comm_repeat_enable.Right + 3;
-            this.num_config_comm_repeat_count.Top = this.chk_config_comm_repeat_enable.Top;
-            this.num_config_comm_repeat_count.Width = 50;
-            this.num_config_comm_repeat_count.DecimalPlaces = 0;
-            this.num_config_comm_repeat_count.Increment = 1;
-            this.num_config_comm_repeat_count.Minimum = 1;
-            this.num_config_comm_repeat_count.Maximum = int.MaxValue;
-            this.num_config_comm_repeat_count.TextAlign = HorizontalAlignment.Right;
-            this.num_config_comm_repeat_count.DataBindings.Add("Value", this._handler,
-                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_Repeat_Count)}",
-                true, DataSourceUpdateMode.OnPropertyChanged);
-            this.num_config_comm_repeat_count.DataBindings.Add("Enabled", this._handler, nameof(this._handler.Reg_Repeat_Count_Enable));
-
-            this.chk_config_comm_repeat_infinity.Left = this.chk_config_comm_repeat_enable.Left;
-            this.chk_config_comm_repeat_infinity.Top = this.chk_config_comm_repeat_enable.Bottom + 3;
-            this.chk_config_comm_repeat_infinity.Width = this.chk_config_comm_repeat_enable.Width;
-            this.chk_config_comm_repeat_infinity.CheckAlign = ContentAlignment.MiddleRight;
-            this.chk_config_comm_repeat_infinity.TextAlign = ContentAlignment.MiddleLeft;
-            this.chk_config_comm_repeat_infinity.DataBindings.Add("Checked", this._handler,
-                $"{nameof(this._handler.CommTester)}.{nameof(this._handler.CommTester.Reg_Repeat_Infinity)}",
-                true, DataSourceUpdateMode.OnPropertyChanged);
-            this.chk_config_comm_repeat_infinity.DataBindings.Add("Enabled", this._handler, nameof(this._handler.Reg_Repeat_Infinity_Enable));
-
-
-            this.btn_config_comm_request.Left = gbx.Right - (this.btn_config_port_connection.Width + 3);
-            this.btn_config_comm_request.Top = gbx.Bottom - (this.btn_config_comm_request.Height + 4);
-            this.btn_config_comm_request.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            this.btn_config_comm_request.DataBindings.Add("Text", this._handler, nameof(this._handler.RequestButtonText));
-            this.btn_config_comm_request.Click += Btn_config_comm_request_Click;
-
-            TextBox txt_config_comm_request = new TextBox();
-            txt_config_comm_request.Left = this.chk_config_comm_repeat_infinity.Left;
-            txt_config_comm_request.Top = this.btn_config_comm_request.Top + 1;
-            txt_config_comm_request.Width = this.btn_config_comm_request.Left - (txt_config_comm_request.Left + 3);
-            txt_config_comm_request.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            txt_config_comm_request.DataBindings.Add("Text", this._handler,
-                nameof(this._handler.Text),
-                true, DataSourceUpdateMode.OnPropertyChanged);
-            txt_config_comm_request.KeyDown += Txt_config_comm_request_KeyDown;
-
-            this.lbl_config_comm_request_description.Left = txt_config_comm_request.Left;
-            this.lbl_config_comm_request_description.Top = txt_config_comm_request.Top - (this.lbl_config_comm_request_description.Height);
-            this.lbl_config_comm_request_description.Width = 400;
-            this.lbl_config_comm_request_description.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            this.lbl_config_comm_request_description.TextAlign = ContentAlignment.MiddleLeft;
-
-
-            gbx.Controls.Add(this.lbl_config_comm_protocol_type);
-            gbx.Controls.Add(cbo_config_comm_protocol_type);
-            gbx.Controls.Add(this.chk_config_comm_protocol_errorcode_add);
-            gbx.Controls.Add(this.chk_config_comm_repeat_enable);
-            gbx.Controls.Add(this.num_config_comm_repeat_count);
-            gbx.Controls.Add(this.chk_config_comm_repeat_infinity);
-            gbx.Controls.Add(this.lbl_config_comm_request_description);
-            gbx.Controls.Add(this.btn_config_comm_request);
-            gbx.Controls.Add(txt_config_comm_request);
-        }
-
-        private void Btn_config_comm_request_Click(object sender, EventArgs e)
-        {
-            this._handler.Data_Register();
-        }
-        private void Txt_config_comm_request_KeyDown(object sender, KeyEventArgs e)
-        {
-            if(e.KeyCode == Keys.Enter)
-                this._handler.Data_Register();
-        }
-
-        private void InitUI_Log(GroupBox gbx)
-        {
-            Panel pnl_log_buffer = new Panel();
-            pnl_log_buffer.Dock = DockStyle.Right;
-            pnl_log_buffer.Width = 378;
-
-            this.gvBuffer.Dock = DockStyle.Top;
-            this.gvBuffer.AutoSize = false;
-            this.gvBuffer.DataSource = this._dtBuffer;
-            this.gvBuffer.Height = 140;
-            this.gvBuffer.RowHeadersVisible = false;
-            this.gvBuffer.AllowUserToAddRows = false;
-            this.gvBuffer.AllowUserToResizeColumns = false;
-            this.gvBuffer.AllowUserToResizeRows = false;
-
-            for (int i = 0; i < BUFFER_COLUMN_COUNT; i++)
+            this.btn_send.Text = "전송";
+            this.btn_send.Dock = DockStyle.Left;
+            this.btn_send.Click += (s, e) =>
             {
-                string fieldName = string.Format("col{0}", i);
-                DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
-                col.DataPropertyName = fieldName;
-                col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                col.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                col.HeaderText = (i + 1).ToString();
-                col.ReadOnly = true;
-                col.Width = 25;
+                this.VM.Send(this.txt_request.Text);
+            };
 
-                this.gvBuffer.Columns.Add(col);
+            this.txt_request.Dock = DockStyle.Fill;
 
-                this._dtBuffer.Columns.Add(new DataColumn(fieldName, typeof(string)) { DefaultValue = string.Empty });
-            }
-
-            this.txtLog.Dock = DockStyle.Fill;
-            this.txtLog.AutoSize = false;
-            this.txtLog.BorderStyle = BorderStyle.FixedSingle;
-            this.txtLog.Multiline = true;
-            this.txtLog.ReadOnly = true;
-            this.txtLog.ScrollBars = ScrollBars.Vertical;
-
-            Panel pnl_log_result = new Panel();
-            pnl_log_result.Dock = DockStyle.Top;
-            pnl_log_result.Height = 47;
-            this.InitUI_Log_Result(pnl_log_result);
-
-            this.InitUI_Log_Grid();
-
-            gbx.Controls.Add(this.gvDataLog);
-            pnl_log_buffer.Controls.Add(this.gvBuffer);
-            pnl_log_buffer.Controls.Add(this.txtLog);
-            gbx.Controls.Add(pnl_log_buffer);
-            gbx.Controls.Add(pnl_log_result);
+            pnl.Controls.Add(this.txt_request);
+            pnl.Controls.Add(this.btn_send);
         }
 
-        private void InitUI_Log_Result(Panel pnl)
+        private void VM_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            InitUI_Log_Result_Comm();
-            InitUI_Log_Result_Protocol();
+            if (sender is PortVM port == false) return;
 
-            pnl.Controls.Add(this.gvProtocolResult);
-            pnl.Controls.Add(this.gvCommResult);
-        }
-
-        private void InitUI_Log_Result_Comm()
-        {
-            //Comm Result
-            this.gvCommResult.Dock = DockStyle.Left;
-            this.gvCommResult.Width = 270 + 3;
-            this.gvCommResult.DataSource = this._dtDataResult;
-            this.gvCommResult.RowHeadersVisible = false;
-            this.gvCommResult.AllowUserToAddRows = false;
-            this.gvCommResult.ReadOnly = true;
-
-            DataGridViewTextBoxColumn colTry = new DataGridViewTextBoxColumn();
-            colTry.Name = colTry.DataPropertyName = "TryCount";
-            colTry.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colTry.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colTry.ReadOnly = true;
-            colTry.Width = 50;
-
-            DataGridViewTextBoxColumn colSuccess = new DataGridViewTextBoxColumn();
-            colSuccess.Name = colSuccess.DataPropertyName = "Success";
-            colSuccess.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colSuccess.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colSuccess.ReadOnly = true;
-            colSuccess.Width = 50;
-
-            DataGridViewTextBoxColumn colNoneReceive = new DataGridViewTextBoxColumn();
-            colNoneReceive.Name = colNoneReceive.DataPropertyName = "None Receive";
-            colNoneReceive.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colNoneReceive.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colNoneReceive.ReadOnly = true;
-            colNoneReceive.Width = 50;
-
-            DataGridViewTextBoxColumn colReceiveStop = new DataGridViewTextBoxColumn();
-            colReceiveStop.Name = colReceiveStop.DataPropertyName = "Receive Stop";
-            colReceiveStop.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colReceiveStop.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colReceiveStop.ReadOnly = true;
-            colReceiveStop.Width = 60;
-
-            DataGridViewTextBoxColumn colReceiveLong = new DataGridViewTextBoxColumn();
-            colReceiveLong.Name = colReceiveLong.DataPropertyName = "Receive Too Long";
-            colReceiveLong.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colReceiveLong.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colReceiveLong.ReadOnly = true;
-            colReceiveLong.Width = 60;
-
-            this.gvCommResult.Columns.Add(colTry);
-            this.gvCommResult.Columns.Add(colSuccess);
-            this.gvCommResult.Columns.Add(colNoneReceive);
-            this.gvCommResult.Columns.Add(colReceiveStop);
-            this.gvCommResult.Columns.Add(colReceiveLong);
-
-            this._dtDataResult.Columns.Add(new DataColumn("TryCount", typeof(uint)) { DefaultValue = 0 });
-            this._dtDataResult.Columns.Add(new DataColumn("Success", typeof(uint)) { DefaultValue = 0 });
-            this._dtDataResult.Columns.Add(new DataColumn("None Receive", typeof(uint)) { DefaultValue = 0 });
-            this._dtDataResult.Columns.Add(new DataColumn("Receive Stop", typeof(uint)) { DefaultValue = 0 });
-            this._dtDataResult.Columns.Add(new DataColumn("Receive Too Long", typeof(uint)) { DefaultValue = 0 });
-        }
-
-        private void InitUI_Log_Result_Protocol()
-        {
-            this.gvProtocolResult.Dock = DockStyle.Left;
-            this.gvProtocolResult.DataSource = this._dtProtocolResult;
-            this.gvProtocolResult.RowHeadersVisible = false;
-            this.gvProtocolResult.AllowUserToAddRows = false;
-            this.gvProtocolResult.ReadOnly = true;
-
-            DataGridViewTextBoxColumn colErrorCheck = new DataGridViewTextBoxColumn();
-            colErrorCheck.Name = colErrorCheck.DataPropertyName = "ErrChk";
-            colErrorCheck.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colErrorCheck.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colErrorCheck.ReadOnly = true;
-            colErrorCheck.Width = 72;
-
-            DataGridViewTextBoxColumn colProtocolErr = new DataGridViewTextBoxColumn();
-            colProtocolErr.Name = colProtocolErr.DataPropertyName = "ProtocolErr";
-            colProtocolErr.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colProtocolErr.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colProtocolErr.ReadOnly = true;
-            colProtocolErr.Width = 80;
-
-            this.gvProtocolResult.Columns.Add(colErrorCheck);
-            this.gvProtocolResult.Columns.Add(colProtocolErr);
-
-            int gvWidth = 0;
-            foreach (DataGridViewColumn col in this.gvProtocolResult.Columns)
-                gvWidth += col.Width;
-            this.gvProtocolResult.Width = gvWidth + 3;
-
-            this._dtProtocolResult.Columns.Add(new DataColumn("ErrChk", typeof(uint)) { DefaultValue = 0 });
-            this._dtProtocolResult.Columns.Add(new DataColumn("ProtocolErr", typeof(uint)) { DefaultValue = 0 });
-        }
-
-        private void InitUI_Log_Grid()
-        {
-            this.gvDataLog.Dock = DockStyle.Fill;
-            this.gvDataLog.AutoSize = false;
-            this.gvDataLog.DataSource = this._dtDataLog;
-            this.gvDataLog.RowHeadersVisible = false;
-            this.gvDataLog.AllowUserToAddRows = false;
-            this.gvDataLog.AllowUserToResizeColumns = false;
-            this.gvDataLog.AllowUserToResizeRows = false;
-            this.gvDataLog.RowsAdded += GvDataLog_RowsAdded;
-
-            DataGridViewTextBoxColumn colType = new DataGridViewTextBoxColumn();
-            colType.Name = "Type";
-            colType.DataPropertyName = "Type";
-            colType.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colType.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colType.HeaderText = "Type";
-            colType.ReadOnly = true;
-            colType.Width = 40;
-            colType.DisplayIndex = 0;
-            this.gvDataLog.Columns.Add(colType);
-
-            DataGridViewTextBoxColumn colTime = new DataGridViewTextBoxColumn();
-            colTime.DataPropertyName = "Time";
-            colTime.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colTime.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colTime.HeaderText = "Time";
-            colTime.ReadOnly = true;
-            colTime.Width = 130;
-            colTime.DisplayIndex = 1;
-            this.gvDataLog.Columns.Add(colTime);
-
-            for (int i = 0; i < RESULT_COLUMN_COUNT; i++)
+            if (e.PropertyName == nameof(PortVM.PortConfig))
             {
-                string colName = string.Format("Col{0}", i);
+                this.pnl_transport.Controls.Clear();
 
-                this._dtDataLog.Columns.Add(new DataColumn(colName, typeof(string)));
-
-                DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
-                col.DataPropertyName = colName;
-                col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                col.Width = 25;
-                col.HeaderText = (i + 1).ToString();
-                col.ReadOnly = true;
-                col.DisplayIndex = 2 + i;
-
-                this.gvDataLog.Columns.Add(col);
-            }
-
-            this.gbxLog.Controls.Add(this.gvDataLog);
-        }
-
-        private void GvDataLog_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
-        {
-            DataGridView gv = sender as DataGridView;
-
-            if (gv.Rows.Count > 0)
-                gv.FirstDisplayedScrollingRowIndex = gv.Rows.Count - 1;
-        }
-
-        private string ByteToString(byte[] bytes)
-        {
-            string str = string.Empty;
-
-            if(bytes != null && bytes.Length != 0)
-            {
-                foreach (var b in bytes)
-                    str += string.Format(" {0:X2}", b);
-            }
-
-            return str;
-        }
-
-        private void AddRow_Frame(byte[] bytes, FrameStatus status)
-        {
-            DataRow dr = this._dtDataLog.NewRow();
-            dr["Type"] = status == FrameStatus.Requesting ? "Req" : "Rcv";
-            dr["Time"] = DateTime.Now.ToString("yy-MM-dd HH:mm:ss.fff");
-
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                if ((i != 0) && ((i % RESULT_COLUMN_COUNT) == 0))
+                switch (port.PortType)
                 {
-                    this._dtDataLog.Rows.Add(dr);
-                    dr = this._dtDataLog.NewRow();
+                    case DotNet.Comm.Transport.PortType.Serial:
+                        this.pnl_transport.Controls.Add(new UcSerial((SerialVM)this.VM.PortConfig));
+                        break;
+                    case DotNet.Comm.Transport.PortType.Socket:
+                        this.pnl_transport.Controls.Add(new UcSocket((SocketVM)this.VM.PortConfig));
+                        break;
                 }
-
-                dr[string.Format("Col{0}", i)] = bytes[i].ToString("X2");
             }
-            this._dtDataLog.Rows.Add(dr);
-
-            if ((status == FrameStatus.Requesting || status == FrameStatus.Result_Comm_OK) == false)
-                this.gvDataLog.Rows[this._dtDataLog.Rows.IndexOf(dr)].Cells["Type"].Style.BackColor = Color.Crimson;
-        }
-
-        private void InitComponent()
-        {
-            this._handler.FrameUpated += _handler_FrameUpated;
-
-            this.FormClosing += (s, e) => this._handler.CommTester.Disconnect();
-
-            this.BgWorker.WorkerSupportsCancellation = true;
-            //this.BgWorker.DoWork += BgWorker_DoWork;
-            //this.BgWorker.RunWorkerAsync();
-        }
-
-        private void _handler_FrameUpated(object sender, TestDataFrame e)
-        {
-            if (this.IsDisposed || this.Disposing) return;
-
-            if (this.InvokeRequired)
-                this.BeginInvoke((MethodInvoker)delegate { _handler_FrameUpated(sender, e); });
-            else
+            else if(e.PropertyName == nameof(PortVM.IsSending))
             {
-                switch (e.Status)
+                if (port.IsSending)
                 {
-                    case FrameStatus.Reading: FrameUpdate_Reading(e); break;
-                    case FrameStatus.Requesting: FrameUpdate_Requesting(e); break;
-                    case FrameStatus.Result_Comm_None:
-                    case FrameStatus.Result_Comm_Stop:
-                    case FrameStatus.Result_Comm_Long: this.FrameUpdate_Timeout(e); break;
-                    case FrameStatus.Result_Comm_OK: 
-                    case FrameStatus.Result_Protocol_ErrorCode:
-                    case FrameStatus.Result_Protocol_NG: this.FrameUpdate_End(e); break;
+                    this.btn_send.Text = "중지";
+                }
+                else
+                {
+                    this.btn_send.Text = "전송";
                 }
             }
         }
 
-        private void FrameUpdate_Reading(TestDataFrame frame)
+        protected override void OnLoad(EventArgs e)
         {
-            byte[] buffer = frame.Comm.Buffer;
+            base.OnLoad(e);
 
-            this._dtBuffer.Rows.Clear();
-
-            DataRow dr = null;
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                string fieldName = string.Format("col{0}", i % BUFFER_COLUMN_COUNT);
-                if (i % BUFFER_COLUMN_COUNT == 0)
-                {
-                    if (i != 0)
-                        this._dtBuffer.Rows.Add(dr);
-
-                    dr = this._dtBuffer.NewRow();
-                }
-
-                dr[fieldName] = buffer[i].ToString("X2");
-            }
-
-            if (dr != null)
-                this._dtBuffer.Rows.Add(dr);
-        }
-        private void FrameUpdate_Requesting(TestDataFrame frame)
-        {
-            this.AddRow_Frame(frame.Comm.ReqBytes, frame.Status);
-
-            //시도횟수
-            this._dtDataResult.Rows[0]["TryCount"] = frame.Comm.TryCount_Cur;
-
-            //TextLog Update
-            this.txtLog.AppendText($"Req:{ByteToString(frame.Comm.ReqBytes)}\r\n");
-        }
-        private void FrameUpdate_Timeout(TestDataFrame frame)
-        {
-            string text = string.Empty;
-
-            this.AddRow_Frame(frame.Comm.Buffer, frame.Status);
-
-            if (frame.Status == FrameStatus.Result_Comm_None)
-            {
-                text = "Res Timeover - None: -\r\n";
-                this._dtDataResult.Rows[0]["None Receive"] = frame.Result.Comm.None;
-            }
-            else if (frame.Status == FrameStatus.Result_Comm_Stop)
-            {
-                text = $"Res Timeover - Stop:{ByteToString(frame.Comm.Buffer)}\r\n";
-                this._dtDataResult.Rows[0]["Receive Stop"] = frame.Result.Comm.Stop;
-            }
-            else if (frame.Status == FrameStatus.Result_Comm_Long)
-            {
-                text = $"Res Timeover - Long:{ByteToString(frame.Comm.Buffer)}\r\n";
-                this._dtDataResult.Rows[0]["Receive Too Long"] = frame.Result.Comm.Long;
-            }
-
-            //TextLog Update
-            this.txtLog.AppendText(text);
-        }
-        private void FrameUpdate_End(TestDataFrame frame)
-        {
-            string text = string.Empty;
-
-            this.AddRow_Frame(frame.Comm.RcvBytes, frame.Status);
-            if (frame.Status == FrameStatus.Result_Comm_OK)
-            {
-                text = $"Res:{ByteToString(frame.Comm.RcvBytes)}\r\n\r\n";
-                this._dtDataResult.Rows[0]["Success"] = frame.Result.Comm.OK;
-            }
-            else if (frame.Status == FrameStatus.Result_Protocol_ErrorCode)
-            {
-                text = $"Res Error - ErrorCode:{ByteToString(frame.Comm.RcvBytes)}\r\n";
-                this._dtProtocolResult.Rows[0]["ErrChk"] = frame.Result.Protocol.ErrorCode;
-            }
-            else if (frame.Status == FrameStatus.Result_Protocol_NG)
-            {
-                text = $"Res Error - Protocol:{ByteToString(frame.Comm.RcvBytes)}\r\n";
-                this._dtDataResult.Rows[0]["ProtocolErr"] = frame.Result.Protocol.NG;
-            }
-
-            //TextLog Update
-            this.txtLog.AppendText(text);
+            this.VM.PortType = DotNet.Comm.Transport.PortType.Serial;
         }
     }
 }

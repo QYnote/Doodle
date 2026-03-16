@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ViewModel\QYItem.cs" />
+    <Compile Include="ViewModel\QYViewModel.cs" />
     <Compile Include="Views\Events\QYEvents.cs" />
     <Compile Include="Views\QYCircularProgressBar.cs">
       <SubType>UserControl</SubType>
@@ -71,16 +73,16 @@
     <Compile Include="Views\QYForm.Designer.cs">
       <DependentUpon>QYForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ucControlBox.cs">
+    <Compile Include="Views\ucControlBox.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\ucControlBox.Designer.cs">
+    <Compile Include="Views\ucControlBox.Designer.cs">
       <DependentUpon>ucControlBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ucNumeric.cs">
+    <Compile Include="Views\ucNumeric.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\ucNumeric.Designer.cs">
+    <Compile Include="Views\ucNumeric.Designer.cs">
       <DependentUpon>ucNumeric.cs</DependentUpon>
     </Compile>
     <Compile Include="Views\ProgressBase.cs">

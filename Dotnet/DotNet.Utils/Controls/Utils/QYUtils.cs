@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNet.Utils.ViewModel;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -102,15 +103,6 @@ namespace DotNet.Utils.Controls.Utils
         }
 
         /// <summary>
-        /// Enum List -> object[]값으로 변경
-        /// </summary>
-        /// <typeparam name="T">변환할 Enum</typeparam>
-        /// <returns>ItemList</returns>
-        static public object[] EnumToItems<Tenum>()
-        {
-            return Enum.GetValues(typeof(Tenum)).OfType<object>().ToArray();
-        }
-        /// <summary>
         /// Enum을 DataItem으로 변환
         /// </summary>
         /// <typeparam name="T">변환할 Enum</typeparam>
@@ -154,6 +146,14 @@ namespace DotNet.Utils.Controls.Utils
 
                 return value.ToString();
             }
+        }
+
+        public static QYItem[] EnumToItems<T>() where T: Enum
+        {
+            return Enum.GetValues(typeof(T))
+                .Cast<T>()
+                .Select(e => new QYItem(e))
+                .ToArray();
         }
 
         /// <summary>
@@ -645,4 +645,13 @@ namespace DotNet.Utils.Controls.Utils
 
     public delegate void Update_WithParam(params object[] obj);
     public delegate void Update_WithoutParam();
+
+    public class QYLang : Attribute
+    {
+        public string Text { get; }
+        public QYLang(string text)
+        {
+            Text = text;
+        }
+    }
 }
