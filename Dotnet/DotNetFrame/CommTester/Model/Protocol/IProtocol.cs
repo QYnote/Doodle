@@ -1,4 +1,4 @@
-﻿using DotNet.Comm.Protocols;
+﻿using DotNet.CommTester.Model.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,24 +28,19 @@ namespace DotNetFrame.CommTester.Model.Protocol
         /// <summary>수신된 Buffer에서 Protocol Frame규격 추출</summary>
         /// <param name="buffer">수신된 Bufer</param>
         /// <returns>Protocol Frame</returns>
-        byte[] Parse(byte[] buffer, byte[] req);
+        byte[] Parse(byte[] buffer);
         /// <summary>
         /// Protocol 규격에 의한 내부 결과값 추출
         /// </summary>
         /// <param name="frame">Protocol Frame</param>
         /// <returns>Protocol 결과</returns>
-        IProtocolResult Extraction(byte[] frame, byte[] req);
-        /// <summary>
-        /// CheckSum Error 검사
-        /// </summary>
-        /// <param name="frame">검사할 Frame</param>
-        /// <returns>true: 에러 / false: 정상</returns>
-        bool CheckError(byte[] frame);
+        IProtocolResult Extraction(byte[] frame);
         /// <summary>
         /// CheckSum 생성
         /// </summary>
         /// <param name="frame">생성할 Frame</param>
         /// <returns>생성된 CheckSum</returns>
         byte[] CreateCheckSum(byte[] frame);
+        void Initialize();
     }
 }

@@ -1,5 +1,4 @@
-﻿using DotNet.Utils.ViewModel;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -118,34 +117,6 @@ namespace DotNet.Utils.Controls.Utils
             }
 
             return idx;
-        }
-
-        /// <summary>
-        /// 숫자형 변환
-        /// </summary>
-        /// <param name="obj">변환할 object</param>
-        /// <returns>true: 숫자형 / false: 숫자형이 아님</returns>
-        static public bool IsNumeric(this object obj)
-        {
-            if (obj == null) return false;
-
-            TypeCode code = Type.GetTypeCode(obj.GetType());
-
-            switch (code)
-            {
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
-                case TypeCode.Int32:
-                case TypeCode.UInt32:
-                case TypeCode.Int64:
-                case TypeCode.UInt64:
-                case TypeCode.Single:
-                case TypeCode.Double:
-                case TypeCode.Decimal:
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         /// <summary>
@@ -394,81 +365,4 @@ namespace DotNet.Utils.Controls.Utils
         }
 
     }
-    /// <summary>
-    /// Thread 동시접근 처리기
-    /// </summary>
-    public class OpenToken : IDisposable
-    {
-        /// <summary>
-        /// 읽기 Method 중단용
-        /// </summary>
-        private readonly System.Threading.CancellationTokenSource _cts = new System.Threading.CancellationTokenSource();
-        /// <summary>
-        /// 읽기 Method Pause용
-        /// </summary>
-        private readonly System.Threading.ManualResetEventSlim _pauseEvent = new System.Threading.ManualResetEventSlim(true);
-        /// <summary>
-        /// 읽기 Method Multi Thread 방지용
-        /// </summary>
-        private readonly object _lock = new object();
-
-        public System.Threading.CancellationToken Token => this._cts.Token;
-        /// <summary>
-        /// Token 사용중 여부
-        /// </summary>
-        public bool IsRunning { get; private set; }
-        /// <summary>
-        /// 사용중 설정
-        /// </summary>
-        /// <param name="running">사용중 여부</param>
-        public void SetRunning(bool running) => this.IsRunning = running;
-        /// <summary>
-        /// Token 중단
-        /// </summary>
-        /// <remarks>
-        /// Token.ThrowIfCancellationRequiested()가 들어간 Thread가 멈춰야 할 때 사용
-        /// </remarks>
-        /// _cts Cancle을 요청해서
-        /// _cts.Token.ThrowIfCancellationRequiested()를 통해
-        /// Cancle 요청을 받았으면 throw아니면 마저 진행함
-        public void Cancle() => this._cts.Cancel();
-        /// <summary>
-        /// Token Thread 일시정지
-        /// </summary>
-        /// <remarks>
-        /// WaitIfPaused가 들어간 Thread가 멈춰야 하는 곳에서 사용
-        /// </remarks>
-        public void Pause() => this._pauseEvent.Reset();
-        /// <summary>
-        /// Token Thread 재진행
-        /// </summary>
-        /// <remarks>
-        /// WaitIfPaused가 들어간 Thread가 재시작 하는 곳에서 사용
-        /// </remarks>
-        public void Resume() => this._pauseEvent.Set();
-        /// <summary>
-        /// Token Thread 대기
-        /// </summary>
-        /// _pauseEvent가 Set상태가 될때까지 대기
-        public void WaitIfPaused() => this._pauseEvent.Wait(this.Token);
-        /// <summary>
-        /// Token Multi Thread 접근 방지용 Lock
-        /// </summary>
-        /// <param name="action">Lock동안 진행할 Action</param>
-        /// <remarks>
-        /// 여러 Thread에서 동시 접근할 Object를 사용할 때
-        /// Lock(() => { Method });를 사용
-        /// </remarks>
-        public void Lock(Action action) { lock (this._lock) { action(); } }
-
-        public void Dispose()
-        {
-            this._cts.Dispose();
-            this._pauseEvent.Dispose();
-        }
-    }
-
-    public delegate void Update_WithParam(params object[] obj);
-    public delegate void Update_WithoutParam();
-
 }

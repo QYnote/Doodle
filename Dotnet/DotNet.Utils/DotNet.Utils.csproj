@@ -43,7 +43,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Model\QYModel.cs" />
     <Compile Include="ViewModel\QYViewModel.cs" />
     <Compile Include="Views\Events\QYEvents.cs" />
     <Compile Include="Views\QYCircularProgressBar.cs">

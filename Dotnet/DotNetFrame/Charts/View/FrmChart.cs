@@ -311,10 +311,12 @@ namespace DotNetFrame.Chart.View
                 System.Threading.Thread.Sleep(50);
             }
         }
+
+        delegate void DelegateUpdateUI();
         private void UpdateUI()
         {
             if (this.InvokeRequired)
-                this.BeginInvoke(new Update_WithoutParam(UpdateUI));
+                this.BeginInvoke(new DelegateUpdateUI(UpdateUI));
             else
             {
                 (DateTime, double)[] data = this._chartHandler.Creater_Data_Get();

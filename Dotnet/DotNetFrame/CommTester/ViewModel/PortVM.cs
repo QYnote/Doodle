@@ -143,10 +143,12 @@ namespace DotNetFrame.CommTester.ViewModel.Port
             this._list_port_type = QYViewUtils.EnumToItem<PortType>().ToList();
             this._list_protocol_type = QYViewUtils.EnumToItem<ProtocolType>().ToList();
             this._log.ListChanged += _log_ListChanged;
-            this._port.Log += _port_Log;
+
+            this._port.OnSendBinary += _port_OnSendBinary;
+            this._port.NoneProtocolReceive += _port_NoneProtocolReceive;
+            this._port.OnResult += _port_OnResult;
             this.PropertyChanged += PortVM_PropertyChanged;
         }
-
 
         public void Send(string text)
         {
@@ -179,40 +181,49 @@ namespace DotNetFrame.CommTester.ViewModel.Port
             }
         }
 
-        private void _port_Log(CommResult rst)
+
+        private void _port_OnSendBinary(byte[] binary)
         {
             base.SyncContext.Post(_ =>
             {
-                string text = "";
-                switch (rst.Type)
+                string txt = this.BinaryToString(binary);
+                this._log.Add($"{DateTime.Now:yyyy-MM-ddTHH:mm:ss.fffZ}/Request{Environment.NewLine}{txt}");
+            }, null);
+        }
+
+        private void _port_NoneProtocolReceive(byte[] binary)
+        {
+            base.SyncContext.Post(_ =>
+            {
+                string txt = this.BinaryToString(binary);
+                this._log.Add($"{DateTime.Now:yyyy-MM-ddTHH:mm:ss.fffZ}/Receive{Environment.NewLine}{txt}");
+            }, null);
+        }
+
+        private void _port_OnResult(DotNet.CommTester.Model.Protocol.IProtocolResult result)
+        {
+            base.SyncContext.Post(_ =>
+            {
+                string txt = this.BinaryToString(result.Response);
+                string style = "";
+                if (result.Type == DotNet.CommTester.Model.Protocol.ResultType.Timeout)
                 {
-                    case ResultType.Write:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Send{Environment.NewLine}{this.BinaryToString(rst.Req)}";
-                        break;
-                    case ResultType.Read:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Read{Environment.NewLine}{this.BinaryToString(rst.Rcv)}";
-                        break;
-                    case ResultType.Timeout_Stop:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Timeout - Stop{Environment.NewLine}{this.BinaryToString(rst.Rcv)}";
-                        break;
-                    case ResultType.Timeout_Long:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Timeout - Long{Environment.NewLine}{this.BinaryToString(rst.Rcv)}";
-                        break;
-                    case ResultType.Timeout_None:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Timeout - None";
-                        break;
-                    case ResultType.Protocol_Success:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Success{Environment.NewLine}{this.BinaryToString(rst.Rcv)}";
-                        break;
-                    case ResultType.Protocol_Error_CheckSum:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Protocol Error - CheckSum{Environment.NewLine}{this.BinaryToString(rst.Rcv)}";
-                        break;
-                    case ResultType.Protocol_Error_Exception:
-                        text = $"{rst.Time:yyyy-MM-ddTHH:mm:ss.fffZ}/Protocol Error - Exception{Environment.NewLine}{this.BinaryToString(rst.Rcv)}";
-                        break;
+                    style = "Timeout";
+                }
+                else if(result.Type == DotNet.CommTester.Model.Protocol.ResultType.CheckSum_Error)
+                {
+                    style = "CheckSum Error";
+                }
+                else if (result.Type == DotNet.CommTester.Model.Protocol.ResultType.Protocol_Exception)
+                {
+                    style = "Protocol Error";
+                }
+                else if(result.Type == DotNet.CommTester.Model.Protocol.ResultType.Success)
+                {
+                    style = "Complete";
                 }
 
-                this._log.Add(text);
+                this._log.Add($"{DateTime.Now:yyyy-MM-ddTHH:mm:ss.fffZ}/{style}{Environment.NewLine}{txt}");
             }, null);
         }
 

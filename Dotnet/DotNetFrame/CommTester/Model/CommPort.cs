@@ -8,31 +8,34 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DotNetFrame.CommTester.Model.Port.Protocol.Custom.HYNux;
+using DotNetFrame.CommTester.Model.Protocol.Modbus;
+using DotNet.CommTester.Model.Protocol;
 
 namespace DotNetFrame.CommTester.Model
 {
-    internal class CommPort
+    internal class CommPort : INotifyPropertyChanged
     {
-        internal event Action<CommResult> Log;
-        private void OnLog(CommResult rst) => this.Log?.Invoke(rst);
+        internal event Action<byte[]> NoneProtocolReceive;
+        internal event Action<byte[]> OnSendBinary;
+        internal event Action<IProtocolResult> OnResult;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private PortType _port_type = PortType.Socket;
         private ITransport _port;
         private ProtocolType _protocol_type = ProtocolType.None;
         private IProtocol _protocol;
 
+        private bool _is_user_send = false;
         private byte[] _write_binary = null;
         private bool _is_write = false;
         private int _count_max = 3;
         private int _count_now = 0;
-        private byte[] _buffer = null;
-        private DateTime _send_time = DateTime.MinValue;
-        private bool _is_read = false;
-        private DateTime _read_time = DateTime.MinValue;
 
         private bool _create_errorcode = false;
 
         private BackgroundWorker _bgworker = new BackgroundWorker();
+        private DotNet.Comm.Protocols.TimeoutChecker _timeout = new DotNet.Comm.Protocols.TimeoutChecker();
 
         internal PortType PortType
         {
@@ -56,25 +59,29 @@ namespace DotNetFrame.CommTester.Model
             set
             {
                 this._protocol_type = value;
+
+                if(this._protocol is IDisposable dispose)
+                    dispose.Dispose();
+
                 switch (this._protocol_type)
                 {
-                    case ProtocolType.ModbusRTU: this._protocol = new ModbusRTU(); break;
-                    case ProtocolType.ModbusAscii: this._protocol = new ModbusAscii(); break;
-                    case ProtocolType.HY_ModbusRTU_EXP: this._protocol = new ModbusRTU_HYExpand(); break;
-                    case ProtocolType.HY_ModbusAscii_EXP: this._protocol = new ModbusAscii_HYExpand(); break;
-                    case ProtocolType.HY_ModbusTCP: this._protocol = new ModbusTCP_HY(); break;
-                    case ProtocolType.HY_PCLinkSTD: this._protocol = new PCLinkSTD(); break;
-                    case ProtocolType.HY_PCLinkSTD_TH300500: this._protocol = new PCLinkSTD_TH300500(); break;
-                    case ProtocolType.HY_PCLinkSUM: this._protocol = new PCLinkSUM(); break;
-                    case ProtocolType.HY_PCLinkSUM_TD300500: this._protocol = new PCLinkSUM_TD300500(); break;
-                    case ProtocolType.HY_PCLinkSUM_TH300500: this._protocol = new PCLinkSUM_TH300500(); break;
+                    case ProtocolType.ModbusRTU: this._protocol = new ModbusRTU(this); break;
+                    case ProtocolType.ModbusAscii: this._protocol = new ModbusAscii(this); break;
+                    case ProtocolType.HY_ModbusRTU_EXP: this._protocol = new ModbusRTU_HYExpand(this); break;
+                    case ProtocolType.HY_ModbusAscii_EXP: this._protocol = new ModbusAscii_HYExpand(this); break;
+                    case ProtocolType.HY_ModbusTCP: this._protocol = new ModbusTCP(this); break;
+                    case ProtocolType.HY_PCLinkSTD: this._protocol = new PCLinkSTD(this); break;
+                    case ProtocolType.HY_PCLinkSTD_TH300500: this._protocol = new PCLinkSTD_TH300500(this); break;
+                    case ProtocolType.HY_PCLinkSUM: this._protocol = new PCLinkSUM(this); break;
+                    case ProtocolType.HY_PCLinkSUM_TD300500: this._protocol = new PCLinkSUM_TD300500(this); break;
+                    case ProtocolType.HY_PCLinkSUM_TH300500: this._protocol = new PCLinkSUM_TH300500(this); break;
                     default: this._protocol = null; break;
                 }
             }
         }
         internal int MaxCount { get => this._count_max; set => this._count_max = value; }
         internal bool CreateErrorCode { get => this._create_errorcode; set => this._create_errorcode = value; }
-        internal bool IsSending => this._is_write || this._is_read;
+        internal bool IsSending => this._is_user_send;
         
         internal CommPort()
         {
@@ -109,6 +116,7 @@ namespace DotNetFrame.CommTester.Model
             //통신 초기 설정
             this._is_write = false;
             this._count_now = 0;
+            this._is_user_send = true;
 
 
             //통신 시작
@@ -120,6 +128,7 @@ namespace DotNetFrame.CommTester.Model
         {
             if(this._bgworker.IsBusy)
                 this._bgworker.CancelAsync();
+            this._is_user_send = false;
         }
 
         private byte[] TextToBinary(string text)
@@ -183,6 +192,8 @@ namespace DotNetFrame.CommTester.Model
                     this._port.Initialize();
                     this._port.Open();
 
+                    this._protocol?.Initialize();
+
                     this._is_write = false;
 
                     System.Threading.Thread.Sleep(1000);
@@ -192,68 +203,31 @@ namespace DotNetFrame.CommTester.Model
                 if (this._is_write)
                 {
                     //수신 Process
-                    if (this.IsTimeout())
+                    DotNet.Comm.Protocols.TimeoutType timeout_type = this._timeout.CheckTimeout();
+                    if (timeout_type != DotNet.Comm.Protocols.TimeoutType.NONE)
                     {
                         this._is_write = false;
-                        this._port.Initialize();
 
                         continue;
                     }
 
                     byte[] read = this._port.Read();
-                    if(read != null)
+
+                    if(this._protocol == null)
                     {
-                        //Read Log 전송
-                        this.OnLog(new CommResult(ResultType.Read, this._write_binary, read));
-
-                        //Read 누적 처리
-                        if (this._buffer == null)
-                        {
-                            this._buffer = new byte[read.Length];
-                            Buffer.BlockCopy(read, 0, this._buffer, 0, read.Length);
-                        }
-                        else
-                        {
-                            byte[] temp = new byte[this._buffer.Length + read.Length];
-                            Buffer.BlockCopy(this._buffer, 0, temp, 0 , this._buffer.Length);
-                            Buffer.BlockCopy(read, 0, temp, this._buffer.Length, read.Length);
-
-                            this._buffer = temp;
-                        }
-
-                        this._is_read = true;
-                        this._read_time = DateTime.Now;
+                        //Protocol 미설정 시 읽은 Binary만 전송
+                        if(read != null)
+                            this.NoneProtocolReceive?.Invoke(read);
                     }
-
-                    if(this._protocol != null)
+                    else
                     {
-                        //Binary → Protocol Type 변환
-
-                        //Protocol Frame 추출
-                        byte[] frame = this._protocol.Parse(this._buffer, this._write_binary);
+                        //Binary → Protocol Frame 추출
+                        byte[] frame = this._protocol.Parse(read);
 
                         if(frame != null)
                         {
-                            if (this._protocol.CheckError(frame))
-                            {
-                                //CheckSum Error Log
-                                this.OnLog(new CommResult(ResultType.Protocol_Error_CheckSum, this._write_binary, frame));
-                            }
-                            else
-                            {
-                                DotNet.Comm.Protocols.IProtocolResult result = this._protocol.Extraction(frame, this._write_binary);
-
-                                if(result.Type == DotNet.Comm.Protocols.ResultType.Success)
-                                {
-                                    //일반 성공 Log
-                                    this.OnLog(new CommResult(ResultType.Protocol_Success, this._write_binary, frame));
-                                }
-                                else if (result.Type == DotNet.Comm.Protocols.ResultType.Protocol_Exception)
-                                {
-                                    //Protocol Error Log
-                                    this.OnLog(new CommResult(ResultType.Protocol_Error_Exception, this._write_binary, frame));
-                                }
-                            }
+                            IProtocolResult result = this._protocol.Extraction(frame);
+                            this.OnResult?.Invoke(result);
 
                             this._is_write = false;
                         }
@@ -266,91 +240,18 @@ namespace DotNetFrame.CommTester.Model
                     else
                     {
                         this._is_write = true;
-                        this._is_read = false;
-                        this._buffer = null;
                         this._count_now++;
-                        this._send_time = DateTime.Now;
-                        this._read_time = DateTime.Now;
+                        this._timeout.OnSend();
+                        this._protocol?.Initialize();
 
                         this._port.Write(this._write_binary);
-                        //Write Log 전송
-                        this.OnLog(new CommResult(ResultType.Protocol_Error_Exception, this._write_binary, null));
+                        this.OnSendBinary?.Invoke(this._write_binary);
                     }
                 }
             }//End While
 
             this._write_binary = null;
-            this._buffer = null;
-            this._is_read = false;
             this._is_write = false;
-        }
-
-        private bool IsTimeout()
-        {
-            TimeSpan ts;
-            if (this._is_read)
-            {
-                //Response Stop
-                ts = DateTime.Now - this._read_time;
-                if(ts.TotalMilliseconds > 5000)
-                {
-                    //Response Stop Timeout 처리
-                    this.OnLog(new CommResult(ResultType.Timeout_Stop, this._write_binary, this._buffer));
-
-                    return true;
-                }
-
-                ts = DateTime.Now - this._send_time;
-                if(ts.TotalMilliseconds > 10000)
-                {
-                    //Response Long Timeout
-                    this.OnLog(new CommResult(ResultType.Timeout_Long, this._write_binary, this._buffer));
-
-                    return true;
-                }
-            }
-            else
-            {
-                //None Receive Timeout
-                ts = DateTime.Now - this._send_time;
-                if(ts.TotalMilliseconds > 3000)
-                {
-                    //None Receive Timeout 처리
-                    this.OnLog(new CommResult(ResultType.Timeout_None, this._write_binary, this._buffer));
-
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
-
-    internal enum ResultType
-    {
-        Write,
-        Read,
-        Timeout_Stop,
-        Timeout_Long,
-        Timeout_None,
-        Protocol_Success,
-        Protocol_Error_CheckSum,
-        Protocol_Error_Exception,
-    }
-
-    internal class CommResult
-    {
-        internal ResultType Type { get; }
-        internal byte[] Req { get; }
-        internal byte[] Rcv { get; }
-        internal DateTime Time { get; }
-
-        internal CommResult(ResultType type, byte[] req, byte[] rcv)
-        {
-            this.Type = type;
-            this.Req = req;
-            this.Rcv = rcv;
-            this.Time = DateTime.Now;
         }
     }
 }
