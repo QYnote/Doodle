@@ -365,4 +365,45 @@ namespace DotNet.Utils.Controls.Utils
         }
 
     }
+
+    /// <summary>
+    /// Word[16 Bit] 구조
+    /// </summary>
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit, Size = 2)]
+    public struct Word
+    {
+        [System.Runtime.InteropServices.FieldOffset(0)] public byte LowByte;
+        [System.Runtime.InteropServices.FieldOffset(1)] public byte HighByte;
+
+        [System.Runtime.InteropServices.FieldOffset(0)] public UInt16 UInt16;
+        [System.Runtime.InteropServices.FieldOffset(0)] public Int16 Int16;
+
+        public byte[] BigEndian() => new byte[] { this.HighByte, this.LowByte };
+        public byte[] LittleEndian() => new byte[] { this.LowByte, this.HighByte };
+    }
+    /// <summary>
+    /// 32 Bit 구조
+    /// </summary>
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit, Size = 4)]
+    public struct DWord
+    {
+        [System.Runtime.InteropServices.FieldOffset(0)] public byte Byte0;
+        [System.Runtime.InteropServices.FieldOffset(1)] public byte Byte1;
+        [System.Runtime.InteropServices.FieldOffset(2)] public byte Byte2;
+        [System.Runtime.InteropServices.FieldOffset(3)] public byte Byte3;
+
+        [System.Runtime.InteropServices.FieldOffset(0)] public Word LowWord;
+        [System.Runtime.InteropServices.FieldOffset(2)] public Word HighWord;
+
+        [System.Runtime.InteropServices.FieldOffset(0)] public UInt32 UInt32;
+        [System.Runtime.InteropServices.FieldOffset(0)] public Int32 Int32;
+        [System.Runtime.InteropServices.FieldOffset(0)] public Single Single;//Float
+
+        public void WordSwap()
+        {
+            Word temp = this.LowWord;
+            this.LowWord = this.HighWord;
+            this.HighWord = temp;
+        }
+    }
 }
