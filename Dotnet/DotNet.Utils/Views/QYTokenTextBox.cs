@@ -12,6 +12,9 @@ namespace DotNet.Utils.Views
 {
     public class QYTokenTextBox : RichTextBox
     {
+        public delegate bool InsertArgs(string new_text);
+        public event InsertArgs ValidateTokenInsert;
+
         private Form popup = new Form();
         private ListBox listBox = new ListBox();
 
@@ -295,10 +298,15 @@ namespace DotNet.Utils.Views
             int selStart = base.SelectionStart;
             string txt = $"[{word}]";
 
-            this.changedStart = selStart + txt.Length;
-            base.Text = base.Text.Insert(selStart, txt);
+            string new_txt = base.Text.Insert(selStart, txt);
+            if (this.ValidateTokenInsert?.Invoke(new_txt) ?? true)
+            {
+                base.Text = new_txt;
 
-            base.Focus();
+                base.Focus();
+                this.changedStart = selStart + txt.Length;
+                base.SelectionLength = 0;
+            }
         }
 
         private void SetTokenColor()
